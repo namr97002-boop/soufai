@@ -6187,243 +6187,280 @@ ${analysis.collectionRate >= 80 && analysis.totalDebt < 500000 ? 'أداء مم�
             return mergedData;
         };
 
-        // التبديل بين القرى
-        const onVillageChange = () => {
-            const key = `${selectedVillage.value}_${selectedMonth.value}`;
-            const hasChanges = checkForPendingChanges();
-            
-            if (hasChanges) {
-                if (confirm('هناك تغييرات غير محفوظة في البيانات الحالية. هل تريد الاستمرار في التبديل؟')) {
-                    showSmartLoading('جاري التبديل', 'جارٍ تحميل بيانات القرية الجديدة...');
-                    loadData();
-                } else {
-                    selectedVillage.value = selectedVillage.value;
-                    return;
-                }
-            } else {
-                showSmartLoading('جاري التبديل', 'جارٍ تحميل بيانات القرية الجديدة...');
-                loadData();
-            }
-        };
+       // التبديل بين القرى - مع دعم عدم الاتصال
+const onVillageChange = async () => {
+    const oldVillage = selectedVillage.value;
+    const newVillage = selectedVillage.value;
+    const month = selectedMonth.value;
 
-        // التبديل بين الأشهر
-        const onMonthChange = () => {
-            const key = `${selectedVillage.value}_${selectedMonth.value}`;
-            const hasChanges = checkForPendingChanges();
-            
-            if (hasChanges) {
-                if (confirm('هناك تغييرات غير محفوظة في الشهر الحالي. هل تريد الاستمرار في التبديل؟')) {
-                    showSmartLoading('جاري التبديل', 'جارٍ تحميل بيانات الشهر الجديد...');
-                    loadData();
-                } else {
-                    selectedMonth.value = selectedMonth.value;
-                    return;
-                }
-            } else {
-                showSmartLoading('جاري التبديل', 'جارٍ تحميل بيانات الشهر الجديد...');
-                loadData();
-            }
-        };
+    const hasChanges = checkForPendingChanges ? checkForPendingChanges() : false;
+    
+    if (hasChanges) {
+        if (!confirm('هناك تغييرات غير محفوظة. هل تريد الاستمرار؟')) {
+            selectedVillage.value = oldVillage;
+            return;
+        }
+    }
 
-        // التحقق من التغييرات المعلقة
-        const checkForPendingChanges = () => {
-            const key = `${selectedVillage.value}_${selectedMonth.value}`;
-            return dataCache.value.pendingChanges[key] && 
-                   dataCache.value.pendingChanges[key].some(c => !c.synced);
-        };
+    if (isOnline.value) {
+        showSmartLoading('جاري التبديل', `جارٍ تحميل بيانات ${newVillage}...`);
+        await loadData(false, true);
+        hideSmartLoading();
+    } else {
+        const cachedData = getCachedData ? getCachedData(newVillage, month) : null;
+        
+        if (cachedData) {
+            villageData.value = cachedData;
+            if (applyPendingChanges) applyPendingChanges();
+            showSyncIndicator(`✅ تم تحميل ${newVillage} من الذاكرة المؤقتة`, 'info');
+            
+            if (updateAIStats) setTimeout(updateAIStats, 500);
+            if (chartsVisible?.value && initializeCharts) {
+                nextTick(() => initializeCharts());
+            }
+        } else {
+            alert(`❌ لا توجد بيانات مخزنة لـ "${newVillage}" في وضع عدم الاتصال`);
+            selectedVillage.value = oldVillage;
+        }
+    }
+};
 
-        // حفظ الخلية مع المزامنة الذكية
-        const saveCell = async (event, rowIndex, cellIndex, meterNumber) => {
-            const newValue = event.target.textContent.trim();
-            const oldValue = villageData.value[rowIndex][cellIndex];
-            
-            if (newValue === oldValue) return;
-            
-            // التحقق من صلاحيات المستخدم
-            if (!currentUser.value.permissions || !currentUser.value.permissions.canEdit.includes(cellIndex)) {
-                showSyncIndicator('ليس لديك صلاحية تعديل هذا العمود', 'error');
-                event.target.textContent = oldValue;
-                return;
-            }
-            
-            if ([3, 10, 11].includes(cellIndex)) {
-                if (isNaN(parseFloat(newValue)) && newValue !== '') {
-                    showSyncIndicator('يرجى إدخال رقم صحيح', 'error');
-                    event.target.textContent = oldValue;
-                    return;
-                }
-            }
-            
-            villageData.value[rowIndex][cellIndex] = newValue;
-            saveChangeLocally(rowIndex, cellIndex, newValue, meterNumber);
-            savingCells.value.push({ row: rowIndex, col: cellIndex });
-            
-            try {
-                if (isOnline.value) {
-                    await syncCell(rowIndex, cellIndex, newValue, meterNumber);
-                    markChangeAsSynced(rowIndex, cellIndex);
-                    lastSyncTime.value = new Date().toLocaleTimeString('ar-SA');
-                    savedCells.value.push({ row: rowIndex, col: cellIndex });
-                    
-                    setTimeout(() => {
-                        const index = savedCells.value.findIndex(cell => 
-                            cell.row === rowIndex && cell.col === cellIndex
-                        );
-                        if (index > -1) savedCells.value.splice(index, 1);
-                    }, 1000);
-                    
-                    // تحديث تحليل AI بعد الحفظ
-                    setTimeout(updateAIStats, 500);
-                    
-                    if (chartsVisible.value) {
-                        nextTick(() => {
-                            initializeCharts();
-                        });
-                    }
-                    
-                } else {
-                    showSyncIndicator('تم حفظ التغيير محلياً، سيتم المزامنة عند الاتصال', 'warning');
-                }
-                
-            } catch (error) {
-                console.error('خطأ في المزامنة:', error);
-                showSyncIndicator('تم حفظ التغيير محلياً، سيتم إعادة المحاولة', 'warning');
-            } finally {
-                const index = savingCells.value.findIndex(cell => 
-                    cell.row === rowIndex && cell.col === cellIndex
-                );
-                if (index > -1) savingCells.value.splice(index, 1);
-            }
-        };
+// التبديل بين الأشهر - مع دعم عدم الاتصال
+const onMonthChange = async () => {
+    const oldMonth = selectedMonth.value;
+    const newMonth = selectedMonth.value;
+    const village = selectedVillage.value;
 
-        // مزامنة خلية واحدة
-        const syncCell = async (rowIndex, cellIndex, value, meterNumber) => {
-            if (!isOnline.value) {
-                throw new Error('لا يوجد اتصال بالإنترنت');
-            }
-            
-            const columnLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
-            const columnLetter = columnLetters[cellIndex];
-            const sheetRow = rowIndex + 1;
-            
-            const formData = new FormData();
-            formData.append('sheet', selectedMonth.value);
-            formData.append('row', sheetRow.toString());
-            formData.append('col', columnLetter);
-            formData.append('value', value);
-            formData.append('meterNumber', meterNumber);
-            formData.append('village', selectedVillage.value);
-            formData.append('timestamp', Date.now().toString());
-            
-            isSyncing.value = true;
-            
-            try {
-                await fetch(villageAPIs[selectedVillage.value], {
-                    method: 'POST',
-                    body: formData,
-                    mode: 'no-cors'
-                });
-                
-                return true;
-            } catch (error) {
-                throw error;
-            } finally {
-                isSyncing.value = false;
-            }
-        };
+    const hasChanges = checkForPendingChanges ? checkForPendingChanges() : false;
+    
+    if (hasChanges) {
+        if (!confirm('هناك تغييرات غير محفوظة. هل تريد الاستمرار؟')) {
+            selectedMonth.value = oldMonth;
+            return;
+        }
+    }
 
-        // مزامنة جميع التغييرات
-        const syncAllChanges = async () => {
-            if (!isOnline.value) {
-                showSyncIndicator('لا يوجد اتصال بالإنترنت', 'error');
-                return;
+    if (isOnline.value) {
+        showSmartLoading('جاري التبديل', `جارٍ تحميل بيانات ${newMonth}...`);
+        await loadData(false, true);
+        hideSmartLoading();
+    } else {
+        const cachedData = getCachedData ? getCachedData(village, newMonth) : null;
+        
+        if (cachedData) {
+            villageData.value = cachedData;
+            if (applyPendingChanges) applyPendingChanges();
+            showSyncIndicator(`✅ تم تحميل ${newMonth} من الذاكرة المؤقتة`, 'info');
+            
+            if (updateAIStats) setTimeout(updateAIStats, 500);
+            if (chartsVisible?.value && initializeCharts) {
+                nextTick(() => initializeCharts());
             }
-            
-            if (pendingChanges.value === 0) {
-                showSyncIndicator('لا توجد تغييرات للمزامنة', 'info');
-                return;
-            }
-            
-            showSmartLoading('جاري المزامنة', `جارٍ مزامنة ${pendingChanges.value} تغيير...`);
-            updateSmartLoading(10, 'جمع التغييرات...');
-            
-            let syncedCount = 0;
-            let errorCount = 0;
-            
-            for (const key in dataCache.value.pendingChanges) {
-                const [village, month] = key.split('_');
-                const changes = dataCache.value.pendingChanges[key];
-                
-                if (changes && changes.length > 0) {
-                    updateSmartLoading(
-                        30 + (syncedCount / pendingChanges.value * 50),
-                        `جارٍ مزامنة تغييرات ${village} - ${month}...`
-                    );
-                    
-                    for (const change of changes) {
-                        if (!change.synced) {
-                            try {
-                                const currentVillage = selectedVillage.value;
-                                const currentMonth = selectedMonth.value;
-                                
-                                selectedVillage.value = village;
-                                selectedMonth.value = month;
-                                
-                                await syncCell(change.row, change.col, change.value, change.meterNumber);
-                                
-                                selectedVillage.value = currentVillage;
-                                selectedMonth.value = currentMonth;
-                                
-                                change.synced = true;
-                                syncedCount++;
-                                
-                                updateSmartLoading(
-                                    30 + (syncedCount / pendingChanges.value * 50),
-                                    `تم مزامنة ${syncedCount} من ${pendingChanges.value} تغيير`
-                                );
-                                
-                            } catch (error) {
-                                console.error('خطأ في مزامنة التغيير:', error);
-                                errorCount++;
-                            }
-                        }
-                    }
-                }
-            }
-            
-            updatePendingChangesCount();
-            updateSmartLoading(100, 'اكتملت المزامنة');
+        } else {
+            alert(`❌ لا توجد بيانات مخزنة لشهر "${newMonth}" في وضع عدم الاتصال`);
+            selectedMonth.value = oldMonth;
+        }
+    }
+};
+
+// التحقق من التغييرات المعلقة
+const checkForPendingChanges = () => {
+    const key = `${selectedVillage.value}_${selectedMonth.value}`;
+    return dataCache.value.pendingChanges[key] && 
+           dataCache.value.pendingChanges[key].some(c => !c.synced);
+};
+
+// حفظ الخلية مع المزامنة الذكية
+const saveCell = async (event, rowIndex, cellIndex, meterNumber) => {
+    const newValue = event.target.textContent.trim();
+    const oldValue = villageData.value[rowIndex][cellIndex];
+    
+    if (newValue === oldValue) return;
+    
+    // التحقق من صلاحيات المستخدم
+    if (!currentUser.value.permissions || !currentUser.value.permissions.canEdit.includes(cellIndex)) {
+        showSyncIndicator('ليس لديك صلاحية تعديل هذا العمود', 'error');
+        event.target.textContent = oldValue;
+        return;
+    }
+    
+    if ([3, 10, 11].includes(cellIndex)) {
+        if (isNaN(parseFloat(newValue)) && newValue !== '') {
+            showSyncIndicator('يرجى إدخال رقم صحيح', 'error');
+            event.target.textContent = oldValue;
+            return;
+        }
+    }
+    
+    villageData.value[rowIndex][cellIndex] = newValue;
+    saveChangeLocally(rowIndex, cellIndex, newValue, meterNumber);
+    savingCells.value.push({ row: rowIndex, col: cellIndex });
+    
+    try {
+        if (isOnline.value) {
+            await syncCell(rowIndex, cellIndex, newValue, meterNumber);
+            markChangeAsSynced(rowIndex, cellIndex);
+            lastSyncTime.value = new Date().toLocaleTimeString('ar-SA');
+            savedCells.value.push({ row: rowIndex, col: cellIndex });
             
             setTimeout(() => {
-                hideSmartLoading();
-                
-                if (errorCount === 0) {
-                    showSyncIndicator(`تمت مزامنة ${syncedCount} تغيير بنجاح`, 'success');
-                } else {
-                    showSyncIndicator(`تمت مزامنة ${syncedCount} تغيير، فشل ${errorCount}`, 'warning');
-                }
-                
-                // تحديث تحليل AI بعد المزامنة
-                setTimeout(updateAIStats, 500);
-                
-                if (chartsVisible.value) {
-                    nextTick(() => {
-                        initializeCharts();
-                    });
-                }
-                
-                loadData(false, false);
+                const index = savedCells.value.findIndex(cell => 
+                    cell.row === rowIndex && cell.col === cellIndex
+                );
+                if (index > -1) savedCells.value.splice(index, 1);
             }, 1000);
-        };
-
-        // المزامنة التلقائية للتغييرات
-        const autoSyncPendingChanges = async () => {
-            if (!isOnline.value || isSyncing.value || pendingChanges.value === 0) return;
-            if (pendingChanges.value <= 5) {
-                await syncAllChanges();
+            
+            // تحديث تحليل AI بعد الحفظ
+            setTimeout(updateAIStats, 500);
+            
+            if (chartsVisible.value) {
+                nextTick(() => {
+                    initializeCharts();
+                });
             }
-        };
+            
+        } else {
+            showSyncIndicator('تم حفظ التغيير محلياً، سيتم المزامنة عند الاتصال', 'warning');
+        }
+        
+    } catch (error) {
+        console.error('خطأ في المزامنة:', error);
+        showSyncIndicator('تم حفظ التغيير محلياً، سيتم إعادة المحاولة', 'warning');
+    } finally {
+        const index = savingCells.value.findIndex(cell => 
+            cell.row === rowIndex && cell.col === cellIndex
+        );
+        if (index > -1) savingCells.value.splice(index, 1);
+    }
+};
 
+// مزامنة خلية واحدة
+const syncCell = async (rowIndex, cellIndex, value, meterNumber) => {
+    if (!isOnline.value) {
+        throw new Error('لا يوجد اتصال بالإنترنت');
+    }
+    
+    const columnLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
+    const columnLetter = columnLetters[cellIndex];
+    const sheetRow = rowIndex + 1;
+    
+    const formData = new FormData();
+    formData.append('sheet', selectedMonth.value);
+    formData.append('row', sheetRow.toString());
+    formData.append('col', columnLetter);
+    formData.append('value', value);
+    formData.append('meterNumber', meterNumber);
+    formData.append('village', selectedVillage.value);
+    formData.append('timestamp', Date.now().toString());
+    
+    isSyncing.value = true;
+    
+    try {
+        await fetch(villageAPIs[selectedVillage.value], {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors'
+        });
+        
+        return true;
+    } catch (error) {
+        throw error;
+    } finally {
+        isSyncing.value = false;
+    }
+};
+
+// مزامنة جميع التغييرات
+const syncAllChanges = async () => {
+    if (!isOnline.value) {
+        showSyncIndicator('لا يوجد اتصال بالإنترنت', 'error');
+        return;
+    }
+    
+    if (pendingChanges.value === 0) {
+        showSyncIndicator('لا توجد تغييرات للمزامنة', 'info');
+        return;
+    }
+    
+    showSmartLoading('جاري المزامنة', `جارٍ مزامنة ${pendingChanges.value} تغيير...`);
+    updateSmartLoading(10, 'جمع التغييرات...');
+    
+    let syncedCount = 0;
+    let errorCount = 0;
+    
+    for (const key in dataCache.value.pendingChanges) {
+        const [village, month] = key.split('_');
+        const changes = dataCache.value.pendingChanges[key];
+        
+        if (changes && changes.length > 0) {
+            updateSmartLoading(
+                30 + (syncedCount / pendingChanges.value * 50),
+                `جارٍ مزامنة تغييرات ${village} - ${month}...`
+            );
+            
+            for (const change of changes) {
+                if (!change.synced) {
+                    try {
+                        const currentVillage = selectedVillage.value;
+                        const currentMonth = selectedMonth.value;
+                        
+                        selectedVillage.value = village;
+                        selectedMonth.value = month;
+                        
+                        await syncCell(change.row, change.col, change.value, change.meterNumber);
+                        
+                        selectedVillage.value = currentVillage;
+                        selectedMonth.value = currentMonth;
+                        
+                        change.synced = true;
+                        syncedCount++;
+                        
+                        updateSmartLoading(
+                            30 + (syncedCount / pendingChanges.value * 50),
+                            `تم مزامنة ${syncedCount} من ${pendingChanges.value} تغيير`
+                        );
+                        
+                    } catch (error) {
+                        console.error('خطأ في مزامنة التغيير:', error);
+                        errorCount++;
+                    }
+                }
+            }
+        }
+    }
+    
+    updatePendingChangesCount();
+    updateSmartLoading(100, 'اكتملت المزامنة');
+    
+    setTimeout(() => {
+        hideSmartLoading();
+        
+        if (errorCount === 0) {
+            showSyncIndicator(`تمت مزامنة ${syncedCount} تغيير بنجاح`, 'success');
+        } else {
+            showSyncIndicator(`تمت مزامنة ${syncedCount} تغيير، فشل ${errorCount}`, 'warning');
+        }
+        
+        // تحديث تحليل AI بعد المزامنة
+        setTimeout(updateAIStats, 500);
+        
+        if (chartsVisible.value) {
+            nextTick(() => {
+                initializeCharts();
+            });
+        }
+        
+        loadData(false, false);
+    }, 1000);
+};
+
+// المزامنة التلقائية للتغييرات
+const autoSyncPendingChanges = async () => {
+    if (!isOnline.value || isSyncing.value || pendingChanges.value === 0) return;
+    if (pendingChanges.value <= 5) {
+        await syncAllChanges();
+    }
+};
         // تحديث البيانات الخلفية كل 30 ثانية بدون إظهار مؤشر
         setInterval(() => {
             if (isLoggedIn.value && isOnline.value && !loading.value && !isSyncing.value) {
