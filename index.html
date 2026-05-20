@@ -24,7 +24,11 @@
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/000000/computer.png">
     <link rel="shortcut icon" href="https://img.icons8.com/fluency/48/000000/computer.png">
     <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/000000/computer.png">
-    
+    <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/000000/computer.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="السوفعي">
     <!-- External Resources -->
     <style>
     [class*="fa-"]:before { font-family: 'Segoe UI', sans-serif; margin-left: 5px; }
@@ -10587,7 +10591,31 @@ const printDirectorReport = () => {
             link.href = manifestURL;
             document.head.appendChild(link);
             
-
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(registration => {
+                            console.log('✅ Service Worker مسجل بنجاح:', registration.scope);
+                        })
+                        .catch(error => {
+                            console.error('❌ فشل تسجيل Service Worker:', error);
+                            const simpleSW = `
+                                self.addEventListener('install', (event) => {
+                                    console.log('✅ Service Worker مثبت');
+                                });
+                                self.addEventListener('fetch', (event) => {
+                                    event.respondWith(fetch(event.request));
+                                });
+                            `;
+                            const blob = new Blob([simpleSW], {type: 'application/javascript'});
+                            const swURL = URL.createObjectURL(blob);
+                            navigator.serviceWorker.register(swURL)
+                                .then(() => console.log('✅ تم تسجيل Service Worker البديل'))
+                                .catch(err => console.log('❌ فشل تسجيل Service Worker البديل:', err));
+                        });
+                });
+            }
+            
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
@@ -11189,37 +11217,71 @@ if (typeof scrollToRow === 'function') {
     console.log("✅ تم تحديث دالة scrollToRow");
 }
 </script>
-    <!-- ========== نهاية محتوى الصفحة ========== -->
-    
-    <!-- الكود الموجود لديك للتسجيل -->
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => {
-                    console.log('✅ Service Worker مسجل بنجاح');
-                    
-                    reg.onupdatefound = () => {
-                        const installingWorker = reg.installing;
-                        installingWorker.onstatechange = () => {
-                            if (installingWorker.state === 'installed') {
-                                if (navigator.serviceWorker.controller) {
-                                    console.log('🔄 تحديث جديد متاح، يرجى إعادة تحميل الصفحة');
-                                } else {
-                                    console.log('✅ التطبيق جاهز للعمل بدون إنترنت');
-                                }
-                            }
-                        };
-                    };
-                })
-                .catch(err => {
-                    console.error('❌ فشل تسجيل Service Worker:', err);
-                });
-        });
-    }
-    </script>
+<script>
+(function () {
 
-</body>
-</html>
+    const splash = document.querySelector('.splash');
+
+    if (splash) {
+
+        splash.style.display = 'flex';
+        splash.style.opacity = '1';
+
+        window.addEventListener('load', function () {
+
+            setTimeout(function () {
+
+                splash.style.transition = 'opacity .5s';
+
+                splash.style.opacity = '0';
+
+                setTimeout(function () {
+                    splash.style.display = 'none';
+                }, 500);
+
+            }, 1200);
+
+        });
+
+    }
+
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+
+        window.addEventListener('load', function () {
+
+            navigator.serviceWorker
+                .register('./sw.js')
+
+                .then(function () {
+                    console.log('SW Ready');
+                })
+
+                .catch(function (e) {
+                    console.log('SW Error', e);
+                });
+
+        });
+
+    }
+
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+
+    window.addEventListener('load', function () {
+
+        navigator.serviceWorker
+            .register('./sw.js')
+
+            .then(() => console.log('SW Ready'))
+
+            .catch(err => console.log(err));
+
+    });
+
+}
+</script>
 </body>
 </html>
