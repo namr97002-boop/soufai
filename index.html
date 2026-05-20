@@ -10587,31 +10587,7 @@ const printDirectorReport = () => {
             link.href = manifestURL;
             document.head.appendChild(link);
             
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('sw.js')
-                        .then(registration => {
-                            console.log('✅ Service Worker مسجل بنجاح:', registration.scope);
-                        })
-                        .catch(error => {
-                            console.error('❌ فشل تسجيل Service Worker:', error);
-                            const simpleSW = `
-                                self.addEventListener('install', (event) => {
-                                    console.log('✅ Service Worker مثبت');
-                                });
-                                self.addEventListener('fetch', (event) => {
-                                    event.respondWith(fetch(event.request));
-                                });
-                            `;
-                            const blob = new Blob([simpleSW], {type: 'application/javascript'});
-                            const swURL = URL.createObjectURL(blob);
-                            navigator.serviceWorker.register(swURL)
-                                .then(() => console.log('✅ تم تسجيل Service Worker البديل'))
-                                .catch(err => console.log('❌ فشل تسجيل Service Worker البديل:', err));
-                        });
-                });
-            }
-            
+
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
@@ -11213,6 +11189,37 @@ if (typeof scrollToRow === 'function') {
     console.log("✅ تم تحديث دالة scrollToRow");
 }
 </script>
+    <!-- ========== نهاية محتوى الصفحة ========== -->
+    
+    <!-- الكود الموجود لديك للتسجيل -->
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => {
+                    console.log('✅ Service Worker مسجل بنجاح');
+                    
+                    reg.onupdatefound = () => {
+                        const installingWorker = reg.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    console.log('🔄 تحديث جديد متاح، يرجى إعادة تحميل الصفحة');
+                                } else {
+                                    console.log('✅ التطبيق جاهز للعمل بدون إنترنت');
+                                }
+                            }
+                        };
+                    };
+                })
+                .catch(err => {
+                    console.error('❌ فشل تسجيل Service Worker:', err);
+                });
+        });
+    }
+    </script>
 
+</body>
+</html>
 </body>
 </html>
