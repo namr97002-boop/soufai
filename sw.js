@@ -1,92 +1,61 @@
 // ==========================================
-// نظام مياه السوفعي - Service Worker
+// نظام مياه السوفعي - Service Worker المثالي
 // ==========================================
 
-const CACHE_NAME = 'soufai-v2';
+const CACHE_NAME = 'soufai-v8';
 
 const FILES_TO_CACHE = [
-
     './',
-    './index.html',
-    './manifest.json',
-    './logo.png'
-
+    './index.html'
 ];
 
-// التثبيت
+// تثبيت
 self.addEventListener('install', event => {
-
     event.waitUntil(
-
         caches.open(CACHE_NAME)
             .then(cache => {
-
+                console.log('✅ تم تخزين الملفات الأساسية');
                 return cache.addAll(FILES_TO_CACHE);
-
             })
-
+            .then(() => self.skipWaiting())
     );
-
-    self.skipWaiting();
-
 });
 
-// التفعيل
+// تفعيل
 self.addEventListener('activate', event => {
-
     event.waitUntil(
-
         caches.keys().then(keys => {
-
             return Promise.all(
-
                 keys.map(key => {
-
                     if (key !== CACHE_NAME) {
+                        console.log('🗑️ حذف الكاش القديم:', key);
                         return caches.delete(key);
                     }
-
                 })
-
             );
-
-        })
-
+        }).then(() => self.clients.claim())
     );
-
-    self.clients.claim();
-
 });
 
-// الجلب
+// الجلب - استراتيجية ذكية
 self.addEventListener('fetch', event => {
-
     event.respondWith(
-
         caches.match(event.request)
-            .then(response => {
-
-                // إذا موجود بالكاش
-                if (response) {
-                    return response;
+            .then(cachedResponse => {
+                if (cachedResponse) {
+                    return cachedResponse;
                 }
-
-                // جلب من الإنترنت
                 return fetch(event.request)
                     .then(networkResponse => {
-
-                        return networkResponse;
-
+                        return caches.open(CACHE_NAME)
+                            .then(cache => {
+                                cache.put(event.request, networkResponse.clone());
+                                return networkResponse;
+                            });
                     })
                     .catch(() => {
-
-                        // عند انقطاع النت افتح الصفحة الرئيسية
                         return caches.match('./index.html');
-
                     });
-
             })
-
     );
-
 });
