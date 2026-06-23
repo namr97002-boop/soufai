@@ -5723,34 +5723,45 @@ body.quick-view-mode .app-container {
                         <th>التاريخ</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr v-for="(row, rowIndex) in filteredDataWithTotal" 
-                        :key="rowIndex"
-                        :class="getRowClass(rowIndex, row)">
-                        <td v-for="(cell, cellIndex) in row" 
-                            :key="cellIndex"
-                            :contenteditable="canEdit(rowIndex, cellIndex, row)"
-                            :class="{
-                            	                                'editable': canEdit(rowIndex, cellIndex, row),
-                                'high-debt-cell': isHighDebtCell(rowIndex, cellIndex, cell, row),
-                                'high-debt-row': hasHighDebt(rowIndex, row),
-                                'saving': isSaving(rowIndex, cellIndex),
-                                'saved': isSaved(rowIndex, cellIndex),
-                                'unsaved-change': hasUnsavedChange(rowIndex, cellIndex)
-                            }"
-                            @blur="saveCell($event, rowIndex, cellIndex, row[0])"
-                            @keydown.enter="$event.target.blur()"
-                            :title="getCellTitle(rowIndex, cellIndex, row)">
-                            {{ cell }}
-                            <span v-if="hasUnsavedChange(rowIndex, cellIndex)" class="cached-indicator">
-                                <i class="fas fa-pencil-alt"></i>
-                            </span>
-                            <span v-if="isHighDebtCell(rowIndex, cellIndex, cell, row)" class="debt-badge high" style="display: inline-block; margin-right: 5px; padding: 2px 6px; font-size: 12px;">
-                                <i class="fas fa-exclamation-circle"></i>
-                            </span>
-                        </td>
-                    </tr>
-                </tbody>
+             <tbody>
+    <tr v-for="(row, rowIndex) in filteredDataWithTotal" 
+        :key="rowIndex"
+        :class="getRowClass(rowIndex, row)">
+        <td v-for="(cell, cellIndex) in row" 
+            :key="cellIndex"
+            :contenteditable="canEdit(rowIndex, cellIndex, row)"
+            :class="{
+                'editable': canEdit(rowIndex, cellIndex, row),
+                'high-debt-cell': isHighDebtCell(rowIndex, cellIndex, cell, row),
+                'high-debt-row': hasHighDebt(rowIndex, row),
+                'saving': isSaving(rowIndex, cellIndex),
+                'saved': isSaved(rowIndex, cellIndex),
+                'unsaved-change': hasUnsavedChange(rowIndex, cellIndex)
+            }"
+            @blur="saveCell($event, rowIndex, cellIndex, row[0])"
+            @keydown.enter="$event.target.blur()"
+            :title="getCellTitle(rowIndex, cellIndex, row)">
+            <!-- عرض المحتوى مع زر الإرسال في العمود الأول فقط -->
+<div v-if="cellIndex === 0 && rowIndex > 1 && rowIndex < villageData.length - 1" 
+     style="display: flex; align-items: center; gap: 6px; justify-content: center;">
+    <span>{{ cell }}</span>
+    <button @click.stop="sendSMS(rowIndex)" 
+            title="إرسال رسالة SMS"
+            style="background: #25D366; border: none; color: white; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 16px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.4); transition: all 0.3s;">
+        <i class="fas fa-sms"></i>
+    </button>
+</div>
+<!-- عرض عادي للخلايا الأخرى -->
+<span v-else>{{ cell }}</span>
+            <span v-if="hasUnsavedChange(rowIndex, cellIndex)" class="cached-indicator">
+                <i class="fas fa-pencil-alt"></i>
+            </span>
+            <span v-if="isHighDebtCell(rowIndex, cellIndex, cell, row)" class="debt-badge high" style="display: inline-block; margin-right: 5px; padding: 2px 6px; font-size: 12px;">
+                <i class="fas fa-exclamation-circle"></i>
+            </span>
+        </td>
+    </tr>
+</tbody>
             </table>
         </div>
         
@@ -9093,6 +9104,47 @@ console.log('📅 الشهر الحالي:', Context.current.month);
         if (index > -1) savingCells.value.splice(index, 1);
     }
 };
+// ================== دالة إرسال رسالة SMS ==================
+const sendSMS = (rowIndex) => {
+    const row = villageData.value[rowIndex];
+    if (!row || row.length < 14) {
+        showSyncIndicator('❌ بيانات المشترك غير مكتملة', 'error');
+        return;
+    }
+
+    const month = selectedMonth.value.replace('شهر ', '');
+    const previous = row[2] || 0;
+    const current = row[3] || 0;
+    const diff = parseFloat(current) - parseFloat(previous);
+    const value = row[6] || 0;
+    const subscription = row[7] || 0;
+    const total = row[9] || 0;
+    const paid = row[11] || 0;
+    const remaining = row[12] || 0;
+    const name = row[1] || 'المشترك';
+    const phone = row[0] || '';
+
+    // تنظيف رقم الجوال
+    let cleanPhone = phone.toString().trim().replace(/\s/g, '');
+    if (cleanPhone.length === 9 && (cleanPhone.startsWith('77') || cleanPhone.startsWith('73') || cleanPhone.startsWith('71') || cleanPhone.startsWith('70'))) {
+        cleanPhone = '+967' + cleanPhone;
+    }
+
+    const warning = parseFloat(remaining) >= 5000 ? ' ⚠️ إنذار بالفصل' : '';
+
+    const message = `فاتورة شهر ${month}: سابقة: ${previous}, الحالية: ${current}, الفارق: ${diff}, القيمة: ${value}, الاشتراك: ${subscription}, المجموع: ${total}, المسلم: ${paid}, المتبقي: ${remaining}${warning}`;
+
+    if (cleanPhone && cleanPhone.length >= 9) {
+        window.location.href = `sms:${cleanPhone}?body=${encodeURIComponent(message)}`;
+        showSyncIndicator(`✅ تم فتح الرسالة للمشترك ${name}`, 'success');
+    } else {
+        navigator.clipboard.writeText(message).then(() => {
+            showSyncIndicator(`📋 تم نسخ الرسالة للحافظة (رقم الجوال غير صحيح)`, 'warning');
+        }).catch(() => {
+            alert(message);
+        });
+    }
+};
 
         const login = async () => {
             if (password.value === '5566') {
@@ -10810,6 +10862,7 @@ const printDirectorReport = () => {
             onVillageChange,
             onMonthChange,
             saveCell,
+            sendSMS,
             syncAllChanges,
             exportToExcel,
             exportHighDebtToExcel,

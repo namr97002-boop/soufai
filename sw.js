@@ -2,7 +2,8 @@
 // نظام مياه السوفعي - Service Worker المثالي
 // ==========================================
 
-const CACHE_NAME = 'soufai-v8';
+const CACHE_NAME = 'soufai-v9';
+
 
 const FILES_TO_CACHE = [
     './',
