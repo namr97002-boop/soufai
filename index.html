@@ -3884,27 +3884,7 @@ body.focus-mode .table-container th {
         min-width: 100px !important;
     }
 }
-/* ===== الصف الأول والثاني - أزرق وأكثر سماكة ===== */
-.row-0 td {
-    background: linear-gradient(135deg, #0d47a1, #1565c0) !important;
-    color: white !important;
-    font-weight: 900 !important;
-    font-size: 18px !important;
-    padding: 16px 10px !important;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
-    border-bottom: 3px solid rgba(255,255,255,0.25) !important;
-}
 
-.row-1 td {
-    background: linear-gradient(135deg, #1565c0, #1e88e5) !important;
-    color: white !important;
-    font-weight: 900 !important;
-    font-size: 17px !important;
-    padding: 14px 10px !important;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-    border-bottom: 3px solid rgba(255,255,255,0.2) !important;
-}
-<style>
     /* ================================================================
        الأنماط السينمائية المتكاملة مع React + Chart.js
        ================================================================ */
@@ -5329,56 +5309,178 @@ select option {
     font-size: 17px !important;
     text-shadow: 0 0 20px rgba(255, 215, 0, 0.2) !important;
 }
+/* ============================================================
+   🎯 تلوين الصف الأول فقط (row-0) - بدون تثبيت
+   ============================================================ */
 
-/* ===== تأثير النبض البرتقالي ===== */
-@keyframes pulseOrange {
+/* ✅ تلوين الصف الأول - أزرق فاخر */
+#tableWrapper .row-0 td {
+    text-align: center !important;
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    background: linear-gradient(135deg, #0a1628, #0d47a1, #1565c0) !important;
+    color: white !important;
+    padding: 16px 12px !important;
+    border-bottom: 4px solid #4cc9f0 !important;
+    text-shadow: 0 2px 15px rgba(76, 201, 240, 0.3) !important;
+    letter-spacing: 1px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    background-size: 300% 300% !important;
+    animation: gradientMove 4s ease-in-out infinite !important;
+}
+
+/* ✅ حركة التدرج */
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* ✅ تلوين صف المجموع (للتناسق) */
+#tableWrapper .total-row td {
+    background: linear-gradient(135deg, #ffb703, #fb8500) !important;
+    color: #1a1a2e !important;
+    font-weight: 900 !important;
+    font-size: 16px !important;
+    padding: 14px 10px !important;
+    border-top: 3px solid rgba(255, 215, 0, 0.3) !important;
+}
+
+/* ✅ تلوين صفوف المديونية العالية */
+#tableWrapper tbody tr.debt-row td:nth-child(13) {
+    background: linear-gradient(135deg, #ff1744, #d50000) !important;
+    color: white !important;
+    animation: debtPulse 1.5s ease-in-out infinite !important;
+    border-radius: 8px !important;
+    font-weight: 900 !important;
+}
+
+/* ✅ حركة النبض للمديونية */
+@keyframes debtPulse {
     0%, 100% {
-        transform: scale(1.1);
-        box-shadow: 0 0 40px rgba(255, 152, 0, 0.3);
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(255, 23, 68, 0.2);
     }
     50% {
-        transform: scale(1.15);
-        box-shadow: 0 0 80px rgba(255, 152, 0, 0.5);
+        transform: scale(1.05);
+        box-shadow: 0 0 40px rgba(255, 23, 68, 0.4);
     }
 }
+/* ============================================================
+   🎯 تلوين عنوان القرية فقط (داخل thead)
+   ============================================================ */
 
-/* ===== تأثير دخول الصف ===== */
-@keyframes slideInRow {
-    0% {
-        opacity: 0.6;
-        transform: translateX(-15px) scale(0.97);
-    }
-    100% {
-        opacity: 1;
-        transform: translateX(0) scale(1.005);
-    }
+/* ✅ تلوين الصف الأول في thead (عنوان القرية) */
+#tableWrapper thead tr:first-child td {
+    background: linear-gradient(135deg, #0a1628, #0d47a1, #1565c0) !important;
+    color: white !important;
+    text-align: center !important;
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    padding: 16px 12px !important;
+    border-bottom: 4px solid #4cc9f0 !important;
+    text-shadow: 0 2px 15px rgba(76, 201, 240, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+/* ============================================================
+   🎨 تلوين رأس الجدول فقط - أزرق فاخر
+   ============================================================ */
+
+/* ✅ تلوين رأس الجدول (thead) */
+.table-container thead {
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-#tableWrapper tbody tr.selected-row {
-    animation: slideInRow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+/* ✅ تلوين الصف الأول في الرأس (row-0) - اسم القرية */
+.table-container thead tr.row-0 td {
+    background: linear-gradient(135deg, #0a1628, #0d47a1, #1565c0) !important;
+    color: #ffffff !important;
+    font-size: 24px !important;
+    font-weight: 900 !important;
+    text-align: center !important;
+    padding: 18px 15px !important;
+    border-bottom: 4px solid #4cc9f0 !important;
+    text-shadow: 0 0 30px rgba(76, 201, 240, 0.3) !important;
+    letter-spacing: 2px !important;
+    box-shadow: 0 4px 30px rgba(13, 71, 161, 0.3) !important;
 }
 
-/* ===== الصفوف الخاصة لا تتأثر ===== */
-#tableWrapper tbody tr.row-0.selected-row td,
-#tableWrapper tbody tr.row-1.selected-row td,
-#tableWrapper tbody tr.total-row.selected-row td {
-    background: inherit !important;
-    color: inherit !important;
-    border: inherit !important;
+/* ✅ تلوين الصف الثاني في الرأس (row-1) - أسماء الأعمدة */
+.table-container thead tr.row-1 th,
+.table-container thead tr.row-1 td {
+    background: linear-gradient(135deg, #1565c0, #1e88e5, #1976d2) !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    text-align: center !important;
+    padding: 14px 12px !important;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.15) !important;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.2) !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* ✅ تلوين رأس الجدول العادي (إذا لم يكن هناك row-0/row-1) */
+.table-container thead th {
+    background: linear-gradient(135deg, #0d1b2a, #1b3a5c, #0077b6) !important;
+    color: white !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    padding: 15px 12px !important;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.1) !important;
+    text-align: center !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ✅ تأثير hover على رأس الجدول */
+.table-container thead th:hover,
+.table-container thead tr.row-1 th:hover {
+    background: linear-gradient(135deg, #1e88e5, #2196f3) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* ✅ تلوين صف المجموع (إذا كان في الأسفل) - يبقى برتقالي */
+.table-container tbody tr.total-row td {
+    background: linear-gradient(135deg, #ffb703, #fb8500) !important;
+    color: #1a1a2e !important;
+    font-weight: 900 !important;
+    font-size: 17px !important;
+    padding: 14px 10px !important;
+    border-top: 4px solid rgba(255, 215, 0, 0.3) !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 50 !important;
+}
+/* ===== رأس جدول أزرق فاخر مع إلغاء تام للتنسيقات السابقة ===== */
+.row-0 td,
+.row-1 td,
+.table-container thead tr td,
+.table-container thead tr th,
+.table-container thead th,
+#tableWrapper .row-0 td,
+#tableWrapper .row-1 td,
+#tableWrapper thead td,
+#tableWrapper thead th {
+    /* إلغاء كل الخلفيات السابقة */
+    background: #1a237e !important;
+    background-color: #1a237e !important;
+    background-image: none !important;
+    background: #1a237e !important;
+    
+    /* إلغاء أي تنسيقات حدود سابقة ووضع حدود أنيقة */
+    border-color: #0d1445 !important;
+    
+    /* لون النص أبيض مع إلغاء أي تنسيق نص سابق */
+    color: #ffffff !important;
+    text-shadow: none !important;
+    
+    /* إلغاء أي ظلال أو تأثيرات */
     box-shadow: none !important;
-    transform: none !important;
-    animation: none !important;
-}
-
-/* ===== منع التداخل مع التعديل ===== */
-#tableWrapper td.editable:focus {
-    background: rgba(255, 255, 255, 0.25) !important;
-    color: #1a1a1a !important;
-    outline: 4px solid #ffd700 !important;
-    z-index: 10;
-    transform: scale(1.05) !important;
-    box-shadow: 0 0 50px rgba(255, 215, 0, 0.4) !important;
-    border-radius: 8px !important;
+    
+    /* إضافات جمالية للون الأزرق الفاخر */
+    border-bottom: 2px solid #0d1445 !important;
+    font-weight: 600 !important;
 }
     </style>
 </head>
@@ -6350,27 +6452,13 @@ if (window.speechSynthesis) {
                 <div className="login-wrapper">
                     <div className="login-card">
                         <div className="card-inner">
-                            <div className="status-bar-login">
-                                <div className="status-item">
-                                    <span>📶</span>
-                                    <span>{navigator.onLine ? 'متصل' : 'غير متصل'}</span>
-                                </div>
-                                <div className="status-item">
-                                    <span>🕐</span>
-                                    <span>{time}</span>
-                                </div>
-                            </div>
+                    <div className="status-bar-login">
+</div>
 
-                            <div className="drop-zone">
-                                <span className="main-drop">💧</span>
-                                <div className="drop-ring"></div>
-                                <div className="drop-ring"></div>
-                            </div>
+<div className="login-title">مشروع مياه السوفعي</div>
+<div className="login-sub">نظام الرقابة والتحكم المركزي 2026</div>
 
-                            <div className="login-title">مشروع مياه السوفعي</div>
-                            <div className="login-sub">نظام الرقابة والتحكم المركزي 2026</div>
-
-                     <div className="login-time-date">
+<div className="login-time-date">
     <div className="time-display" id="clockDisplay">{time}</div>
     <div className="date-display">
         <span>📅</span>
@@ -6381,7 +6469,6 @@ if (window.speechSynthesis) {
         <span id="hijriDisplay">--</span>
     </div>
 </div>
-
                             <form onSubmit={handleSubmit}>
                                 <div className="input-group">
                                     <input
@@ -8921,285 +9008,323 @@ const loadData = useCallback(async (forceRefresh = false) => {
             }, []);
 
             const renderTable = useCallback(() => {
-                if (!data || data.length === 0) {
-                    return (
-                        <div className="empty-state">
-                            <span className="empty-icon">📭</span>
-                            <p>لا توجد بيانات</p>
-                            <p style={{ fontSize: '14px', marginTop: '10px', opacity: 0.6 }}>
-                                القرية: {village} - {month}
-                            </p>
-                        </div>
-                    );
-                }
-
-                const canEdit = (rowIndex, cellIndex) => {
-                    if (!user || !user.permissions) return false;
-                    if (rowIndex === 0 || rowIndex === 1 || rowIndex === data.length - 1) return false;
-                    return user.permissions.canEdit.includes(cellIndex);
-                };
-
-                const key = `${village}_${month}`;
-                const pending = pendingChanges[key] || [];
-
-                let html = '<table><thead><tr>';
-                if (data[0] && Array.isArray(data[0])) {
-                    data[0].forEach(col => {
-                        html += `<th>${col || ''}</th>`;
-                    });
-                } else {
-                    const columns = ['رقم العداد', 'الاسم', 'قراءة سابقة', 'قراءة حالية', '1-8 م³', '9+ م³', 'قيمة الاستهلاك',
-                        'رسوم ثابتة', 'متأخرات سابقة', 'الإجمالي المطلوب', 'إيرادات أخرى', 'المسلم', 'المتبقي', 'التاريخ'
-                    ];
-                    columns.forEach(col => html += `<th>${col}</th>`);
-                }
-                html += '</tr></thead><tbody>';
-
-                data.forEach((row, index) => {
-                    let rowClass = '';
-                    if (index === 0) rowClass = 'row-0';
-                    else if (index === 1) rowClass = 'row-1';
-                    else if (index === data.length - 1) rowClass = 'total-row';
-                    let isDebtRow = false;
-                    if (Array.isArray(row) && row.length > 12) {
-                        const remaining = parseNumber(row[12]);
-                        if (remaining > 5000 && index > 1 && index < data.length - 1) {
-                            isDebtRow = true;
-                            rowClass += ' debt-row';
-                        }
-                    }
-                    html += `<tr class="${rowClass}" data-row="${index}">`;
-                    if (Array.isArray(row)) {
-                        row.forEach((cell, cellIndex) => {
-                            const pendingChange = pending.find(
-                                c => c.rowIndex === index && c.cellIndex === cellIndex && !c.synced
-                            );
-                            const isSynced = pending.find(
-                                c => c.rowIndex === index && c.cellIndex === cellIndex && c.synced
-                            );
-                            const displayValue = pendingChange ? pendingChange.value : (cell || '');
-                            const isEditable = canEdit(index, cellIndex);
-                            const hasUnsaved = !!pendingChange && !pendingChange.synced;
-
-                            let extraClass = '';
-                            if (isEditable) extraClass += ' editable';
-                            if (hasUnsaved) extraClass += ' unsaved-change';
-                            if (isSynced && !hasUnsaved) extraClass += ' synced-success';
-
-                            html += `<td 
-                                contenteditable="${isEditable ? 'true' : 'false'}"
-                                class="${extraClass}"
-                                data-row="${index}"
-                                data-col="${cellIndex}"
-                                data-meter="${row[0] || ''}"
-                                data-original="${cell || ''}"
-                            >${displayValue}</td>`;
-                        });
-                    } else {
-                        for (let i = 0; i < 14; i++) {
-                            const pendingChange = pending.find(
-                                c => c.rowIndex === index && c.cellIndex === i && !c.synced
-                            );
-                            const isSynced = pending.find(
-                                c => c.rowIndex === index && c.cellIndex === i && c.synced
-                            );
-                            const displayValue = pendingChange ? pendingChange.value : (row[i] || '');
-                            const isEditable = canEdit(index, i);
-                            const hasUnsaved = !!pendingChange && !pendingChange.synced;
-
-                            let extraClass = '';
-                            if (isEditable) extraClass += ' editable';
-                            if (hasUnsaved) extraClass += ' unsaved-change';
-                            if (isSynced && !hasUnsaved) extraClass += ' synced-success';
-
-                            html += `<td 
-                                contenteditable="${isEditable ? 'true' : 'false'}"
-                                class="${extraClass}"
-                                data-row="${index}"
-                                data-col="${i}"
-                                data-meter="${row[0] || ''}"
-                                data-original="${row[i] || ''}"
-                            >${displayValue}</td>`;
-                        }
-                    }
-                    html += '</tr>';
-                });
-
-                html += '</tbody></table>';
-
-                return (
-                    <div
-                        id="tableWrapper"
-                        dangerouslySetInnerHTML={{ __html: html }}
-                        onClick={(e) => {
-                            const cell = e.target.closest('td.editable');
-                            if (cell) {
-                                const rowIndex = parseInt(cell.dataset.row);
-                                const cellIndex = parseInt(cell.dataset.col);
-                                const meterNumber = cell.dataset.meter || '';
-                                const oldValue = cell.dataset.original || '';
-
-                                const onBlur = () => {
-    const newValue = cell.textContent.trim();
-    if (newValue === oldValue) {
-        cell.classList.remove('unsaved-change');
-        return;
+    if (!data || data.length === 0) {
+        return (
+            <div className="empty-state">
+                <span className="empty-icon">📭</span>
+                <p>لا توجد بيانات</p>
+                <p style={{ fontSize: '14px', marginTop: '10px', opacity: 0.6 }}>
+                    القرية: {village} - {month}
+                </p>
+            </div>
+        );
     }
 
-    if (data[rowIndex]) {
-        data[rowIndex][cellIndex] = newValue;
+    const canEdit = (rowIndex, cellIndex) => {
+        if (!user || !user.permissions) return false;
+        if (rowIndex === 0 || rowIndex === 1 || rowIndex === data.length - 1) return false;
+        return user.permissions.canEdit.includes(cellIndex);
+    };
 
-        syncImmediately(village, month, rowIndex, cellIndex, newValue, meterNumber);
+    const key = `${village}_${month}`;
+    const pending = pendingChanges[key] || [];
 
-        if (cellIndex === 11 || cellIndex === 9) {
-            const total = parseNumber(data[rowIndex][9]);
-            const paid = parseNumber(data[rowIndex][11]);
-            data[rowIndex][12] = total - paid;
-
-            syncImmediately(
-                village,
-                month,
-                rowIndex,
-                12,
-                data[rowIndex][12],
-                data[rowIndex][0] || ''
-            );
-
-            const remCell = document.querySelector(
-                `td[data-row="${rowIndex}"][data-col="12"]`
-            );
-            if (remCell) {
-                remCell.textContent = data[rowIndex][12];
-                remCell.dataset.original = data[rowIndex][12];
-            }
-        }
-
-        // ===== 🔥 إضافة معالجة عمود المسلم (العمود 11) وإرسال رسالة =====
-// ===== 🔥 معالجة عمود المسلم (العمود 11) وإرسال رسالة فورية =====
-if (cellIndex === 11) {
-    // ===== منع التكرار المزدوج =====
-    const pendingKey = `${village}_${month}`;
-    const existingPending = pendingChanges[pendingKey] || [];
-    const alreadyPending = existingPending.some(c => 
-        c.rowIndex === rowIndex && c.cellIndex === cellIndex && !c.synced
-    );
+    let html = '<table><thead><tr>';
     
-    if (alreadyPending) {
-        console.log('⏳ تم الحفظ مسبقاً، تجاهل التكرار');
-        return;
+    // ✅ متتبع لعرض اسم القرية (row-0) مرة واحدة فقط
+    let villageDisplayed = false;
+    
+    // ✅ معالجة الصف الأول (row-0) - اسم القرية
+if (data[0] && Array.isArray(data[0]) && data[0].length === 1) {
+    const villageName = data[0][0] || village;
+    html += `<tr class="row-0">
+        <td colspan="14" style="text-align:center;font-size:20px;font-weight:bold;background:#0a1929;color:white;padding:12px;border-bottom:3px solid #1e88e5;">
+            🏘️ ${villageName}
+        </td>
+    </tr>`;
+    villageDisplayed = true;
+} else {
+    // ✅ إذا كان الصف الأول ليس اسم قرية، نضيفه كعنوان عادي
+    if (data[0] && Array.isArray(data[0])) {
+        html += '<tr class="row-0">';
+        data[0].forEach(col => {
+            html += `<th>${col || ''}</th>`;
+        });
+        html += '</tr>';
     }
-    
-    // ===== منع التكرار باستخدام timer =====
-    if (window._paidSaving) {
-        console.log('⏳ جاري الحفظ بالفعل...');
-        return;
-    }
-    window._paidSaving = true;
-    
-    // ✅ حفظ القيمة محلياً أولاً (للمزامنة عند انقطاع النت)
-    markAsPending(village, month, rowIndex, cellIndex, newValue, meterNumber);
-    
-    // ✅ محاولة المزامنة الفورية (إذا كان هناك نت)
-    if (navigator.onLine) {
-        syncImmediately(village, month, rowIndex, cellIndex, newValue, meterNumber);
-    }
-    
-    // ✅ حساب المتبقي للرسالة فقط (ناقص 200)
-    const totalRequired = parseNumber(data[rowIndex][9]) || 0;
-    const paidAmount = parseNumber(newValue) || 0;
-    const remainingReal = totalRequired - paidAmount;
-    const remainingForMessage = remainingReal - 200;
-    
-    showSync('💰 جاري حفظ المبلغ وإرسال الرسالة...', 'info', 2000);
-    
-    // ========== 🔥 إرسال الرسالة فوراً (بغض النظر عن النت) ==========
-    setTimeout(async () => {
-        try {
-            // جلب البيانات من الجدول الحالي
-            const name = data[rowIndex][1] || 'المشترك';
-            
-            // التاريخ
-            const dateValue = data[rowIndex][14];
-            const finalDate = (dateValue && dateValue.toString().trim() !== '') 
-                ? dateValue 
-                : new Date().toLocaleDateString('ar-EG');
-            
-            // معالجة رقم الجوال (من العمود 0)
-            let phone = (data[rowIndex][0] || '').toString().trim().replace(/\s+/g, '');
-            
-            if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('73') || phone.startsWith('71') || phone.startsWith('70'))) {
-                phone = `+967${phone}`;
-            }
-            
-            // 🔥 رسالة التسديد (المتبقي ناقص 200)
-            const message = `عزيزي ${name} لقد قمت بدفع مبلغ ${paidAmount} بتاريخ ${finalDate} والمتبقي عليك ${remainingForMessage}\nأمين الصندوق\nسليمان الفرزعي`;
-            
-            if (phone && (phone.startsWith('+967') || phone.length >= 9)) {
-                // فتح تطبيق الرسائل
-                window.location.href = `sms:${phone}?body=${encodeURIComponent(message)}`;
-                showSync(`✓ تم إرسال رسالة للمشترك ${name}`, 'success', 4000);
-            } else if (phone && phone.length > 0) {
-                // نسخ الرسالة للحافظة إذا كان الرقم غير صحيح
-                await navigator.clipboard.writeText(message);
-                showSync(`⚠ رقم الجوال غير صحيح، تم نسخ الرسالة للحافظة`, 'warning', 4000);
-            } else {
-                // لا يوجد رقم جوال
-                await navigator.clipboard.writeText(message);
-                showSync(`⚠ لا يوجد رقم جوال للمشترك ${name}، تم نسخ الرسالة للحافظة`, 'warning', 4000);
-            }
-            
-        } catch (err) {
-            console.error('خطأ في إرسال الرسالة:', err);
-            // محاولة نسخ الرسالة للحافظة كحل بديل
-            try {
-                const name = data[rowIndex][1] || 'المشترك';
-                const message = `عزيزي ${name} لقد قمت بدفع مبلغ ${paidAmount} بتاريخ ${finalDate} والمتبقي عليك ${remainingForMessage}\nأمين الصندوق\nسليمان الفرزعي`;
-                await navigator.clipboard.writeText(message);
-                showSync(`⚠ حدث خطأ، لكن تم نسخ الرسالة للحافظة`, 'warning', 4000);
-            } catch(e) {
-                showSync(`❌ فشل إرسال الرسالة ونسخها`, 'error', 4000);
-            }
-        }
-    }, 300);
-    
-    // ===== إلغاء قفل التكرار بعد 3 ثواني =====
-    setTimeout(() => {
-        window._paidSaving = false;
-    }, 3000);
-    
-    // ===== منع أي معالجة إضافية =====
-    return;
 }
-// ===== نهاية معالجة عمود المسلم =====
-        // ===== نهاية الإضافة =====
 
-        cell.dataset.original = newValue;
-        setData([...data]);
-        loadPendingChanges();
+    // ✅ الصف الثاني (row-1) - العناوين
+    if (data[1] && Array.isArray(data[1])) {
+        html += '<tr class="row-1">';
+        data[1].forEach(col => {
+            html += `<th style="font-weight:bold;background:#0077b6;color:white;padding:10px;">${col || ''}</th>`;
+        });
+        html += '</tr>';
+    } else {
+        // ✅ عناوين افتراضية في حالة عدم وجودها
+        const columns = ['رقم العداد', 'الاسم', 'قراءة سابقة', 'قراءة حالية', '1-8 م³', '9+ م³', 'قيمة الاستهلاك',
+            'رسوم ثابتة', 'متأخرات سابقة', 'الإجمالي المطلوب', 'إيرادات أخرى', 'المسلم', 'المتبقي', 'التاريخ'
+        ];
+        html += '<tr class="row-1">';
+        columns.forEach(col => html += `<th style="font-weight:bold;background:#0077b6;color:white;padding:10px;">${col}</th>`);
+        html += '</tr>';
     }
-};
-                                cell.removeEventListener('blur', onBlur);
-                                cell.removeEventListener('keydown', (e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        cell.blur();
-                                    }
-                                });
+    
+    html += '</thead><tbody>';
 
-                                cell.addEventListener('blur', onBlur);
-                                cell.addEventListener('keydown', (e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        cell.blur();
-                                    }
-                                });
+    // ✅ صفوف البيانات (من الصف 2 فما فوق، مع تخطي الصفوف المكررة)
+    data.forEach((row, index) => {
+        // ✅ تخطي الصفوف الخاصة (0 و 1) لأننا عالجناها بالفعل
+        if (index === 0 || index === 1) return;
+        
+        if (!row || !Array.isArray(row) || row.length === 0) return;
+        
+        // ✅ التحقق من أن هذا الصف ليس اسم قرية مكرر
+        if (row.length === 1 && typeof row[0] === 'string' && 
+            (row[0].includes('السوفعي') || row[0].includes('العليا') || 
+             row[0].includes('السفلى') || row[0].includes('الشعابي') || 
+             row[0].includes('الجبل') || row[0].includes('حيزان') || 
+             row[0].includes('رقش') || row[0].includes('الضرفة') ||
+             row[0].includes('🏘️'))) {
+            return; // ✅ تخطي صف اسم القرية المكرر
+        }
 
-                                cell.focus();
-                            }
-                        }}
-                    />
+        let rowClass = '';
+        const isTotalRow = (index === data.length - 1);
+        if (isTotalRow) rowClass = 'total-row';
+        
+        let isDebtRow = false;
+        if (Array.isArray(row) && row.length > 12) {
+            const remaining = parseNumber(row[12]);
+            if (remaining > 5000 && index > 1 && index < data.length - 1) {
+                isDebtRow = true;
+                rowClass += ' debt-row';
+            }
+        }
+        
+        html += `<tr class="${rowClass}" data-row="${index}">`;
+        
+        if (Array.isArray(row)) {
+            row.forEach((cell, cellIndex) => {
+                const pendingChange = pending.find(
+                    c => c.rowIndex === index && c.cellIndex === cellIndex && !c.synced
                 );
-            }, [data, village, month, user, pendingChanges, syncImmediately, loadPendingChanges]);
+                const isSynced = pending.find(
+                    c => c.rowIndex === index && c.cellIndex === cellIndex && c.synced
+                );
+                const displayValue = pendingChange ? pendingChange.value : (cell || '');
+                const isEditable = canEdit(index, cellIndex);
+                const hasUnsaved = !!pendingChange && !pendingChange.synced;
+
+                let extraClass = '';
+                if (isEditable) extraClass += ' editable';
+                if (hasUnsaved) extraClass += ' unsaved-change';
+                if (isSynced && !hasUnsaved) extraClass += ' synced-success';
+
+                html += `<td 
+                    contenteditable="${isEditable ? 'true' : 'false'}"
+                    class="${extraClass}"
+                    data-row="${index}"
+                    data-col="${cellIndex}"
+                    data-meter="${row[0] || ''}"
+                    data-original="${cell || ''}"
+                >${displayValue}</td>`;
+            });
+        } else {
+            for (let i = 0; i < 14; i++) {
+                const pendingChange = pending.find(
+                    c => c.rowIndex === index && c.cellIndex === i && !c.synced
+                );
+                const isSynced = pending.find(
+                    c => c.rowIndex === index && c.cellIndex === i && c.synced
+                );
+                const displayValue = pendingChange ? pendingChange.value : (row[i] || '');
+                const isEditable = canEdit(index, i);
+                const hasUnsaved = !!pendingChange && !pendingChange.synced;
+
+                let extraClass = '';
+                if (isEditable) extraClass += ' editable';
+                if (hasUnsaved) extraClass += ' unsaved-change';
+                if (isSynced && !hasUnsaved) extraClass += ' synced-success';
+
+                html += `<td 
+                    contenteditable="${isEditable ? 'true' : 'false'}"
+                    class="${extraClass}"
+                    data-row="${index}"
+                    data-col="${i}"
+                    data-meter="${row[0] || ''}"
+                    data-original="${row[i] || ''}"
+                >${displayValue}</td>`;
+            }
+        }
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+
+    return (
+        <div
+            id="tableWrapper"
+            dangerouslySetInnerHTML={{ __html: html }}
+            onClick={(e) => {
+                const cell = e.target.closest('td.editable');
+                if (cell) {
+                    const rowIndex = parseInt(cell.dataset.row);
+                    const cellIndex = parseInt(cell.dataset.col);
+                    const meterNumber = cell.dataset.meter || '';
+                    const oldValue = cell.dataset.original || '';
+
+                    const onBlur = () => {
+                        const newValue = cell.textContent.trim();
+                        if (newValue === oldValue) {
+                            cell.classList.remove('unsaved-change');
+                            return;
+                        }
+
+                        if (data[rowIndex]) {
+                            data[rowIndex][cellIndex] = newValue;
+
+                            syncImmediately(village, month, rowIndex, cellIndex, newValue, meterNumber);
+
+                            if (cellIndex === 11 || cellIndex === 9) {
+                                const total = parseNumber(data[rowIndex][9]);
+                                const paid = parseNumber(data[rowIndex][11]);
+                                data[rowIndex][12] = total - paid;
+
+                                syncImmediately(
+                                    village,
+                                    month,
+                                    rowIndex,
+                                    12,
+                                    data[rowIndex][12],
+                                    data[rowIndex][0] || ''
+                                );
+
+                                const remCell = document.querySelector(
+                                    `td[data-row="${rowIndex}"][data-col="12"]`
+                                );
+                                if (remCell) {
+                                    remCell.textContent = data[rowIndex][12];
+                                    remCell.dataset.original = data[rowIndex][12];
+                                }
+                            }
+
+                            // ===== معالجة عمود المسلم (العمود 11) وإرسال رسالة =====
+                            if (cellIndex === 11) {
+                                // ===== منع التكرار المزدوج =====
+                                const pendingKey = `${village}_${month}`;
+                                const existingPending = pendingChanges[pendingKey] || [];
+                                const alreadyPending = existingPending.some(c => 
+                                    c.rowIndex === rowIndex && c.cellIndex === cellIndex && !c.synced
+                                );
+                                
+                                if (alreadyPending) {
+                                    console.log('⏳ تم الحفظ مسبقاً، تجاهل التكرار');
+                                    return;
+                                }
+                                
+                                // ===== منع التكرار باستخدام timer =====
+                                if (window._paidSaving) {
+                                    console.log('⏳ جاري الحفظ بالفعل...');
+                                    return;
+                                }
+                                window._paidSaving = true;
+                                
+                                // ✅ حفظ القيمة محلياً أولاً
+                                markAsPending(village, month, rowIndex, cellIndex, newValue, meterNumber);
+                                
+                                // ✅ محاولة المزامنة الفورية
+                                if (navigator.onLine) {
+                                    syncImmediately(village, month, rowIndex, cellIndex, newValue, meterNumber);
+                                }
+                                
+                                // ✅ حساب المتبقي للرسالة
+                                const totalRequired = parseNumber(data[rowIndex][9]) || 0;
+                                const paidAmount = parseNumber(newValue) || 0;
+                                const remainingReal = totalRequired - paidAmount;
+                                const remainingForMessage = remainingReal - 200;
+                                
+                                showSync('💰 جاري حفظ المبلغ وإرسال الرسالة...', 'info', 2000);
+                                
+                                // ========== إرسال الرسالة ==========
+                                setTimeout(async () => {
+                                    try {
+                                        const name = data[rowIndex][1] || 'المشترك';
+                                        
+                                        const dateValue = data[rowIndex][14];
+                                        const finalDate = (dateValue && dateValue.toString().trim() !== '') 
+                                            ? dateValue 
+                                            : new Date().toLocaleDateString('ar-EG');
+                                        
+                                        let phone = (data[rowIndex][0] || '').toString().trim().replace(/\s+/g, '');
+                                        
+                                        if (phone.length === 9 && (phone.startsWith('77') || phone.startsWith('73') || phone.startsWith('71') || phone.startsWith('70'))) {
+                                            phone = `+967${phone}`;
+                                        }
+                                        
+                                        const message = `عزيزي ${name} لقد قمت بدفع مبلغ ${paidAmount} بتاريخ ${finalDate} والمتبقي عليك ${remainingForMessage}\nأمين الصندوق\nسليمان الفرزعي`;
+                                        
+                                        if (phone && (phone.startsWith('+967') || phone.length >= 9)) {
+                                            window.location.href = `sms:${phone}?body=${encodeURIComponent(message)}`;
+                                            showSync(`✓ تم إرسال رسالة للمشترك ${name}`, 'success', 4000);
+                                        } else if (phone && phone.length > 0) {
+                                            await navigator.clipboard.writeText(message);
+                                            showSync(`⚠ رقم الجوال غير صحيح، تم نسخ الرسالة للحافظة`, 'warning', 4000);
+                                        } else {
+                                            await navigator.clipboard.writeText(message);
+                                            showSync(`⚠ لا يوجد رقم جوال للمشترك ${name}، تم نسخ الرسالة للحافظة`, 'warning', 4000);
+                                        }
+                                        
+                                    } catch (err) {
+                                        console.error('خطأ في إرسال الرسالة:', err);
+                                        try {
+                                            const name = data[rowIndex][1] || 'المشترك';
+                                            const message = `عزيزي ${name} لقد قمت بدفع مبلغ ${paidAmount} بتاريخ ${finalDate} والمتبقي عليك ${remainingForMessage}\nأمين الصندوق\nسليمان الفرزعي`;
+                                            await navigator.clipboard.writeText(message);
+                                            showSync(`⚠ حدث خطأ، لكن تم نسخ الرسالة للحافظة`, 'warning', 4000);
+                                        } catch(e) {
+                                            showSync(`❌ فشل إرسال الرسالة ونسخها`, 'error', 4000);
+                                        }
+                                    }
+                                }, 300);
+                                
+                                setTimeout(() => {
+                                    window._paidSaving = false;
+                                }, 3000);
+                                
+                                return;
+                            }
+                            // ===== نهاية معالجة عمود المسلم =====
+
+                            cell.dataset.original = newValue;
+                            setData([...data]);
+                            loadPendingChanges();
+                        }
+                    };
+                    
+                    cell.removeEventListener('blur', onBlur);
+                    cell.removeEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            cell.blur();
+                        }
+                    });
+
+                    cell.addEventListener('blur', onBlur);
+                    cell.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            cell.blur();
+                        }
+                    });
+
+                    cell.focus();
+                }
+            }}
+        />
+    );
+}, [data, village, month, user, pendingChanges, syncImmediately, loadPendingChanges, markAsPending, showSync]);
             // ============================================================
 //  دوال الرسائل النصية - جميع المشتركين
 // ============================================================
@@ -10543,20 +10668,9 @@ useEffect(() => {
                                     )}
                                 </div>
 
-                                {/* ===== تذييل سينمائي ===== */}
+                                {/* ===== تذييل ===== */}
                                 <div className="developer-signature">
-                                    <span className="sig-icon">💻</span>
-                                    <span>نظام مياه السوفعي - تصميم وتطوير: نصر العامري</span>
-                                    <span className="sig-badge sync-badge">🚀 يعمل بدون إنترنت</span>
-                                    <span className="sig-badge search-badge">🤖 بحث ذكي متطور</span>
-                                    <span className="sig-badge sync-badge">⚡ مزامنة تلقائية</span>
-                                    <span className="sig-badge ai-badge-sig">🧠 ذكاء اصطناعي متكامل</span>
-                                    <span className="sig-badge chart-badge">📊 رسوم بيانية تفاعلية</span>
-                                    {pendingCount > 0 && (
-                                        <span style={{ color: '#ffb703', fontWeight: 'bold' }}>
-                                            ⚡ {pendingCount} تغيير {isOnline ? 'في الانتظار' : 'معلق'}
-                                        </span>
-                                    )}
+                                    <span>برمجة وتطوير: نصر العامري</span>
                                 </div>
                             </div>
                         </div>
@@ -15271,5 +15385,6 @@ console.log('✅ تم تفعيل دوال نافذة الذاكرة البديل
 
 })();
 </script>
+
 </body>
 </html>
