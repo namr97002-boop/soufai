@@ -17006,5 +17006,72 @@ const sendSingleSmsAll = useCallback((subscriber) => {
     
 })();
 </script>
+<script>
+// ============================================================
+//  🔥 منع الشاشة البيضاء - حل جذري
+// ============================================================
+(function() {
+    'use strict';
+    
+    // ===== 1. حفظ شاشة الدخول في localStorage =====
+    try {
+        localStorage.setItem('soufai_login_page', document.documentElement.outerHTML);
+        console.log('✅ تم حفظ شاشة الدخول');
+    } catch(e) {}
+    
+    // ===== 2. إذا كانت الصفحة بيضاء، نستعيد من localStorage =====
+    if (document.body.innerHTML.trim() === '' || 
+        document.body.textContent.trim() === '' ||
+        document.querySelector('.login-wrapper') === null) {
+        
+        console.log('⚠️ كشف صفحة بيضاء - جاري الاستعادة...');
+        
+        try {
+            const saved = localStorage.getItem('soufai_login_page');
+            if (saved && saved.length > 1000) {
+                document.open();
+                document.write(saved);
+                document.close();
+                console.log('✅ تم استعادة شاشة الدخول');
+            }
+        } catch(e) {
+            console.error('❌ فشل الاستعادة:', e);
+        }
+    }
+    
+    // ===== 3. مراقبة الـ DOM لمنع الشاشة البيضاء =====
+    if (window.MutationObserver) {
+        let timeout;
+        const observer = new MutationObserver(() => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                // إذا لم تظهر شاشة الدخول بعد 3 ثواني
+                const login = document.querySelector('.login-wrapper');
+                const app = document.querySelector('.app-container');
+                
+                if (!login && !app) {
+                    console.log('⚠️ لم تظهر شاشة الدخول - جاري الاستعادة...');
+                    try {
+                        const saved = localStorage.getItem('soufai_login_page');
+                        if (saved && saved.length > 1000) {
+                            document.open();
+                            document.write(saved);
+                            document.close();
+                        }
+                    } catch(e) {}
+                }
+            }, 3000);
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true
+        });
+    }
+    
+    console.log('🔒 نظام منع الشاشة البيضاء جاهز');
+})();
+</script>
 </body>
 </html>
