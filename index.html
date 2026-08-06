@@ -17007,71 +17007,85 @@ const sendSingleSmsAll = useCallback((subscriber) => {
 })();
 </script>
 <script>
-// ============================================================
-//  🔥 منع الشاشة البيضاء - حل جذري
-// ============================================================
-(function() {
-    'use strict';
-    
-    // ===== 1. حفظ شاشة الدخول في localStorage =====
-    try {
-        localStorage.setItem('soufai_login_page', document.documentElement.outerHTML);
-        console.log('✅ تم حفظ شاشة الدخول');
-    } catch(e) {}
-    
-    // ===== 2. إذا كانت الصفحة بيضاء، نستعيد من localStorage =====
-    if (document.body.innerHTML.trim() === '' || 
-        document.body.textContent.trim() === '' ||
-        document.querySelector('.login-wrapper') === null) {
-        
-        console.log('⚠️ كشف صفحة بيضاء - جاري الاستعادة...');
-        
-        try {
-            const saved = localStorage.getItem('soufai_login_page');
-            if (saved && saved.length > 1000) {
-                document.open();
-                document.write(saved);
-                document.close();
-                console.log('✅ تم استعادة شاشة الدخول');
-            }
-        } catch(e) {
-            console.error('❌ فشل الاستعادة:', e);
+    (function() {
+        'use strict';
+
+        // ============================================================
+        //  🔥 تسجيل Service Worker مع تخزين فوري للصفحة
+        // ============================================================
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js', { scope: './' })
+                .then(function(reg) {
+                    console.log('✅ Service Worker مسجل بنجاح');
+
+                    // ===== تخزين الصفحة الحالية فوراً =====
+                    if (reg.active) {
+                        reg.active.postMessage({
+                            type: 'CACHE_PAGE',
+                            url: window.location.href
+                        });
+                    }
+
+                    // ===== مراقبة حالة الـ SW =====
+                    if (reg.installing) {
+                        console.log('⏳ جاري تثبيت الـ SW...');
+                    } else if (reg.waiting) {
+                        console.log('⏳ الـ SW في انتظار التفعيل...');
+                    } else if (reg.active) {
+                        console.log('✅ الـ SW نشط وجاهز');
+                    }
+
+                })
+                .catch(function(err) {
+                    console.warn('⚠️ فشل تسجيل Service Worker:', err);
+                });
+
+            // ===== مراقبة تغييرات الـ SW =====
+            navigator.serviceWorker.addEventListener('controllerchange', function() {
+                console.log('🔄 تم تغيير الـ SW، إعادة تحميل الصفحة...');
+                window.location.reload();
+            });
         }
-    }
-    
-    // ===== 3. مراقبة الـ DOM لمنع الشاشة البيضاء =====
-    if (window.MutationObserver) {
-        let timeout;
-        const observer = new MutationObserver(() => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                // إذا لم تظهر شاشة الدخول بعد 3 ثواني
-                const login = document.querySelector('.login-wrapper');
-                const app = document.querySelector('.app-container');
-                
-                if (!login && !app) {
-                    console.log('⚠️ لم تظهر شاشة الدخول - جاري الاستعادة...');
-                    try {
-                        const saved = localStorage.getItem('soufai_login_page');
-                        if (saved && saved.length > 1000) {
-                            document.open();
-                            document.write(saved);
-                            document.close();
-                        }
-                    } catch(e) {}
+
+        // ============================================================
+        //  💾 حفظ الصفحة في localStorage كنسخة احتياطية
+        // ============================================================
+
+        try {
+            // حفظ شاشة الدخول (للحالات الطارئة)
+            localStorage.setItem('soufai_login_page', document.documentElement.outerHTML);
+            localStorage.setItem('soufai_last_save', new Date().toISOString());
+            console.log('✅ تم حفظ شاشة الدخول في localStorage');
+        } catch(e) {
+            console.warn('⚠️ فشل حفظ شاشة الدخول:', e);
+        }
+
+        // ============================================================
+        //  📶 استعادة شاشة الدخول عند انقطاع النت (حل احتياطي)
+        // ============================================================
+
+        if (!navigator.onLine) {
+            console.log('📶 غير متصل - جاري استعادة شاشة الدخول...');
+            try {
+                const saved = localStorage.getItem('soufai_login_page');
+                if (saved && saved.length > 1000) {
+                    // نستعيد فقط إذا كانت الصفحة فارغة
+                    if (document.body.innerHTML.trim() === '' || 
+                        document.querySelector('.login-wrapper') === null) {
+                        document.open();
+                        document.write(saved);
+                        document.close();
+                        console.log('✅ تم استعادة شاشة الدخول من localStorage');
+                    }
                 }
-            }, 3000);
-        });
-        
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true
-        });
-    }
-    
-    console.log('🔒 نظام منع الشاشة البيضاء جاهز');
-})();
+            } catch(e) {
+                console.error('❌ فشل استعادة شاشة الدخول:', e);
+            }
+        }
+
+        console.log('🔒 نظام التشغيل بدون إنترنت جاهز 100%');
+    })();
 </script>
 </body>
 </html>
