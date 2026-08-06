@@ -5482,6 +5482,1217 @@ select option {
     border-bottom: 2px solid #0d1445 !important;
     font-weight: 600 !important;
 }
+/* ================================================================
+   🎯 تلوين العمود 13 (المتبقي) - أقل من 5000 = خلفية سوداء ونص أبيض
+   ✅ استثناء الصف الأخير (صف المجموع)
+   ================================================================ */
+
+/* ===== إلغاء كل التلوين السابق للعمود 13 ===== */
+#tableWrapper tbody td:nth-child(13) {
+    background: transparent !important;
+    background-image: none !important;
+    animation: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border-left: none !important;
+    border-right: none !important;
+}
+
+/* ===== تلوين العمود 13 للصفوف العادية فقط (ما عدا الصف الأخير) ===== */
+#tableWrapper tbody tr:not(.row-0):not(.row-1):not(.total-row):not(:last-child) td:nth-child(13) {
+    background: #000000 !important;
+    color: #ffffff !important;
+    font-weight: 900 !important;
+    border-left: 3px solid #333333 !important;
+    border-right: 3px solid #333333 !important;
+    transition: all 0.3s ease !important;
+}
+
+/* ===== المتبقي 5000 فأكثر - أحمر متوهج ===== */
+#tableWrapper tbody tr:not(.row-0):not(.row-1):not(.total-row):not(:last-child) td:nth-child(13).high-debt {
+    background: linear-gradient(135deg, #ff1744, #d50000) !important;
+    color: #ffffff !important;
+    border-left: 3px solid #ff1744 !important;
+    border-right: 3px solid #ff1744 !important;
+    animation: debtPulse 1.5s ease-in-out infinite !important;
+    border-radius: 8px !important;
+}
+
+/* ===== المتبقي صفر - أسود مع أزرق ===== */
+#tableWrapper tbody tr:not(.row-0):not(.row-1):not(.total-row):not(:last-child) td:nth-child(13).zero-debt {
+    background: #000000 !important;
+    color: #4cc9f0 !important;
+    border-left: 3px solid #4cc9f0 !important;
+    border-right: 3px solid #4cc9f0 !important;
+}
+
+/* ===== المتبقي أقل من 5000 - أسود مع أبيض (الافتراضي) ===== */
+#tableWrapper tbody tr:not(.row-0):not(.row-1):not(.total-row):not(:last-child) td:nth-child(13).low-debt {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-left: 3px solid #333333 !important;
+    border-right: 3px solid #333333 !important;
+}
+
+/* ===== الصف الأخير (المجموع) يبقى برتقالي ===== */
+#tableWrapper tbody tr:last-child td:nth-child(13),
+#tableWrapper tbody tr.total-row td:nth-child(13) {
+    background: linear-gradient(135deg, #ffb703, #fb8500) !important;
+    color: #1a1a1a !important;
+    font-weight: 900 !important;
+    border: none !important;
+    animation: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* ===== حركة النبض للمديونية العالية ===== */
+@keyframes debtPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(255, 23, 68, 0.2);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px rgba(255, 23, 68, 0.4);
+    }
+}
+/* ================================================================
+   🎨 تلوين جميع الأزرار باللون الأزرق الفاخر
+   ================================================================ */
+
+/* ===== جميع الأزرار في المشروع ===== */
+.btn,
+button:not(.close-report-modal):not(.search-result-close):not(.close-fullscreen):not(.ai-report-close):not(.btn-enter):not(.btn-theme):not(.voice-btn) {
+    background: linear-gradient(135deg, #1a237e, #0d47a1, #1565c0) !important;
+    border: 2px solid rgba(26, 35, 126, 0.3) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 20px rgba(26, 35, 126, 0.3) !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    font-weight: 700 !important;
+}
+
+/* ===== hover ===== */
+.btn:hover,
+button:not(.close-report-modal):not(.search-result-close):not(.close-fullscreen):not(.ai-report-close):not(.btn-enter):not(.btn-theme):not(.voice-btn):hover {
+    background: linear-gradient(135deg, #0d47a1, #0a1628, #1a237e) !important;
+    border-color: rgba(26, 35, 126, 0.6) !important;
+    box-shadow: 0 8px 35px rgba(26, 35, 126, 0.5) !important;
+    transform: translateY(-3px) scale(1.03) !important;
+}
+
+/* ===== active (عند الضغط) ===== */
+.btn:active,
+button:not(.close-report-modal):not(.search-result-close):not(.close-fullscreen):not(.ai-report-close):not(.btn-enter):not(.btn-theme):not(.voice-btn):active {
+    transform: scale(0.95) !important;
+}
+
+/* ================================================================
+   🔥 استثناءات - أزرار تبقى كما هي
+   ================================================================ */
+
+/* ===== زر الدخول في شاشة الدخول ===== */
+.btn-enter {
+    background: linear-gradient(135deg, #ffb703, #fb8500) !important;
+    color: #1a1a2e !important;
+    box-shadow: 0 5px 25px rgba(255, 183, 3, 0.4) !important;
+}
+.btn-enter:hover {
+    background: linear-gradient(135deg, #fb8500, #f7971e) !important;
+    box-shadow: 0 8px 35px rgba(255, 183, 3, 0.5) !important;
+}
+
+/* ===== زر الخروج ===== */
+.btn-danger,
+button[title="خروج"] {
+    background: linear-gradient(135deg, #dc3545, #b02a37) !important;
+    border-color: rgba(220, 53, 69, 0.3) !important;
+    color: white !important;
+}
+.btn-danger:hover,
+button[title="خروج"]:hover {
+    background: linear-gradient(135deg, #b02a37, #8b1a2b) !important;
+    box-shadow: 0 8px 35px rgba(220, 53, 69, 0.5) !important;
+}
+
+/* ===== زر المزامنة اليدوية (يظل ذهبي) ===== */
+.btn-sync-gold,
+button:has(.btn-sync-gold),
+button[style*="background: linear-gradient(135deg, #ffb703, #fb8500)"] {
+    background: linear-gradient(135deg, #ffb703, #fb8500) !important;
+    color: #1a1a2e !important;
+    box-shadow: 0 4px 25px rgba(255, 183, 3, 0.4) !important;
+    border-color: rgba(255, 183, 3, 0.3) !important;
+}
+.btn-sync-gold:hover,
+button:has(.btn-sync-gold):hover,
+button[style*="background: linear-gradient(135deg, #ffb703, #fb8500)"]:hover {
+    background: linear-gradient(135deg, #fb8500, #f7971e) !important;
+    box-shadow: 0 8px 45px rgba(255, 183, 3, 0.6) !important;
+}
+
+/* ===== زر المدير ===== */
+.btn-director-blue {
+    background: linear-gradient(135deg, #1a237e, #0d47a1) !important;
+    border-color: rgba(26, 35, 126, 0.3) !important;
+    color: white !important;
+    box-shadow: 0 4px 20px rgba(26, 35, 126, 0.3) !important;
+}
+.btn-director-blue:hover {
+    background: linear-gradient(135deg, #0d47a1, #0a1628) !important;
+    box-shadow: 0 8px 35px rgba(26, 35, 126, 0.5) !important;
+}
+
+/* ===== زر الرسائل النصية (يظل أخضر) ===== */
+button[title="الرسائل النصية - جميع المشتركين"] {
+    background: linear-gradient(135deg, #25D366, #128C7E) !important;
+    border-color: rgba(37, 211, 102, 0.3) !important;
+    color: white !important;
+}
+button[title="الرسائل النصية - جميع المشتركين"]:hover {
+    background: linear-gradient(135deg, #128C7E, #0a6b5c) !important;
+    box-shadow: 0 8px 35px rgba(37, 211, 102, 0.5) !important;
+}
+
+/* ===== زر المديونيات (يظل أحمر) ===== */
+button[title="المديونيات العالية (5000+)"] {
+    background: linear-gradient(135deg, #ff4757, #ff3838) !important;
+    border-color: rgba(255, 71, 87, 0.3) !important;
+    color: white !important;
+}
+button[title="المديونيات العالية (5000+)"]:hover {
+    background: linear-gradient(135deg, #ff3838, #d63031) !important;
+    box-shadow: 0 8px 35px rgba(255, 71, 87, 0.5) !important;
+}
+
+/* ===== زر الذاكرة (يظل بنفسجي) ===== */
+button[title="إدارة الذاكرة"] {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+    border-color: rgba(124, 58, 237, 0.3) !important;
+    color: white !important;
+}
+button[title="إدارة الذاكرة"]:hover {
+    background: linear-gradient(135deg, #6d28d9, #5b21b6) !important;
+    box-shadow: 0 8px 35px rgba(124, 58, 237, 0.5) !important;
+}
+
+/* ================================================================
+   🌙 الوضع الليلي
+   ================================================================ */
+[data-theme="night"] .btn,
+[data-theme="night"] button:not(.close-report-modal):not(.search-result-close):not(.close-fullscreen):not(.ai-report-close):not(.btn-enter):not(.btn-theme):not(.voice-btn) {
+    background: linear-gradient(135deg, #0d47a1, #0a1628) !important;
+    border-color: rgba(13, 71, 161, 0.3) !important;
+}
+[data-theme="night"] .btn:hover,
+[data-theme="night"] button:not(.close-report-modal):not(.search-result-close):not(.close-fullscreen):not(.ai-report-close):not(.btn-enter):not(.btn-theme):not(.voice-btn):hover {
+    background: linear-gradient(135deg, #0a1628, #061120) !important;
+    box-shadow: 0 8px 35px rgba(13, 71, 161, 0.4) !important;
+}
+
+/* ================================================================
+   🌑 الوضع الداكن
+   ================================================================ */
+[data-theme="dark"] .btn,
+[data-theme="dark"] button:not(.close-report-modal):not(.search-result-close):not(.close-fullscreen):not(.ai-report-close):not(.btn-enter):not(.btn-theme):not(.voice-btn) {
+    background: linear-gradient(135deg, #0a1628, #030814) !important;
+    border-color: rgba(10, 22, 40, 0.3) !important;
+}
+[data-theme="dark"] .btn:hover,
+[data-theme="dark"] button:not(.close-report-modal):not(.search-result-close):not(.close-fullscreen):not(.ai-report-close):not(.btn-enter):not(.btn-theme):not(.voice-btn):hover {
+    background: linear-gradient(135deg, #030814, #000000) !important;
+    box-shadow: 0 8px 35px rgba(10, 22, 40, 0.4) !important;
+}
+
+/* ================================================================
+   ⭐ الوضع الطليعي PRO
+   ================================================================ */
+[data-theme="pro"] .btn,
+[data-theme="pro"] button:not(.close-report-modal):not(.search-result-close):not(.close-fullscreen):not(.ai-report-close):not(.btn-enter):not(.btn-theme):not(.voice-btn) {
+    background: linear-gradient(135deg, #1e3a5f, #0f172a) !important;
+    border-color: rgba(30, 58, 95, 0.2) !important;
+    color: #7dd3fc !important;
+}
+[data-theme="pro"] .btn:hover,
+[data-theme="pro"] button:not(.close-report-modal):not(.search-result-close):not(.close-fullscreen):not(.ai-report-close):not(.btn-enter):not(.btn-theme):not(.voice-btn):hover {
+    background: linear-gradient(135deg, #1e40af, #1e3a5f) !important;
+    box-shadow: 0 10px 40px rgba(30, 58, 95, 0.3) !important;
+}
+/* ================================================================
+   📊 تجميل وتلوين نافذة الرسائل النصية - جميع الأعمدة
+   ================================================================ */
+
+/* ===== نافذة الرسائل النصية - تلوين الجدول بالكامل ===== */
+
+/* ===== رأس الجدول ===== */
+.report-modal .report-table thead th,
+.report-modal table thead th {
+    background: linear-gradient(135deg, #0a1628, #1a237e, #0d47a1) !important;
+    color: #ffffff !important;
+    font-weight: 900 !important;
+    font-size: 14px !important;
+    padding: 14px 12px !important;
+    text-align: center !important;
+    border-bottom: 3px solid #4cc9f0 !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+}
+
+/* ===== صفوف الجدول بالتناوب ===== */
+.report-modal .report-table tbody tr:nth-child(even),
+.report-modal table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.report-modal .report-table tbody tr:nth-child(odd),
+.report-modal table tbody tr:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.01) !important;
+}
+
+/* ===== hover على الصفوف ===== */
+.report-modal .report-table tbody tr:hover td,
+.report-modal table tbody tr:hover td {
+    background: rgba(76, 201, 240, 0.08) !important;
+    transform: scale(1.001) !important;
+}
+
+/* ================================================================
+   🎨 تلوين الأعمدة (حسب الترتيب)
+   ================================================================ */
+
+/* ===== العمود 1: # (الرقم التسلسلي) ===== */
+.report-modal .report-table tbody td:nth-child(1),
+.report-modal table tbody td:nth-child(1) {
+    color: #4cc9f0 !important;
+    font-weight: 900 !important;
+    font-size: 14px !important;
+}
+
+/* ===== العمود 2: 🏘️ القرية ===== */
+.report-modal .report-table tbody td:nth-child(2),
+.report-modal table tbody td:nth-child(2) {
+    color: #ffb703 !important;
+    font-weight: 900 !important;
+    font-size: 14px !important;
+}
+
+/* ===== العمود 3: 👤 الاسم ===== */
+.report-modal .report-table tbody td:nth-child(3),
+.report-modal table tbody td:nth-child(3) {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    text-align: right !important;
+}
+
+/* ===== العمود 4: 📱 رقم الجوال ===== */
+.report-modal .report-table tbody td:nth-child(4),
+.report-modal table tbody td:nth-child(4) {
+    color: #4cc9f0 !important;
+    font-weight: 700 !important;
+    direction: ltr !important;
+    font-size: 13px !important;
+}
+
+/* ===== العمود 5: 💰 المطلوب ===== */
+.report-modal .report-table tbody td:nth-child(5),
+.report-modal table tbody td:nth-child(5) {
+    color: #4cc9f0 !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+}
+
+/* ===== العمود 6: 💵 المسلم ===== */
+.report-modal .report-table tbody td:nth-child(6),
+.report-modal table tbody td:nth-child(6) {
+    color: #00b09b !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+}
+
+/* ===== العمود 7: 📊 المتبقي ===== */
+.report-modal .report-table tbody td:nth-child(7),
+.report-modal table tbody td:nth-child(7) {
+    color: #ffb703 !important;
+    font-weight: 900 !important;
+    font-size: 15px !important;
+}
+
+/* ===== المتبقي 5000+ (مديونية عالية) ===== */
+.report-modal .report-table tbody tr.high-debt-row td:nth-child(7),
+.report-modal table tbody tr.high-debt-row td:nth-child(7) {
+    color: #ff4757 !important;
+    font-size: 16px !important;
+    animation: debtPulse 1.5s ease-in-out infinite !important;
+}
+
+/* ===== العمود 8: 📨 إرسال (زر الإرسال) ===== */
+.report-modal .report-table tbody td:last-child,
+.report-modal table tbody td:last-child {
+    text-align: center !important;
+}
+
+/* ===== زر الإرسال داخل الجدول ===== */
+.report-modal .report-table tbody td:last-child button,
+.report-modal table tbody td:last-child button {
+    background: linear-gradient(135deg, #25D366, #128C7E) !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 50% !important;
+    width: 38px !important;
+    height: 38px !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+}
+
+.report-modal .report-table tbody td:last-child button:hover,
+.report-modal table tbody td:last-child button:hover {
+    transform: scale(1.15) !important;
+    box-shadow: 0 6px 25px rgba(37, 211, 102, 0.5) !important;
+}
+
+/* ===== أيقونة التنبيه على زر الإرسال (للمديونية العالية) ===== */
+.report-modal .report-table tbody td:last-child button .alert-badge,
+.report-modal table tbody td:last-child button .alert-badge {
+    position: absolute !important;
+    top: -4px !important;
+    right: -4px !important;
+    background: #ff4757 !important;
+    border-radius: 50% !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+    font-weight: 900 !important;
+    font-size: 10px !important;
+    box-shadow: 0 2px 10px rgba(255, 71, 87, 0.3) !important;
+}
+
+/* ================================================================
+   🔥 صف المجموع (آخر صف)
+   ================================================================ */
+
+.report-modal .report-table tbody tr:last-child td,
+.report-modal table tbody tr:last-child td {
+    background: linear-gradient(135deg, #ffb703, #fb8500) !important;
+    color: #1a1a2e !important;
+    font-weight: 900 !important;
+    font-size: 15px !important;
+    padding: 14px 12px !important;
+    border-top: 3px solid rgba(255, 215, 0, 0.3) !important;
+    border-bottom: none !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 5 !important;
+}
+
+.report-modal .report-table tbody tr:last-child td:nth-child(7),
+.report-modal table tbody tr:last-child td:nth-child(7) {
+    color: #1a1a2e !important;
+    font-size: 16px !important;
+}
+
+/* ================================================================
+   🎨 تلوين شريط البحث وأزرار التحكم
+   ================================================================ */
+
+/* ===== حقل البحث ===== */
+.report-modal .report-search-input {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 2px solid rgba(76, 201, 240, 0.2) !important;
+    border-radius: 12px !important;
+    color: #ffffff !important;
+    padding: 10px 16px !important;
+    font-family: 'Tajawal', sans-serif !important;
+    font-size: 14px !important;
+    transition: all 0.3s ease !important;
+}
+
+.report-modal .report-search-input:focus {
+    border-color: #4cc9f0 !important;
+    box-shadow: 0 0 30px rgba(76, 201, 240, 0.15) !important;
+    outline: none !important;
+}
+
+.report-modal .report-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* ===== أزرار الأشهر ===== */
+.report-modal .report-month-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 2px solid rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    padding: 6px 16px !important;
+    border-radius: 20px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    font-family: 'Tajawal', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+.report-modal .report-month-btn:hover {
+    background: rgba(76, 201, 240, 0.15) !important;
+    border-color: #4cc9f0 !important;
+    transform: translateY(-2px) !important;
+}
+
+.report-modal .report-month-btn.active {
+    background: linear-gradient(135deg, #1a237e, #0d47a1) !important;
+    border-color: #4cc9f0 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 20px rgba(26, 35, 126, 0.3) !important;
+}
+
+.report-modal .report-month-btn.total-btn {
+    background: linear-gradient(135deg, #ffb703, #fb8500) !important;
+    border-color: #ffb703 !important;
+    color: #1a1a2e !important;
+    box-shadow: 0 4px 20px rgba(255, 183, 3, 0.3) !important;
+}
+
+/* ===== زر التحديث ===== */
+.report-modal .refresh-btn {
+    background: linear-gradient(135deg, #1a237e, #0d47a1) !important;
+    border: 2px solid rgba(26, 35, 126, 0.3) !important;
+    color: #ffffff !important;
+    padding: 8px 20px !important;
+    border-radius: 20px !important;
+    cursor: pointer !important;
+    font-family: 'Tajawal', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    transition: all 0.3s ease !important;
+}
+
+.report-modal .refresh-btn:hover {
+    background: linear-gradient(135deg, #0d47a1, #0a1628) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 25px rgba(26, 35, 126, 0.3) !important;
+}
+
+/* ================================================================
+   📱 تحسينات الجوال
+   ================================================================ */
+
+@media (max-width: 768px) {
+    .report-modal .report-table thead th,
+    .report-modal table thead th {
+        font-size: 11px !important;
+        padding: 8px 6px !important;
+    }
+    
+    .report-modal .report-table tbody td,
+    .report-modal table tbody td {
+        font-size: 11px !important;
+        padding: 6px 4px !important;
+    }
+    
+    .report-modal .report-table tbody td:nth-child(7),
+    .report-modal table tbody td:nth-child(7) {
+        font-size: 13px !important;
+    }
+    
+    .report-modal .report-month-btn {
+        font-size: 11px !important;
+        padding: 4px 12px !important;
+    }
+}
+/* ================================================================
+   📊 تجميل وتلوين تقرير القرى - عصري واحترافي
+   ================================================================ */
+
+/* ===== رأس الجدول ===== */
+.report-modal .report-table thead th,
+.report-modal .report-table thead td {
+    background: linear-gradient(135deg, #0a1628, #1a237e, #0d47a1) !important;
+    color: #ffffff !important;
+    font-weight: 900 !important;
+    font-size: 14px !important;
+    padding: 14px 12px !important;
+    text-align: center !important;
+    border-bottom: 3px solid #4cc9f0 !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    white-space: nowrap !important;
+}
+
+/* ===== صفوف الجدول بالتناوب ===== */
+.report-modal .report-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.report-modal .report-table tbody tr:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.01) !important;
+}
+
+/* ===== hover على الصفوف ===== */
+.report-modal .report-table tbody tr:hover td {
+    background: rgba(76, 201, 240, 0.08) !important;
+    transform: scale(1.001) !important;
+}
+
+/* ================================================================
+   🎨 تلوين الأعمدة في تقرير القرى
+   ================================================================ */
+
+/* ===== العمود 1: # (الرقم التسلسلي) ===== */
+.report-modal .report-table tbody td:nth-child(1) {
+    color: #4cc9f0 !important;
+    font-weight: 900 !important;
+    font-size: 14px !important;
+    text-align: center !important;
+}
+
+/* ===== العمود 2: اسم القرية ===== */
+.report-modal .report-table tbody td:nth-child(2) {
+    color: #ffb703 !important;
+    font-weight: 900 !important;
+    font-size: 14px !important;
+    text-align: center !important;
+}
+
+/* ===== العمود 3: الاسم (رئيسي) ===== */
+.report-modal .report-table tbody td:nth-child(3) {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    text-align: right !important;
+    padding-right: 15px !important;
+}
+
+/* ===== العمود 4: 1-8 م³ ===== */
+.report-modal .report-table tbody td:nth-child(4) {
+    color: #00b09b !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    text-align: center !important;
+}
+
+/* ===== العمود 5: 9+ م³ ===== */
+.report-modal .report-table tbody td:nth-child(5) {
+    color: #ffb703 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    text-align: center !important;
+}
+
+/* ===== العمود 6: المطلوب ===== */
+.report-modal .report-table tbody td:nth-child(6) {
+    color: #4cc9f0 !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    text-align: center !important;
+}
+
+/* ===== العمود 7: المسلم ===== */
+.report-modal .report-table tbody td:nth-child(7) {
+    color: #00b09b !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    text-align: center !important;
+}
+
+/* ===== العمود 8: المتبقي ===== */
+.report-modal .report-table tbody td:nth-child(8) {
+    color: #ffb703 !important;
+    font-weight: 900 !important;
+    font-size: 15px !important;
+    text-align: center !important;
+}
+
+/* ===== المتبقي 5000+ (مديونية عالية) ===== */
+.report-modal .report-table tbody tr.high-debt-row td:nth-child(8) {
+    color: #ff4757 !important;
+    font-size: 16px !important;
+    animation: debtPulse 1.5s ease-in-out infinite !important;
+}
+
+/* ===== العمود 9: نسبة التحصيل ===== */
+.report-modal .report-table tbody td:nth-child(9) {
+    font-weight: 900 !important;
+    font-size: 14px !important;
+    text-align: center !important;
+}
+
+/* ===== نسبة التحصيل - حسب القيمة ===== */
+.report-modal .report-table tbody td:nth-child(9).high {
+    color: #00b09b !important;
+}
+.report-modal .report-table tbody td:nth-child(9).medium {
+    color: #ffb703 !important;
+}
+.report-modal .report-table tbody td:nth-child(9).low {
+    color: #ff4757 !important;
+}
+
+/* ===== العمود 10: الحالة (أيقونة) ===== */
+.report-modal .report-table tbody td:nth-child(10) {
+    font-size: 18px !important;
+    text-align: center !important;
+}
+
+/* ================================================================
+   🔥 صف المجموع (آخر صف)
+   ================================================================ */
+
+.report-modal .report-table tbody tr:last-child td,
+.report-modal .report-table tbody tr.total-row td {
+    background: linear-gradient(135deg, #ffb703, #fb8500) !important;
+    color: #1a1a2e !important;
+    font-weight: 900 !important;
+    font-size: 15px !important;
+    padding: 14px 12px !important;
+    border-top: 3px solid rgba(255, 215, 0, 0.3) !important;
+    border-bottom: none !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 5 !important;
+}
+
+.report-modal .report-table tbody tr:last-child td:nth-child(8),
+.report-modal .report-table tbody tr.total-row td:nth-child(8) {
+    color: #1a1a2e !important;
+    font-size: 16px !important;
+}
+
+/* ================================================================
+   🎨 تلوين رأس التقرير (العنوان)
+   ================================================================ */
+
+.report-modal .report-modal-header {
+    background: linear-gradient(135deg, #0a1628, #1a237e, #0d47a1) !important;
+    border-bottom: 3px solid #4cc9f0 !important;
+}
+
+.report-modal .report-modal-header h2 {
+    color: #ffffff !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.report-modal .report-modal-header .cached-indicator {
+    background: rgba(76, 201, 240, 0.2) !important;
+    border: 1px solid rgba(76, 201, 240, 0.3) !important;
+    color: #4cc9f0 !important;
+}
+
+/* ================================================================
+   🎨 تلوين إحصائيات التقرير (البطاقات)
+   ================================================================ */
+
+.report-modal .report-stats {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    margin-bottom: 16px !important;
+}
+
+.report-modal .report-stat-box {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 14px !important;
+    padding: 15px 20px !important;
+    text-align: center !important;
+    flex: 1 !important;
+    min-width: 80px !important;
+    transition: all 0.3s ease !important;
+}
+
+.report-modal .report-stat-box:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2) !important;
+}
+
+.report-modal .report-stat-box .number {
+    font-size: 24px !important;
+    font-weight: 900 !important;
+    color: #4cc9f0 !important;
+}
+
+.report-modal .report-stat-box .label {
+    font-size: 12px !important;
+    opacity: 0.6 !important;
+    margin-top: 4px !important;
+}
+
+/* ================================================================
+   🎨 تلوين شريط التحكم في التقرير
+   ================================================================ */
+
+.report-modal .report-controls {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 14px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 16px !important;
+}
+
+/* ===== أزرار الأشهر ===== */
+.report-modal .report-month-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 2px solid rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    padding: 6px 16px !important;
+    border-radius: 20px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    font-family: 'Tajawal', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+.report-modal .report-month-btn:hover {
+    background: rgba(76, 201, 240, 0.15) !important;
+    border-color: #4cc9f0 !important;
+    transform: translateY(-2px) !important;
+}
+
+.report-modal .report-month-btn.active {
+    background: linear-gradient(135deg, #1a237e, #0d47a1) !important;
+    border-color: #4cc9f0 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 20px rgba(26, 35, 126, 0.3) !important;
+}
+
+.report-modal .report-month-btn.total-btn {
+    background: linear-gradient(135deg, #ffb703, #fb8500) !important;
+    border-color: #ffb703 !important;
+    color: #1a1a2e !important;
+    box-shadow: 0 4px 20px rgba(255, 183, 3, 0.3) !important;
+}
+
+/* ===== حقل البحث ===== */
+.report-modal .report-search-input {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 2px solid rgba(76, 201, 240, 0.2) !important;
+    border-radius: 12px !important;
+    color: #ffffff !important;
+    padding: 10px 16px !important;
+    font-family: 'Tajawal', sans-serif !important;
+    font-size: 14px !important;
+    transition: all 0.3s ease !important;
+}
+
+.report-modal .report-search-input:focus {
+    border-color: #4cc9f0 !important;
+    box-shadow: 0 0 30px rgba(76, 201, 240, 0.15) !important;
+    outline: none !important;
+}
+
+.report-modal .report-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* ===== زر التحديث ===== */
+.report-modal .refresh-btn {
+    background: linear-gradient(135deg, #1a237e, #0d47a1) !important;
+    border: 2px solid rgba(26, 35, 126, 0.3) !important;
+    color: #ffffff !important;
+    padding: 8px 20px !important;
+    border-radius: 20px !important;
+    cursor: pointer !important;
+    font-family: 'Tajawal', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    transition: all 0.3s ease !important;
+}
+
+.report-modal .refresh-btn:hover {
+    background: linear-gradient(135deg, #0d47a1, #0a1628) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 25px rgba(26, 35, 126, 0.3) !important;
+}
+
+/* ================================================================
+   🎯 حركة النبض للمديونية العالية
+   ================================================================ */
+
+@keyframes debtPulse {
+    0%, 100% {
+        transform: scale(1);
+        text-shadow: 0 0 10px rgba(255, 71, 87, 0.2);
+    }
+    50% {
+        transform: scale(1.05);
+        text-shadow: 0 0 25px rgba(255, 71, 87, 0.4);
+    }
+}
+
+/* ================================================================
+   📱 تحسينات الجوال
+   ================================================================ */
+
+@media (max-width: 768px) {
+    .report-modal .report-table thead th,
+    .report-modal .report-table thead td {
+        font-size: 11px !important;
+        padding: 8px 6px !important;
+    }
+    
+    .report-modal .report-table tbody td {
+        font-size: 11px !important;
+        padding: 6px 4px !important;
+    }
+    
+    .report-modal .report-table tbody td:nth-child(8) {
+        font-size: 13px !important;
+    }
+    
+    .report-modal .report-stat-box .number {
+        font-size: 18px !important;
+    }
+    
+    .report-modal .report-month-btn {
+        font-size: 11px !important;
+        padding: 4px 12px !important;
+    }
+}
+/* ================================================================
+   📊 تجميل تقرير القرى والرسائل النصية - خط عريض وأسماء سوداء
+   ================================================================ */
+
+/* ================================================================
+   🎯 1. تقرير القرى - جميع النصوص عريضة
+   ================================================================ */
+
+/* ===== جميع النصوص في تقرير القرى ===== */
+.report-modal .report-table td,
+.report-modal .report-table th,
+.report-modal .report-table td *,
+.report-modal .report-table th * {
+    font-weight: 900 !important;
+    font-family: 'Tajawal', 'Segoe UI', sans-serif !important;
+}
+
+/* ===== رأس الجدول ===== */
+.report-modal .report-table thead th,
+.report-modal .report-table thead td {
+    font-weight: 900 !important;
+    font-size: 18px !important;
+    letter-spacing: 1px !important;
+}
+
+/* ===== جميع خلايا الجسم ===== */
+.report-modal .report-table tbody td {
+    font-weight: 900 !important;
+    font-size: 17px !important;
+}
+
+/* ===== الأرقام فقط ===== */
+.report-modal .report-table tbody td:not(:nth-child(3)) {
+    font-weight: 900 !important;
+}
+
+/* ===== صف المجموع ===== */
+.report-modal .report-table tbody tr:last-child td,
+.report-modal .report-table tbody tr.total-row td {
+    font-weight: 900 !important;
+    font-size: 19px !important;
+}
+
+/* ================================================================
+   🎯 2. الرسائل النصية - جميع النصوص عريضة
+   ================================================================ */
+
+/* ===== جميع النصوص في جدول الرسائل ===== */
+.report-modal .sms-table td,
+.report-modal .sms-table th,
+.report-modal .sms-table td *,
+.report-modal .sms-table th *,
+.report-modal table:not(.report-table) td,
+.report-modal table:not(.report-table) th,
+.report-modal table:not(.report-table) td *,
+.report-modal table:not(.report-table) th * {
+    font-weight: 900 !important;
+    font-family: 'Tajawal', 'Segoe UI', sans-serif !important;
+}
+
+/* ===== رأس جدول الرسائل ===== */
+.report-modal .sms-table thead th,
+.report-modal .sms-table thead td,
+.report-modal table:not(.report-table) thead th,
+.report-modal table:not(.report-table) thead td {
+    font-weight: 900 !important;
+    font-size: 18px !important;
+    letter-spacing: 1px !important;
+}
+
+/* ===== جميع خلايا جدول الرسائل ===== */
+.report-modal .sms-table tbody td,
+.report-modal table:not(.report-table) tbody td {
+    font-weight: 900 !important;
+    font-size: 17px !important;
+}
+
+/* ===== الأرقام فقط في جدول الرسائل ===== */
+.report-modal .sms-table tbody td:not(:nth-child(3)),
+.report-modal table:not(.report-table) tbody td:not(:nth-child(3)) {
+    font-weight: 900 !important;
+}
+
+/* ================================================================
+   🎯 3. الأسماء في الرسائل النصية - لون أسود
+   ================================================================ */
+
+/* ===== عمود الاسم في جدول الرسائل ===== */
+.report-modal .sms-table tbody td:nth-child(3),
+.report-modal table:not(.report-table) tbody td:nth-child(3) {
+    color: #000000 !important;
+    font-weight: 900 !important;
+    font-size: 18px !important;
+    text-align: right !important;
+    padding-right: 15px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 6px !important;
+    text-shadow: none !important;
+}
+
+/* ===== الاسم في وضع الـ hover ===== */
+.report-modal .sms-table tbody tr:hover td:nth-child(3),
+.report-modal table:not(.report-table) tbody tr:hover td:nth-child(3) {
+    color: #000000 !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* ===== الاسم مع مديونية عالية ===== */
+.report-modal .sms-table tbody tr.high-debt-row td:nth-child(3),
+.report-modal table:not(.report-table) tbody tr.high-debt-row td:nth-child(3) {
+    color: #000000 !important;
+    background: rgba(255, 200, 200, 0.9) !important;
+    border-right: 4px solid #ff4757 !important;
+}
+
+/* ================================================================
+   🎯 4. الأسماء في تقرير القرى - لون أبيض (لأن الخلفية داكنة)
+   ================================================================ */
+
+/* ===== عمود الاسم في تقرير القرى ===== */
+.report-modal .report-table tbody td:nth-child(3) {
+    color: #ffffff !important;
+    font-weight: 900 !important;
+    font-size: 18px !important;
+    text-align: right !important;
+    padding-right: 15px !important;
+}
+
+/* ================================================================
+   🎯 5. تحسينات إضافية للخطوط
+   ================================================================ */
+
+/* ===== أرقام المتبقي (أكثر سمكاً) ===== */
+.report-modal .report-table tbody td:nth-child(8),
+.report-modal .sms-table tbody td:nth-child(7),
+.report-modal table:not(.report-table) tbody td:nth-child(7) {
+    font-weight: 900 !important;
+    font-size: 19px !important;
+}
+
+/* ===== أرقام المطلوب والمسلم ===== */
+.report-modal .report-table tbody td:nth-child(6),
+.report-modal .report-table tbody td:nth-child(7),
+.report-modal .sms-table tbody td:nth-child(5),
+.report-modal .sms-table tbody td:nth-child(6),
+.report-modal table:not(.report-table) tbody td:nth-child(5),
+.report-modal table:not(.report-table) tbody td:nth-child(6) {
+    font-weight: 900 !important;
+    font-size: 18px !important;
+}
+
+/* ===== نسبة التحصيل ===== */
+.report-modal .report-table tbody td:nth-child(9) {
+    font-weight: 900 !important;
+    font-size: 18px !important;
+}
+
+/* ================================================================
+   🎯 6. التوقيع - إعداد وتطوير نصر العامري - ذهبي فاخر
+   ================================================================ */
+
+/* ===== التوقيع في شاشة الدخول ===== */
+.designer-signature .designer-name,
+.designer-signature .designer-label {
+    font-weight: 900 !important;
+}
+
+.designer-signature .designer-name {
+    font-size: 32px !important;
+    font-weight: 900 !important;
+    background: linear-gradient(135deg, #ffd700, #ffb703, #f7971e, #ffd700) !important;
+    background-size: 300% 300% !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    animation: goldShine 3s ease-in-out infinite !important;
+    text-shadow: none !important;
+    letter-spacing: 2px !important;
+}
+
+/* ===== التوقيع في التطبيق الرئيسي ===== */
+.developer-signature,
+.developer-signature * {
+    font-weight: 900 !important;
+}
+
+.developer-signature {
+    font-size: 20px !important;
+    background: linear-gradient(135deg, rgba(10, 22, 40, 0.95), rgba(26, 35, 126, 0.8)) !important;
+    border: 2px solid rgba(255, 215, 0, 0.2) !important;
+    border-radius: 16px !important;
+    padding: 16px 24px !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
+}
+
+.developer-signature span {
+    background: linear-gradient(135deg, #ffd700, #ffb703, #f7971e, #ffd700) !important;
+    background-size: 300% 300% !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    animation: goldShine 3s ease-in-out infinite !important;
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    letter-spacing: 1px !important;
+}
+
+/* ===== حركة الذهب المتلألئ ===== */
+@keyframes goldShine {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* ================================================================
+   🌙 الوضع الليلي - الأسماء تبقى سوداء
+   ================================================================ */
+
+[data-theme="night"] .report-modal .sms-table tbody td:nth-child(3),
+[data-theme="night"] .report-modal table:not(.report-table) tbody td:nth-child(3) {
+    color: #000000 !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-theme="night"] .report-modal .sms-table tbody tr:hover td:nth-child(3),
+[data-theme="night"] .report-modal table:not(.report-table) tbody tr:hover td:nth-child(3) {
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* ================================================================
+   🌑 الوضع الداكن - الأسماء تبقى سوداء
+   ================================================================ */
+
+[data-theme="dark"] .report-modal .sms-table tbody td:nth-child(3),
+[data-theme="dark"] .report-modal table:not(.report-table) tbody td:nth-child(3) {
+    color: #000000 !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .report-modal .sms-table tbody tr:hover td:nth-child(3),
+[data-theme="dark"] .report-modal table:not(.report-table) tbody tr:hover td:nth-child(3) {
+    background: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* ================================================================
+   ⭐ الوضع الطليعي PRO - الأسماء تبقى سوداء
+   ================================================================ */
+
+[data-theme="pro"] .report-modal .sms-table tbody td:nth-child(3),
+[data-theme="pro"] .report-modal table:not(.report-table) tbody td:nth-child(3) {
+    color: #000000 !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="pro"] .report-modal .sms-table tbody tr:hover td:nth-child(3),
+[data-theme="pro"] .report-modal table:not(.report-table) tbody tr:hover td:nth-child(3) {
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* ================================================================
+   📱 تحسينات الجوال
+   ================================================================ */
+
+@media (max-width: 768px) {
+    .report-modal .report-table tbody td,
+    .report-modal .sms-table tbody td,
+    .report-modal table:not(.report-table) tbody td {
+        font-size: 14px !important;
+    }
+    
+    .report-modal .sms-table tbody td:nth-child(3),
+    .report-modal table:not(.report-table) tbody td:nth-child(3) {
+        font-size: 15px !important;
+    }
+    
+    .report-modal .report-table tbody td:nth-child(8),
+    .report-modal .sms-table tbody td:nth-child(7),
+    .report-modal table:not(.report-table) tbody td:nth-child(7) {
+        font-size: 16px !important;
+    }
+    
+    .developer-signature {
+        font-size: 16px !important;
+        padding: 12px 16px !important;
+    }
+    
+    .developer-signature span {
+        font-size: 18px !important;
+    }
+    
+    .designer-signature .designer-name {
+        font-size: 24px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .report-modal .report-table tbody td,
+    .report-modal .sms-table tbody td,
+    .report-modal table:not(.report-table) tbody td {
+        font-size: 12px !important;
+    }
+    
+    .report-modal .sms-table tbody td:nth-child(3),
+    .report-modal table:not(.report-table) tbody td:nth-child(3) {
+        font-size: 13px !important;
+    }
+    
+    .report-modal .report-table tbody td:nth-child(8),
+    .report-modal .sms-table tbody td:nth-child(7),
+    .report-modal table:not(.report-table) tbody td:nth-child(7) {
+        font-size: 14px !important;
+    }
+    
+    .developer-signature {
+        font-size: 13px !important;
+        padding: 10px 12px !important;
+    }
+    
+    .developer-signature span {
+        font-size: 15px !important;
+    }
+    
+    .designer-signature .designer-name {
+        font-size: 20px !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -8178,7 +9389,7 @@ const [loadingVillages, setLoadingVillages] = useState(false);
     }
 
     if (!navigator.onLine) {
-        showSync('📶 لا يوجد اتصال بالإنترنت، سيتم المزامنة عند عودة النت', 'warning', 2000);
+        showSync('?? لا يوجد اتصال بالإنترنت، سيتم المزامنة عند عودة النت', 'warning', 2000);
         return;
     }
 
@@ -11491,11 +12702,8 @@ useEffect(() => {
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
-<!-- ================================================================
-     نظام المزامنة الفورية المتطور - مدمج في نفس الملف
-     ================================================================ -->
 <script>
-//  نظام إرسال الرسائل - النسخة المتطورة
+//  نظام إرسال الرسائل - نسخة فائقة السرعة مع إصلاح الأزرار
 // ============================================================
 
 (function() {
@@ -11508,10 +12716,10 @@ useEffect(() => {
     const CONFIG = {
         BUTTON_SIZE: 28,
         BUTTON_COLOR: '#25D366',
-        DEBOUNCE_DELAY: 150,
-        CACHE_EXPIRY: 5000,
-        TOAST_DURATION: 2000,
-        MAX_RETRIES: 3
+        DEBOUNCE_DELAY: 30,
+        CACHE_EXPIRY: 15000,
+        TOAST_DURATION: 1500,
+        MAX_RETRIES: 2
     };
     
     let state = {
@@ -11519,7 +12727,8 @@ useEffect(() => {
         month: null,
         isProcessing: false,
         initialized: false,
-        retryCount: 0
+        retryCount: 0,
+        renderTimeout: null
     };
     
     // ============================================================
@@ -11528,7 +12737,15 @@ useEffect(() => {
     
     class MonthDetector {
         constructor() {
-            this.sources = [
+            this.cachedMonth = null;
+        }
+        
+        detect() {
+            if (this.cachedMonth) return this.cachedMonth;
+            if (state.month) return state.month;
+            
+            // محاولة الحصول على الشهر من مصادر مختلفة
+            const sources = [
                 this.fromSelects.bind(this),
                 this.fromText.bind(this),
                 this.fromElements.bind(this),
@@ -11539,33 +12756,26 @@ useEffect(() => {
                 this.fromURL.bind(this),
                 this.fromDate.bind(this)
             ];
-        }
-        
-        detect() {
-            // استخدام الكاش أولاً
-            if (state.month) return state.month;
             
-            // تجربة كل المصادر
-            for (const source of this.sources) {
+            for (const source of sources) {
                 const result = source();
                 if (result) {
+                    this.cachedMonth = result;
                     state.month = result;
-                    console.log(`📅 تم اكتشاف الشهر: ${result} من ${source.name}`);
                     return result;
                 }
             }
             
-            // استخدام الشهر الحالي كحل أخير
-            const fallback = new Date().getMonth() + 1;
-            console.log(`⚠️ استخدام الشهر الحالي: ${fallback}`);
-            state.month = fallback.toString();
-            return state.month;
+            const fallback = (new Date().getMonth() + 1).toString();
+            this.cachedMonth = fallback;
+            state.month = fallback;
+            return fallback;
         }
         
         fromSelects() {
             const selects = document.querySelectorAll('select');
-            for (const sel of selects) {
-                const text = sel.value || sel.textContent || '';
+            for (let i = 0; i < selects.length; i++) {
+                const text = selects[i].value || selects[i].textContent || '';
                 const match = text.match(/شهر\s*(\d+)/);
                 if (match) return match[1];
             }
@@ -11585,8 +12795,8 @@ useEffect(() => {
         
         fromElements() {
             const elements = document.querySelectorAll('[class*="month" i], [id*="month" i], [data-month]');
-            for (const el of elements) {
-                const text = el.textContent || el.value || el.dataset.month || '';
+            for (let i = 0; i < elements.length; i++) {
+                const text = elements[i].textContent || elements[i].value || elements[i].dataset.month || '';
                 const match = text.match(/\d+/);
                 if (match) return match[0];
             }
@@ -11597,10 +12807,10 @@ useEffect(() => {
             const storages = [localStorage, sessionStorage];
             const keys = ['currentMonth', 'month', 'selectedMonth', 'monthNumber'];
             
-            for (const storage of storages) {
+            for (let s = 0; s < storages.length; s++) {
                 try {
-                    for (const key of keys) {
-                        const value = storage.getItem(key);
+                    for (let k = 0; k < keys.length; k++) {
+                        const value = storages[s].getItem(keys[k]);
                         if (value) {
                             const match = value.match(/\d+/);
                             if (match) return match[0];
@@ -11613,9 +12823,9 @@ useEffect(() => {
         
         fromWindow() {
             const keys = ['__currentMonth', 'month', 'selectedMonth', 'currentMonth'];
-            for (const key of keys) {
-                if (window[key]) {
-                    const value = window[key].toString();
+            for (let i = 0; i < keys.length; i++) {
+                if (window[keys[i]]) {
+                    const value = window[keys[i]].toString();
                     const match = value.match(/\d+/);
                     if (match) return match[0];
                 }
@@ -11630,8 +12840,8 @@ useEffect(() => {
         
         fromTableHeaders() {
             const headers = document.querySelectorAll('th, caption, thead td');
-            for (const el of headers) {
-                const match = el.textContent.match(/شهر\s*(\d+)/);
+            for (let i = 0; i < headers.length; i++) {
+                const match = headers[i].textContent.match(/شهر\s*(\d+)/);
                 if (match) return match[1];
             }
             return null;
@@ -11666,10 +12876,7 @@ useEffect(() => {
             
             const getText = (cell) => {
                 if (!cell) return '';
-                // إزالة الأزرار فقط
-                const clone = cell.cloneNode(true);
-                clone.querySelectorAll('button').forEach(b => b.remove());
-                return clone.textContent.trim();
+                return cell.textContent.trim();
             };
             
             return {
@@ -11694,7 +12901,6 @@ useEffect(() => {
                 }
             }
             
-            // من DOM
             const tableWrapper = document.getElementById('tableWrapper');
             if (!tableWrapper) return null;
             
@@ -11718,15 +12924,16 @@ useEffect(() => {
             const rows = tableWrapper.querySelectorAll('tbody tr');
             const result = [];
             const month = this.getMonth();
+            const totalRows = rows.length;
             
-            rows.forEach((row, index) => {
-                if (index === 0 || index === 1 || index === rows.length - 1) return;
-                const data = this.extractRowData(row);
+            // استثناء الصف الأخير فقط
+            for (let i = 0; i < totalRows - 1; i++) {
+                const data = this.extractRowData(rows[i]);
                 if (data) {
                     data.month = month;
-                    result.push({ index, data, row });
+                    result.push({ index: i, data, row: rows[i] });
                 }
-            });
+            }
             
             return result;
         }
@@ -11749,41 +12956,42 @@ useEffect(() => {
             btn.title = 'إرسال رسالة';
             btn.setAttribute('data-index', index);
             
-            Object.assign(btn.style, {
-                background: CONFIG.BUTTON_COLOR,
-                border: 'none',
-                color: 'white',
-                borderRadius: '50%',
-                width: CONFIG.BUTTON_SIZE + 'px',
-                height: CONFIG.BUTTON_SIZE + 'px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginLeft: '6px',
-                flexShrink: '0',
-                verticalAlign: 'middle',
-                boxShadow: '0 2px 8px rgba(37,211,102,0.4)',
-                transition: 'all 0.2s ease'
-            });
+            btn.style.cssText = `
+                background: ${CONFIG.BUTTON_COLOR};
+                border: none;
+                color: white;
+                border-radius: 50%;
+                width: ${CONFIG.BUTTON_SIZE}px;
+                height: ${CONFIG.BUTTON_SIZE}px;
+                cursor: pointer;
+                font-size: 14px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                margin-left: 6px;
+                flex-shrink: 0;
+                vertical-align: middle;
+                box-shadow: 0 2px 8px rgba(37,211,102,0.4);
+                transition: all 0.15s ease;
+            `;
             
             // أحداث الـ Hover
-            btn.addEventListener('mouseenter', () => {
-                btn.style.transform = 'scale(1.15)';
-                btn.style.boxShadow = '0 4px 16px rgba(37,211,102,0.6)';
+            btn.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+                this.style.boxShadow = '0 4px 16px rgba(37,211,102,0.6)';
             });
             
-            btn.addEventListener('mouseleave', () => {
-                btn.style.transform = 'scale(1)';
-                btn.style.boxShadow = '0 2px 8px rgba(37,211,102,0.4)';
+            btn.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+                this.style.boxShadow = '0 2px 8px rgba(37,211,102,0.4)';
             });
             
-            // حدث النقر
-            btn.addEventListener('click', (e) => {
+            // حدث النقر - الأهم
+            btn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 e.preventDefault();
-                const idx = parseInt(btn.getAttribute('data-index'));
+                const idx = parseInt(this.getAttribute('data-index'));
+                console.log('🔘 تم النقر على الزر رقم:', idx);
                 window.sendSMSOptimized(idx);
             });
             
@@ -11791,47 +12999,58 @@ useEffect(() => {
         }
         
         renderButtons() {
+            // إلغاء أي عملية تقديم معلقة
+            if (state.renderTimeout) {
+                clearTimeout(state.renderTimeout);
+                state.renderTimeout = null;
+            }
+            
             // حذف الأزرار القديمة
-            document.querySelectorAll('.send-btn-added').forEach(btn => btn.remove());
+            const oldButtons = document.querySelectorAll('.send-btn-added');
+            for (let i = 0; i < oldButtons.length; i++) {
+                oldButtons[i].remove();
+            }
             
             const rows = this.dataManager.getAllRows();
             if (rows.length === 0) {
                 if (state.retryCount < CONFIG.MAX_RETRIES) {
                     state.retryCount++;
-                    setTimeout(() => this.renderButtons(), CONFIG.DEBOUNCE_DELAY * 2);
+                    state.renderTimeout = setTimeout(() => this.renderButtons(), CONFIG.DEBOUNCE_DELAY * 2);
                 }
                 return;
             }
             
-            // إعادة تعيين عدد المحاولات
             state.retryCount = 0;
             
             // تخزين البيانات في الكاش
-            rows.forEach(({ index, data }) => {
+            for (let i = 0; i < rows.length; i++) {
+                const { index, data } = rows[i];
                 state.cache.set(index, {
                     data: data,
                     timestamp: Date.now()
                 });
-            });
+            }
             
             // إضافة الأزرار
-            rows.forEach(({ index, row }) => {
+            let addedCount = 0;
+            for (let i = 0; i < rows.length; i++) {
+                const { index, row } = rows[i];
                 const cells = row.querySelectorAll('td');
-                if (cells.length < 2) return;
+                if (cells.length < 2) continue;
                 
                 const meterCell = cells[0];
-                if (!meterCell || meterCell.querySelector('.send-btn-added')) return;
+                if (!meterCell || meterCell.querySelector('.send-btn-added')) continue;
                 
                 const btn = this.createButton(index);
-                meterCell.prepend(btn);
-            });
+                meterCell.insertBefore(btn, meterCell.firstChild);
+                addedCount++;
+            }
             
-            console.log(`✅ تم إضافة ${rows.length} زر إرسال`);
+            console.log(`✅ تم إضافة ${addedCount} زر إرسال`);
             state.initialized = true;
         }
         
         showToast(message, type = 'success') {
-            // إزالة التوست القديم
             const oldToast = document.querySelector('.custom-toast');
             if (oldToast) oldToast.remove();
             
@@ -11846,29 +13065,30 @@ useEffect(() => {
                 warning: '#FF9800'
             };
             
-            Object.assign(toast.style, {
-                position: 'fixed',
-                bottom: '20px',
-                right: '20px',
-                background: colors[type] || colors.success,
-                color: 'white',
-                padding: '12px 24px',
-                borderRadius: '10px',
-                fontSize: '14px',
-                zIndex: '9999',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-                animation: 'slideInRight 0.3s ease',
-                fontFamily: 'Arial, sans-serif',
-                direction: 'rtl'
-            });
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: ${colors[type] || colors.success};
+                color: white;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-size: 13px;
+                z-index: 9999;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+                animation: slideInRight 0.25s ease;
+                font-family: Arial, sans-serif;
+                direction: rtl;
+                opacity: 1;
+            `;
             
             document.body.appendChild(toast);
             
             clearTimeout(this.toastTimer);
             this.toastTimer = setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s';
-                setTimeout(() => toast.remove(), 300);
+                toast.style.transition = 'opacity 0.25s';
+                setTimeout(() => toast.remove(), 250);
             }, CONFIG.TOAST_DURATION);
         }
         
@@ -11889,16 +13109,19 @@ useEffect(() => {
         constructor() {
             this.dataManager = new DataManager();
             this.uiManager = new UIManager(this.dataManager);
+            this.updateTimer = null;
         }
         
         init() {
-            // التأكد من وجود الجدول
+            // تأكد من وجود الجدول
             const checkTable = () => {
                 const tableWrapper = document.getElementById('tableWrapper');
                 if (tableWrapper) {
-                    this.uiManager.renderButtons();
+                    requestAnimationFrame(() => {
+                        this.uiManager.renderButtons();
+                    });
                 } else {
-                    setTimeout(checkTable, 200);
+                    setTimeout(checkTable, 100);
                 }
             };
             
@@ -11906,10 +13129,9 @@ useEffect(() => {
             
             // مراقبة التغييرات
             const observer = new MutationObserver((mutations) => {
-                // التحقق من وجود تغييرات مهمة
                 let shouldUpdate = false;
-                for (const mutation of mutations) {
-                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                for (let i = 0; i < mutations.length; i++) {
+                    if (mutations[i].type === 'childList' && mutations[i].addedNodes.length > 0) {
                         shouldUpdate = true;
                         break;
                     }
@@ -11918,7 +13140,9 @@ useEffect(() => {
                 if (shouldUpdate) {
                     clearTimeout(this.updateTimer);
                     this.updateTimer = setTimeout(() => {
-                        this.uiManager.renderButtons();
+                        requestAnimationFrame(() => {
+                            this.uiManager.renderButtons();
+                        });
                     }, CONFIG.DEBOUNCE_DELAY);
                 }
             });
@@ -11928,10 +13152,12 @@ useEffect(() => {
                 subtree: true
             });
             
-            console.log('🚀 نظام الإرسال جاهز');
+            console.log('🚀 نظام الإرسال جاهز - يستثني الصف الأخير فقط');
         }
         
         send(rowIndex) {
+            console.log('📤 محاولة إرسال للصف:', rowIndex);
+            
             if (state.isProcessing) {
                 this.uiManager.showToast('⏳ جاري المعالجة...', 'warning');
                 return;
@@ -11940,38 +13166,49 @@ useEffect(() => {
             state.isProcessing = true;
             
             try {
-                // جلب البيانات
                 const data = this.dataManager.getRowData(rowIndex);
+                console.log('📊 البيانات المستخرجة:', data);
+                
                 if (!data) {
                     this.uiManager.showError('البيانات غير مكتملة');
                     state.isProcessing = false;
                     return;
                 }
                 
-                // بناء الرسالة
+                // التحقق من وجود رقم هاتف
+                if (!data.phone || data.phone.trim() === '') {
+                    this.uiManager.showError('رقم الهاتف غير موجود');
+                    state.isProcessing = false;
+                    return;
+                }
+                
                 const diff = parseFloat(data.current) - parseFloat(data.previous);
                 const remainingNum = parseFloat(data.remaining);
                 const warning = remainingNum >= 5000 ? ' ⚠️ إنذار بالفصل' : '';
                 
-                // ✅ الحفاظ على النص الكامل كما هو
                 const message = `فاتورة شهر ${data.month}: سابقة: ${data.previous}, الحالية: ${data.current}, الفارق: ${diff}, القيمة: ${data.value}, الاشتراك: ${data.subscription}, المجموع: ${data.total}, المسلم: ${data.paid}, المتبقي: ${data.remaining}${warning}`;
                 
-                // تنظيف رقم الهاتف
+                console.log('📝 الرسالة:', message);
+                
                 let phone = data.phone.toString().trim().replace(/\s/g, '');
                 if (phone.startsWith('0')) phone = phone.substring(1);
                 if (phone.length === 9 && phone.startsWith('7')) {
                     phone = '+967' + phone;
                 }
                 
-                // الإرسال
+                console.log('📱 رقم الهاتف بعد التنسيق:', phone);
+                
                 if (phone.length >= 9) {
-                    window.location.href = `sms:${phone}?body=${encodeURIComponent(message)}`;
+                    const smsUrl = `sms:${phone}?body=${encodeURIComponent(message)}`;
+                    console.log('🔗 فتح الرابط:', smsUrl);
+                    window.location.href = smsUrl;
                     this.uiManager.showSuccess('تم فتح تطبيق الرسائل');
                 } else {
+                    // نسخ الرسالة للحافظة
                     navigator.clipboard.writeText(message).then(() => {
                         this.uiManager.showSuccess('تم نسخ الرسالة');
                     }).catch(() => {
-                        // نسخ احتياطي
+                        // طريقة بديلة للنسخ
                         const textarea = document.createElement('textarea');
                         textarea.value = message;
                         document.body.appendChild(textarea);
@@ -11983,13 +13220,13 @@ useEffect(() => {
                 }
                 
             } catch (error) {
-                console.error('خطأ:', error);
+                console.error('❌ خطأ:', error);
                 this.uiManager.showError(error.message || 'حدث خطأ غير متوقع');
             }
             
             setTimeout(() => {
                 state.isProcessing = false;
-            }, 500);
+            }, 300);
         }
     }
     
@@ -12027,21 +13264,31 @@ useEffect(() => {
     
     const smsManager = new SMSManager();
     
-    // جعل الدوال متاحة عالمياً
-    window.sendSMSOptimized = (index) => smsManager.send(index);
-    window.initSendButtons = () => smsManager.uiManager.renderButtons();
-    window.getMonth = () => smsManager.dataManager.getMonth();
+    // تعريف الدوال العالمية
+    window.sendSMSOptimized = function(index) {
+        console.log('🌐 تم استدعاء sendSMSOptimized من العام:', index);
+        smsManager.send(index);
+    };
+    
+    window.initSendButtons = function() {
+        smsManager.uiManager.renderButtons();
+    };
+    
+    window.getMonth = function() {
+        return smsManager.dataManager.getMonth();
+    };
     
     // بدء التشغيل
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', function() {
             smsManager.init();
         });
     } else {
         smsManager.init();
     }
     
-    console.log('✅ تم تحميل نظام الإرسال المتطور');
+    console.log('✅ تم تحميل نظام الإرسال - الأزرار تعمل الآن');
+    console.log('💡 اضغط F12 وافتح Console لمشاهدة السجلات');
     
 })();
 </script>
@@ -15384,7 +16631,171 @@ console.log('✅ تم تفعيل دوال نافذة الذاكرة البديل
     console.log('🎯 نظام تمييز الصف جاهز - انقر على أي اسم لتمييز الصف');
 
 })();
-</script>
+// ============================================================
+//  دوال الرسائل النصية - جميع المشتركين
+// ============================================================
 
+// ===== جلب جميع المشتركين من كل القرى =====
+const fetchAllForSms = useCallback(async () => {
+    setSmsAllLoading(true);
+    const results = [];
+    
+    for (const v of VILLAGES_LIST) {
+        try {
+            const apiUrl = villageAPIs[v];
+            if (!apiUrl) continue;
+            
+            const url = `${apiUrl}?sheet=${encodeURIComponent(month)}&t=${Date.now()}`;
+            const res = await fetch(url);
+            if (!res.ok) continue;
+            
+            const data = await res.json();
+            if (!data || !Array.isArray(data)) continue;
+            
+            for (let i = 2; i < data.length - 1; i++) {
+                const row = data[i];
+                if (!row || !row[1] || row[1] === 'الاسم') continue;
+                
+                const phone = (row[0] || '').toString().trim();
+                if (!phone || phone.length < 9) continue;
+                
+                results.push({
+                    village: v,
+                    meterNumber: row[0] || '-',
+                    name: row[1] || 'غير معروف',
+                    phone: phone,
+                    previous: row[2] || 0,
+                    current: row[3] || 0,
+                    total: parseFloat(row[9] || 0),
+                    paid: parseFloat(row[11] || 0),
+                    remaining: parseFloat(row[12] || 0),
+                    date: row[14] || '-'
+                });
+            }
+        } catch (e) {
+            console.warn(`⚠️ فشل جلب ${v}:`, e);
+        }
+    }
+    
+    results.sort((a, b) => a.name.localeCompare(b.name));
+    setSmsAllData(results);
+    setSmsAllLoading(false);
+    showSync(`✅ تم تحميل ${results.length} مشترك لديهم أرقام هواتف`, 'success');
+}, [month, showSync]);
+
+// ===== بناء رسالة المشترك =====
+const buildSmsMessage = useCallback((subscriber) => {
+    const monthNum = month.replace('شهر ', '');
+    const diff = parseFloat(subscriber.current) - parseFloat(subscriber.previous);
+    const remaining = parseFloat(subscriber.remaining);
+    const warning = remaining >= 5000 ? ' ⚠️ إنذار بالفصل' : '';
+    return `فاتورة شهر ${monthNum}: سابقة: ${subscriber.previous}, حالية: ${subscriber.current}, الفارق: ${diff}, المجموع: ${subscriber.total}, المسلم: ${subscriber.paid}, المتبقي: ${subscriber.remaining}${warning}`;
+}, [month]);
+
+// ============================================================
+//  🚀 إرسال رسالة فردية - أقصى سرعة (بدون أي تأخير)
+// ============================================================
+
+const sendSingleSmsAll = useCallback((subscriber) => {
+    if (!subscriber) return;
+    
+    const message = buildSmsMessage(subscriber);
+    
+    let phone = subscriber.phone.replace(/\s/g, '');
+    if (phone.startsWith('0')) phone = phone.substring(1);
+    if (phone.length === 9 && phone.startsWith('7')) {
+        phone = '+967' + phone;
+    }
+    
+    window.location.href = `sms:${phone}?body=${encodeURIComponent(message)}`;
+    
+}, [buildSmsMessage]);
+</script>
+<script>
+(function() {
+    'use strict';
+    
+    // ============================================================
+    //  🎯 تلوين العمود 13 (المتبقي) - نسخة مبسطة
+    // ============================================================
+    
+    function colorRemainingColumn() {
+        const table = document.querySelector('#tableWrapper table');
+        if (!table) {
+            setTimeout(colorRemainingColumn, 500);
+            return;
+        }
+        
+        const rows = table.querySelectorAll('tbody tr');
+        const totalRows = rows.length;
+        
+        rows.forEach((row, index) => {
+            // تخطي الصفوف الخاصة والصف الأخير
+            if (row.classList.contains('row-0') || 
+                row.classList.contains('row-1') || 
+                row.classList.contains('total-row') ||
+                index === totalRows - 1) {
+                return;
+            }
+            
+            const cells = row.querySelectorAll('td');
+            if (cells.length < 13) return;
+            
+            const remainingCell = cells[12];
+            const remaining = parseFloat(remainingCell.textContent.trim()) || 0;
+            
+            // إزالة الكلاسات القديمة
+            remainingCell.classList.remove('low-debt', 'high-debt', 'zero-debt');
+            
+            // إضافة الكلاسة المناسبة
+            if (remaining >= 5000) {
+                remainingCell.classList.add('high-debt');
+            } else if (remaining === 0) {
+                remainingCell.classList.add('zero-debt');
+            } else {
+                remainingCell.classList.add('low-debt');
+            }
+            
+            // ✅ تطبيق التلوين مباشرة (ضمان)
+            if (remaining >= 5000) {
+                remainingCell.style.background = 'linear-gradient(135deg, #ff1744, #d50000)';
+                remainingCell.style.color = '#ffffff';
+                remainingCell.style.borderLeft = '3px solid #ff1744';
+                remainingCell.style.borderRight = '3px solid #ff1744';
+                remainingCell.style.animation = 'debtPulse 1.5s ease-in-out infinite';
+                remainingCell.style.borderRadius = '8px';
+            } else {
+                remainingCell.style.background = '#000000';
+                remainingCell.style.color = '#ffffff';
+                remainingCell.style.borderLeft = '3px solid #333333';
+                remainingCell.style.borderRight = '3px solid #333333';
+                remainingCell.style.animation = 'none';
+                remainingCell.style.borderRadius = '0';
+            }
+        });
+        
+        console.log('✅ تم تلوين العمود 13');
+    }
+    
+    // ============================================================
+    //  تشغيل عند تحميل الصفحة
+    // ============================================================
+    
+    // تشغيل فوري
+    setTimeout(colorRemainingColumn, 1000);
+    
+    // مراقبة التغييرات
+    const observer = new MutationObserver(function() {
+        colorRemainingColumn();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // جعل الدالة عامة
+    window.colorRemainingColumn = colorRemainingColumn;
+    
+    console.log('✅ تم تفعيل تلوين العمود 13 (المتبقي)');
+    
+})();
+</script>
 </body>
 </html>
