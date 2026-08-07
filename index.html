@@ -9111,7 +9111,7 @@ if (window.speechSynthesis) {
             const [syncInProgress, setSyncInProgress] = useState(false);
             const [showAIPanel, setShowAIPanel] = useState(false);
             const [selectedRow, setSelectedRow] = useState(null);
-            
+            const [hasData, setHasData] = useState(false);
             const [chartsVisible, setChartsVisible] = useState(false);
             const [chartTypes, setChartTypes] = useState({
                 revenue: 'bar',
@@ -9561,7 +9561,7 @@ const loadData = useCallback(async (forceRefresh = false) => {
         });
 
         setData(result);
-
+setHasData(true);
         // 🔥 تحديث الرسالة حسب المصدر
         if (!navigator.onLine && isCached) {
             showSync(`📦 بيانات من الذاكرة المؤقتة (غير متصل)`, 'info', 3000);
@@ -9572,6 +9572,7 @@ const loadData = useCallback(async (forceRefresh = false) => {
         }
     } else {
         setData([]);
+        setHasData(false);
         if (navigator.onLine) {
             showSync('❌ فشل تحميل البيانات من السيرفر', 'error', 4000);
         } else {
@@ -11164,12 +11165,17 @@ const printDirectorReport = useCallback(() => {
             }, [loadPendingChanges]);
 
             useEffect(() => {
-                if (isLoggedIn && user) {
-                    loadData();
-                    localStorage.setItem('soufai_last_village', village);
-                }
-            }, [isLoggedIn, user, village, month, loadData]);
-
+    if (isLoggedIn && user) {
+        // loadData(); // <-- تم التعليق لمنع التحميل التلقائي
+        localStorage.setItem('soufai_last_village', village);
+    }
+}, [isLoggedIn, user, village, month, loadData]);
+// تحميل البيانات عند تغيير القرية أو الشهر
+useEffect(() => {
+    if (isLoggedIn && user && village) {
+        loadData(true);
+    }
+}, [village, month]); // <-- يتشغل عند تغيير القرية أو الشهر فقط
             useEffect(() => {
                 if (isLoggedIn && user && village) {
                     fetchRealMonthlyData();
@@ -11179,6 +11185,7 @@ const printDirectorReport = useCallback(() => {
             const handleLogin = useCallback((userData) => {
     setUser(userData);
     setIsLoggedIn(true);
+    
     showMessage('✅ مرحباً الأستاذ ' + userData.name + ' - ' + userData.role, 'success');
     
     // ===== 🎤 تشغيل الترحيب الصوتي المخصص =====
@@ -12665,7 +12672,7 @@ useEffect(() => {
                                                             loadReportData('الإجمالي الكلي');
                                                         }}
                                                     >
-                                                        📊 الإجمالي الكلي
+                                                        ?? الإجمالي الكلي
                                                     </button>
                                                 )}
                                             </div>
