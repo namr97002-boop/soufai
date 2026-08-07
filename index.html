@@ -11557,7 +11557,30 @@ useEffect(() => {
                 <button onClick={() => { document.body.classList.toggle('focus-mode'); const isFocus = document.body.classList.contains('focus-mode'); localStorage.setItem('focusMode', isFocus); const exitBtn = document.getElementById('exitFocusBtn'); if (exitBtn) { exitBtn.style.display = isFocus ? 'flex' : 'none'; } }} style={{ width: '32px', height: '32px', borderRadius: '8px', border: '2px solid rgba(220, 53, 69, 0.3)', background: 'linear-gradient(135deg, #dc3545, #b02a37)', color: 'white', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="وضع التركيز">👁️</button>
                 <span style={{ fontSize: '12px', color: '#0a58ca', textAlign: 'center', fontWeight: 'bold' }}>تركيز</span>
             </div>
-
+{/* ===== زر بدون اشتراك ===== */}
+<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+    <button 
+        onClick={showZeroSubscriptionModal} 
+        style={{ 
+            width: '32px', 
+            height: '32px', 
+            borderRadius: '8px', 
+            border: '2px solid rgba(255, 107, 107, 0.3)',
+            background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
+            color: 'white', 
+            cursor: 'pointer', 
+            fontSize: '14px',
+            transition: 'all 0.3s ease',
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center'
+        }} 
+        title="المشتركين بدون اشتراك"
+    >
+        🧹
+    </button>
+    <span style={{ fontSize: '12px', color: '#ff6b6b', textAlign: 'center', fontWeight: 'bold' }}>بدون اشتراك</span>
+</div>
     {/* ===== زر الرسائل النصية - جميع المشتركين ===== */}
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
         <button 
@@ -16911,42 +16934,261 @@ if ('serviceWorker' in navigator) {
         }, 5000);
     }
 }
+// ============================================================
+//  🧹 عرض المشتركين غير النشطين (الاشتراك = 0 أو فارغ)
+// ============================================================
 
-// ===== 6. ⚡ التحقق الفوري من حالة الاتصال عند التحميل =====
-if (!navigator.onLine) {
-    console.log('📶 تم التحميل بدون اتصال بالإنترنت');
-    // عرض رسالة فورية
-    setTimeout(function() {
-        const toast = document.createElement('div');
-        toast.innerHTML = '📶 وضع غير متصل - التطبيق يعمل من الكاش';
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 183, 3, 0.95);
-            color: #1a1a2e;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-family: 'Tajawal', sans-serif;
-            font-weight: bold;
-            font-size: 14px;
-            z-index: 99999;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            animation: slideUp 0.3s ease;
-            text-align: center;
-            max-width: 90%;
-        `;
-        document.body.appendChild(toast);
-        setTimeout(function() {
-            toast.style.opacity = '0';
-            toast.style.transition = 'opacity 0.5s';
-            setTimeout(function() { toast.remove(); }, 500);
-        }, 4000);
-    }, 1000);
+function showZeroSubscriptionModal() {
+    // التحقق من وجود الجدول
+    const table = document.querySelector('#tableWrapper table');
+    if (!table) {
+        alert('❌ لا يوجد جدول بيانات. تأكد من تحميل البيانات أولاً.');
+        return;
+    }
+
+    const rows = table.querySelectorAll('tbody tr');
+    const results = [];
+
+    // استخراج الشهر الحالي
+    let monthSelect = document.querySelector('.app-sidebar select:nth-of-type(2)');
+    let month = monthSelect?.value || 'شهر 1';
+
+    rows.forEach((row, index) => {
+        // تخطي الصفوف الخاصة
+        if (row.classList.contains('row-0') || 
+            row.classList.contains('row-1') || 
+            row.classList.contains('total-row')) {
+            return;
+        }
+
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 13) return;
+
+        // قراءة البيانات
+        const name = cells[1]?.textContent.trim() || '';
+        const meterNumber = cells[0]?.textContent.trim() || '';
+        const subscription = cells[7]?.textContent.trim() || '0'; // عمود الاشتراك
+        const fixedFee = parseFloat(cells[6]?.textContent.trim()) || 0;
+
+        // ✅ فقط المشتركين الذين الاشتراك = 0 أو فارغ
+        if (name !== '' && (subscription === '0' || subscription === '')) {
+            // قراءة باقي البيانات
+            const previousReading = parseFloat(cells[8]?.textContent.trim()) || 0;
+            const currentReading = parseFloat(cells[9]?.textContent.trim()) || 0;
+            const consumption = parseFloat(cells[10]?.textContent.trim()) || 0;
+            const amount = parseFloat(cells[11]?.textContent.trim()) || 0;
+
+            results.push({
+                name: name,
+                meterNumber: meterNumber || '-',
+                subscription: subscription,
+                fixedFee: fixedFee,
+                previousReading: previousReading,
+                currentReading: currentReading,
+                consumption: consumption,
+                amount: amount
+            });
+        }
+    });
+
+    // عرض النتائج
+    if (results.length === 0) {
+        alert('✅ لا يوجد مشتركين غير نشطين (الاشتراك = 0)');
+        return;
+    }
+
+    showZeroSubscriptionResults(results, month);
 }
+
+// ============================================================
+//  عرض نتائج المشتركين غير النشطين
+// ============================================================
+
+function showZeroSubscriptionResults(results, month) {
+    // إزالة النافذة القديمة إن وجدت
+    const oldModal = document.querySelector('.zero-subscription-modal');
+    if (oldModal) oldModal.remove();
+
+    // إنشاء النافذة
+    const modal = document.createElement('div');
+    modal.className = 'zero-subscription-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.88);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(12px);
+        animation: fadeIn 0.3s ease;
+        font-family: 'Tajawal', sans-serif;
+    `;
+
+    // بناء القائمة
+    let namesList = results.map((item, idx) => `
+        <div style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s ease;
+            gap: 10px;
+            flex-wrap: wrap;
+        " onmouseenter="this.style.background='rgba(255,107,107,0.05)'" onmouseleave="this.style.background='transparent'">
+            <span style="color: #4cc9f0; font-weight: bold; min-width: 35px; font-size: 14px;">${idx + 1}</span>
+            <span style="color: #ff6b6b; font-weight: bold; font-size: 15px; flex: 1; min-width: 120px;">${item.name}</span>
+            <span style="color: rgba(255,255,255,0.3); font-size: 12px; direction: ltr;">عداد: ${item.meterNumber}</span>
+            <span style="color: rgba(255,255,255,0.2); font-size: 11px; direction: ltr;">
+                اشتراك: ${item.subscription || '0'}
+            </span>
+        </div>
+    `).join('');
+
+    // دالة نسخ الأسماء
+    window.copyZeroSubscriptionNames = function() {
+        const names = results.map(r => r.name).join('\n');
+        navigator.clipboard.writeText(names).then(() => {
+            alert('📋 تم نسخ ' + results.length + ' اسم إلى الحافظة');
+        }).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = names;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+            alert('📋 تم نسخ ' + results.length + ' اسم إلى الحافظة');
+        });
+    };
+
+    // دالة نسخ التفاصيل
+    window.copyZeroSubscriptionDetails = function() {
+        const details = results.map((r, i) => 
+            `${i+1}. ${r.name} | عداد: ${r.meterNumber} | اشتراك: ${r.subscription || '0'}`
+        ).join('\n');
+        
+        navigator.clipboard.writeText(details).then(() => {
+            alert('📋 تم نسخ التفاصيل إلى الحافظة');
+        }).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = details;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+            alert('📋 تم نسخ التفاصيل إلى الحافظة');
+        });
+    };
+
+    // محتوى النافذة
+    modal.innerHTML = `
+        <style>
+            @keyframes fadeIn {
+                from { opacity: 0; transform: scale(0.95); }
+                to { opacity: 1; transform: scale(1); }
+            }
+            .zero-subscription-modal::-webkit-scrollbar { width: 6px; }
+            .zero-subscription-modal::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
+            .zero-subscription-modal::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #ff6b6b, #ee5a24); border-radius: 10px; }
+        </style>
+        <div style="
+            background: linear-gradient(145deg, #0a0e27, #1a1a3e);
+            border-radius: 24px;
+            padding: 25px;
+            max-width: 650px;
+            width: 94%;
+            max-height: 92vh;
+            overflow-y: auto;
+            color: #e0e0ff;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,107,107,0.2);
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h2 style="margin: 0; display: flex; align-items: center; gap: 12px; color: #ff6b6b;">
+                        🚫 غير نشطين (الاشتراك = 0)
+                        <span style="font-size: 14px; background: rgba(255,107,107,0.2); padding: 2px 14px; border-radius: 20px; color: #ff6b6b;">
+                            ${results.length} مشترك
+                        </span>
+                    </h2>
+                    <div style="font-size: 13px; opacity: 0.6; margin-top: 4px;">
+                        📅 ${month} | عمود الاشتراك = 0
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="copyZeroSubscriptionNames()" style="
+                        background: rgba(76,201,240,0.2);
+                        border: 1px solid rgba(76,201,240,0.2);
+                        color: #4cc9f0;
+                        padding: 6px 14px;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        font-family: 'Tajawal';
+                        font-weight: bold;
+                        font-size: 13px;
+                        transition: all 0.3s ease;
+                    " onmouseenter="this.style.background='rgba(76,201,240,0.3)'" onmouseleave="this.style.background='rgba(76,201,240,0.2)'">
+                        📋 نسخ الأسماء
+                    </button>
+                    <button onclick="copyZeroSubscriptionDetails()" style="
+                        background: rgba(255,107,107,0.15);
+                        border: 1px solid rgba(255,107,107,0.15);
+                        color: #ff6b6b;
+                        padding: 6px 14px;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        font-family: 'Tajawal';
+                        font-weight: bold;
+                        font-size: 13px;
+                        transition: all 0.3s ease;
+                    " onmouseenter="this.style.background='rgba(255,107,107,0.25)'" onmouseleave="this.style.background='rgba(255,107,107,0.15)'">
+                        📊 نسخ التفاصيل
+                    </button>
+                    <button onclick="this.closest('.zero-subscription-modal').remove()" style="
+                        background: rgba(255,255,255,0.1);
+                        border: none;
+                        color: #e0e0ff;
+                        width: 38px;
+                        height: 38px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        font-size: 22px;
+                        transition: all 0.3s ease;
+                    " onmouseenter="this.style.background='rgba(255,255,255,0.2)'" onmouseleave="this.style.background='rgba(255,255,255,0.1)'">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <div style="
+                background: rgba(0,0,0,0.2);
+                border-radius: 14px;
+                overflow: auto;
+                max-height: 55vh;
+                border: 1px solid rgba(255,255,255,0.05);
+                padding: 5px 0;
+            ">
+                ${namesList}
+            </div>
+
+            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; font-size: 12px; opacity: 0.4; flex-wrap: wrap; gap: 8px;">
+                <span>🚫 المشتركين غير النشطين (الاشتراك = 0)</span>
+                <span>🕐 ${new Date().toLocaleString('ar-EG')}</span>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+// ============================================================
+//  جعل الدوال عامة
+// ============================================================
+
+window.showZeroSubscriptionModal = showZeroSubscriptionModal;
+
 </script>
+
 </body>
 </html>
