@@ -1,215 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<script>
-(function() {
-    'use strict';
-    
-    // ============================================================
-    //  1. حفظ شاشة الدخول فوراً
-    // ============================================================
-    
-    try {
-        // حفظ HTML كامل الصفحة
-        localStorage.setItem('soufai_login_page', document.documentElement.outerHTML);
-        localStorage.setItem('soufai_last_save', new Date().toISOString());
-        console.log('✅ تم حفظ شاشة الدخول');
-    } catch(e) {
-        console.warn('⚠️ فشل حفظ شاشة الدخول');
-    }
-    
-    // ============================================================
-    //  2. استعادة شاشة الدخول عند انقطاع النت
-    // ============================================================
-    
-    if (!navigator.onLine) {
-        console.log('📶 غير متصل - جاري استعادة شاشة الدخول');
-        
-        try {
-            const saved = localStorage.getItem('soufai_login_page');
-            if (saved && saved.length > 1000) {
-                document.open();
-                document.write(saved);
-                document.close();
-                console.log('✅ تم استعادة شاشة الدخول من localStorage');
-            } else {
-                console.warn('⚠️ لا توجد نسخة محفوظة');
-            }
-        } catch(e) {
-            console.error('❌ فشل استعادة شاشة الدخول:', e);
-        }
-    }
-    
-    // ============================================================
-    //  3. تسجيل Service Worker مع تخزين مخصص
-    // ============================================================
-    
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js', { scope: './' })
-            .then(function(reg) {
-                console.log('✅ Service Worker مسجل');
-                
-                // طلب تخزين الصفحة الحالية في Cache
-                if (reg.active) {
-                    reg.active.postMessage({
-                        type: 'CACHE_PAGE',
-                        url: window.location.href
-                    });
-                }
-            })
-            .catch(function(err) {
-                console.warn('⚠️ فشل تسجيل Service Worker:', err);
-            });
-    }
-    
-    // ============================================================
-    //  4. زر تثبيت يدوي (يظهر فقط قبل التثبيت)
-    // ============================================================
-    
-    setTimeout(function() {
-        // نتحقق إذا كان التطبيق غير مثبت
-        if (!window.matchMedia('(display-mode: standalone)').matches &&
-            !window.navigator.standalone) {
-            
-            const btn = document.createElement('button');
-            btn.id = 'pwaInstallBtn';
-            btn.innerHTML = '📲 تثبيت التطبيق للعمل بدون إنترنت';
-            btn.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 999999;
-                background: linear-gradient(135deg, #4cc9f0, #00b4d8);
-                color: white;
-                border: none;
-                border-radius: 50px;
-                padding: 14px 30px;
-                font-size: 16px;
-                font-weight: bold;
-                font-family: 'Tajawal', sans-serif;
-                cursor: pointer;
-                box-shadow: 0 8px 35px rgba(76, 201, 240, 0.5);
-                animation: pulseInstall 2s infinite;
-                transition: all 0.3s ease;
-            `;
-            
-            // تأثير hover
-            btn.onmouseenter = function() {
-                this.style.transform = 'translateX(-50%) scale(1.05)';
-                this.style.boxShadow = '0 8px 50px rgba(76, 201, 240, 0.7)';
-            };
-            btn.onmouseleave = function() {
-                this.style.transform = 'translateX(-50%) scale(1)';
-                this.style.boxShadow = '0 8px 35px rgba(76, 201, 240, 0.5)';
-            };
-            
-            btn.onclick = function() {
-                // محاولة استخدام زر التثبيت الرسمي
-                if (window.installApp) {
-                    window.installApp();
-                } else if (window.deferredPrompt) {
-                    window.deferredPrompt.prompt();
-                } else {
-                    alert('📲 استخدم قائمة المتصفح:\n• Chrome: ⋮ > تثبيت التطبيق\n• Safari: ⬆️ > إضافة للشاشة الرئيسية');
-                }
-            };
-            
-            // إضافة أنماط الـ animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes pulseInstall {
-                    0%, 100% { box-shadow: 0 8px 35px rgba(76, 201, 240, 0.5); }
-                    50% { box-shadow: 0 8px 60px rgba(76, 201, 240, 0.8), 0 0 80px rgba(76, 201, 240, 0.2); }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            document.body.appendChild(btn);
-            console.log('✅ ظهر زر تثبيت التطبيق');
-        } else {
-            console.log('📱 التطبيق مثبت بالفعل - يعمل بدون إنترنت');
-        }
-    }, 5000); // تأخير 5 ثواني لضمان تحميل الصفحة
-    
-    // ============================================================
-    //  5. إشعار للمستخدم عند التثبيت
-    // ============================================================
-    
-    if (window.matchMedia('(display-mode: standalone)').matches ||
-        window.navigator.standalone === true) {
-        
-        console.log('📱 يعمل كـ PWA - شاشة الدخول جاهزة للعمل بدون إنترنت');
-        
-        // رسالة تأكيد قصيرة
-        setTimeout(function() {
-            const msg = document.createElement('div');
-            msg.style.cssText = `
-                position: fixed;
-                bottom: 90px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0, 180, 216, 0.95);
-                color: white;
-                padding: 12px 25px;
-                border-radius: 15px;
-                font-family: 'Tajawal', sans-serif;
-                font-size: 14px;
-                font-weight: bold;
-                box-shadow: 0 8px 30px rgba(0,180,216,0.4);
-                z-index: 999998;
-                animation: slideIn 0.5s ease;
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255,255,255,0.1);
-            `;
-            msg.innerHTML = '✅ ✅ شاشة الدخول جاهزة للعمل بدون إنترنت';
-            document.body.appendChild(msg);
-            
-            setTimeout(function() {
-                msg.style.opacity = '0';
-                msg.style.transition = 'opacity 1s';
-                setTimeout(function() {
-                    if (msg.parentNode) msg.remove();
-                }, 1000);
-            }, 4000);
-        }, 2000);
-    }
-    
-    // ============================================================
-    //  6. حفظ تلقائي عند تغيير الصفحة
-    // ============================================================
-    
-    // حفظ عند التحميل
-    window.addEventListener('load', function() {
-        try {
-            localStorage.setItem('soufai_login_page', document.documentElement.outerHTML);
-            console.log('💾 تم تحديث نسخة شاشة الدخول بعد التحميل');
-        } catch(e) {}
-    });
-    
-    // حفظ عند أي تغيير في DOM
-    if (window.MutationObserver) {
-        let saveTimeout;
-        const observer = new MutationObserver(function() {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(function() {
-                try {
-                    localStorage.setItem('soufai_login_page', document.documentElement.outerHTML);
-                } catch(e) {}
-            }, 3000);
-        });
-        
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true
-        });
-    }
-    
-    console.log('🔒 نظام شاشة الدخول جاهز للعمل بدون إنترنت 100%');
-    
-})();
-</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0077b6" />
@@ -17007,85 +16798,148 @@ const sendSingleSmsAll = useCallback((subscriber) => {
 })();
 </script>
 <script>
-    (function() {
-        'use strict';
+// ==========================================
+// 🚀 تسجيل Service Worker - النسخة المتطورة
+// ==========================================
 
-        // ============================================================
-        //  🔥 تسجيل Service Worker مع تخزين فوري للصفحة
-        // ============================================================
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js', { scope: './' })
-                .then(function(reg) {
-                    console.log('✅ Service Worker مسجل بنجاح');
-
-                    // ===== تخزين الصفحة الحالية فوراً =====
-                    if (reg.active) {
-                        reg.active.postMessage({
-                            type: 'CACHE_PAGE',
-                            url: window.location.href
-                        });
+if ('serviceWorker' in navigator) {
+    
+    // ===== 1. التسجيل الفوري (بدون انتظار) =====
+    navigator.serviceWorker.register('sw.js')
+        .then(function(registration) {
+            console.log('✅ Service Worker مسجل بنجاح');
+            console.log('📦 نطاق العمل:', registration.scope);
+            
+            // ===== 2. التحقق من التفعيل =====
+            if (registration.active) {
+                console.log('✅ الـ SW نشط وجاهز');
+            } else if (registration.waiting) {
+                console.log('⏳ الـ SW في انتظار التفعيل...');
+                // فرض التفعيل فوراً
+                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            } else if (registration.installing) {
+                console.log('⏳ جاري تثبيت الـ SW...');
+                // مراقبة حالة التثبيت
+                registration.installing.addEventListener('statechange', function(e) {
+                    if (e.target.state === 'installed') {
+                        console.log('✅ تم التثبيت، جاري التفعيل...');
+                        // فرض التفعيل
+                        if (registration.waiting) {
+                            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        }
                     }
-
-                    // ===== مراقبة حالة الـ SW =====
-                    if (reg.installing) {
-                        console.log('⏳ جاري تثبيت الـ SW...');
-                    } else if (reg.waiting) {
-                        console.log('⏳ الـ SW في انتظار التفعيل...');
-                    } else if (reg.active) {
-                        console.log('✅ الـ SW نشط وجاهز');
-                    }
-
-                })
-                .catch(function(err) {
-                    console.warn('⚠️ فشل تسجيل Service Worker:', err);
                 });
-
-            // ===== مراقبة تغييرات الـ SW =====
-            navigator.serviceWorker.addEventListener('controllerchange', function() {
-                console.log('🔄 تم تغيير الـ SW، إعادة تحميل الصفحة...');
-                window.location.reload();
-            });
-        }
-
-        // ============================================================
-        //  💾 حفظ الصفحة في localStorage كنسخة احتياطية
-        // ============================================================
-
-        try {
-            // حفظ شاشة الدخول (للحالات الطارئة)
-            localStorage.setItem('soufai_login_page', document.documentElement.outerHTML);
-            localStorage.setItem('soufai_last_save', new Date().toISOString());
-            console.log('✅ تم حفظ شاشة الدخول في localStorage');
-        } catch(e) {
-            console.warn('⚠️ فشل حفظ شاشة الدخول:', e);
-        }
-
-        // ============================================================
-        //  📶 استعادة شاشة الدخول عند انقطاع النت (حل احتياطي)
-        // ============================================================
-
-        if (!navigator.onLine) {
-            console.log('📶 غير متصل - جاري استعادة شاشة الدخول...');
-            try {
-                const saved = localStorage.getItem('soufai_login_page');
-                if (saved && saved.length > 1000) {
-                    // نستعيد فقط إذا كانت الصفحة فارغة
-                    if (document.body.innerHTML.trim() === '' || 
-                        document.querySelector('.login-wrapper') === null) {
-                        document.open();
-                        document.write(saved);
-                        document.close();
-                        console.log('✅ تم استعادة شاشة الدخول من localStorage');
-                    }
-                }
-            } catch(e) {
-                console.error('❌ فشل استعادة شاشة الدخول:', e);
             }
-        }
+        })
+        .catch(function(error) {
+            console.log('❌ فشل تسجيل Service Worker:', error);
+        });
+    
+    // ===== 3. 🔥 مراقبة التغييرات وإعادة التحميل =====
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+        console.log('🔄 تم تغيير الـ SW، إعادة تحميل الصفحة...');
+        window.location.reload();
+    });
+    
+    // ===== 4. ✅ التحقق من وجود اتصال =====
+    window.addEventListener('online', function() {
+        console.log('🌐 عاد الاتصال بالإنترنت');
+        // محاولة تحديث الـ SW
+        navigator.serviceWorker.ready.then(function(registration) {
+            registration.update();
+        });
+    });
+    
+    window.addEventListener('offline', function() {
+        console.log('📶 فقد الاتصال بالإنترنت - سيتم استخدام الكاش');
+        // عرض رسالة للمستخدم (اختياري)
+        showOfflineMessage();
+    });
+    
+    // ===== 5. 🔧 دالة عرض رسالة عدم الاتصال =====
+    function showOfflineMessage() {
+        // التأكد من عدم وجود رسالة مكررة
+        if (document.getElementById('offline-toast')) return;
+        
+        const toast = document.createElement('div');
+        toast.id = 'offline-toast';
+        toast.innerHTML = '📶 أنت غير متصل بالإنترنت - التطبيق يعمل من الكاش';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 183, 3, 0.95);
+            color: #1a1a2e;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 99999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            animation: slideUp 0.3s ease;
+            text-align: center;
+            max-width: 90%;
+        `;
+        document.body.appendChild(toast);
+        
+        // إضافة حركة CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateX(-50%) translateY(30px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // إخفاء الرسالة بعد 5 ثواني
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.5s';
+            setTimeout(function() { toast.remove(); }, 500);
+        }, 5000);
+    }
+}
 
-        console.log('🔒 نظام التشغيل بدون إنترنت جاهز 100%');
-    })();
+// ===== 6. ⚡ التحقق الفوري من حالة الاتصال عند التحميل =====
+if (!navigator.onLine) {
+    console.log('📶 تم التحميل بدون اتصال بالإنترنت');
+    // عرض رسالة فورية
+    setTimeout(function() {
+        const toast = document.createElement('div');
+        toast.innerHTML = '📶 وضع غير متصل - التطبيق يعمل من الكاش';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 183, 3, 0.95);
+            color: #1a1a2e;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 99999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            animation: slideUp 0.3s ease;
+            text-align: center;
+            max-width: 90%;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.5s';
+            setTimeout(function() { toast.remove(); }, 500);
+        }, 4000);
+    }, 1000);
+}
 </script>
 </body>
 </html>
