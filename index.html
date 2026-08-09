@@ -11675,170 +11675,170 @@ useEffect(() => {
     </button>
     <span style={{ fontSize: '12px', color: '#6d28d9', textAlign: 'center', fontWeight: 'bold' }}>ذاكرة</span>
 </div>
-    {/* ===== 🔥 زر المدير - يظهر فقط للمدير ===== */}
-    {user && user.name === 'نصر العامري' && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-            <button 
-                onClick={() => {
-                    setShowDirectorReport(true);
-                    fetchAllVillagesData();
-                }} 
-                style={{ 
-                    width: '32px', 
-                    height: '32px', 
-                    borderRadius: '8px', 
-                    border: '2px solid rgba(255, 183, 3, 0.3)',
-                    background: 'linear-gradient(135deg, #ffb703, #fb8500)',
-                    color: 'white', 
-                    cursor: 'pointer', 
-                    fontSize: '14px',
-                    transition: 'all 0.3s ease',
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center'
-                }} 
-                title="لوحة المدير"
-            >
-                👑
-            </button>
-            <span style={{ fontSize: '12px', color: '#ffb703', textAlign: 'center', fontWeight: 'bold' }}>مدير</span>
-        </div>
-    )}
+{/* ===== 🔥 زر المدير - يظهر فقط للمدير ===== */}
+{user && user.name === 'نصر العامري' && (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+        <button 
+            onClick={() => {
+                setShowDirectorReport(true);
+                fetchAllVillagesData();
+            }} 
+            style={{ 
+                width: '32px', 
+                height: '32px', 
+                borderRadius: '8px', 
+                border: '2px solid rgba(255, 183, 3, 0.3)',
+                background: 'linear-gradient(135deg, #ffb703, #fb8500)',
+                color: 'white', 
+                cursor: 'pointer', 
+                fontSize: '14px',
+                transition: 'all 0.3s ease',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center'
+            }} 
+            title="لوحة المدير"
+        >
+            👑
+        </button>
+        <span style={{ fontSize: '12px', color: '#ffb703', textAlign: 'center', fontWeight: 'bold' }}>مدير</span>
+    </div>
+)}
 
-    {/* ===== 🔥🔥🔥 زر المزامنة اليدوية 🔥🔥🔥 ===== */}
-    {user && user.name === 'نصر العامري' && (
+{/* ===== 🔥🔥🔥 زر المزامنة اليدوية - يظهر للجميع 🔥🔥🔥 ===== */}
+{user && (
+    <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        gap: '4px',
+        width: '100%',
+        marginTop: '6px',
+        paddingTop: '6px',
+        borderTop: '1px solid rgba(255,255,255,0.08)'
+    }}>
+        <button 
+            onClick={() => {
+                const count = Object.values(pendingChanges).reduce((sum, changes) => 
+                    sum + changes.filter(c => !c.synced).length, 0
+                );
+                
+                if (count === 0) {
+                    showSync('✅ لا توجد تغييرات معلقة', 'success', 2000);
+                    return;
+                }
+                
+                if (!navigator.onLine) {
+                    showSync('📶 لا يوجد اتصال بالإنترنت!', 'error', 3000);
+                    return;
+                }
+                
+                showSync('🔄 جاري مزامنة ' + count + ' تغيير يدوياً...', 'info', 3000);
+                syncAllPendingChanges();
+            }} 
+            style={{ 
+                width: '100%',
+                padding: '14px 20px',
+                borderRadius: '14px', 
+                border: '3px solid rgba(255, 183, 3, 0.5)',
+                background: 'linear-gradient(135deg, #ffb703, #fb8500)',
+                color: '#1a1a2e', 
+                cursor: 'pointer', 
+                fontSize: '18px',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                gap: '14px',
+                boxShadow: '0 4px 25px rgba(255, 183, 3, 0.4)',
+                fontFamily: 'Tajawal, sans-serif'
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.03)';
+                e.currentTarget.style.boxShadow = '0 8px 45px rgba(255, 183, 3, 0.6)';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 25px rgba(255, 183, 3, 0.4)';
+            }}
+            title="مزامنة يدوية - إرسال جميع التغييرات المعلقة"
+        >
+            <span style={{ fontSize: '28px' }}>🔄</span>
+            <span>مزامنة يدوية</span>
+            <span style={{ 
+                background: 'rgba(0,0,0,0.15)', 
+                padding: '2px 16px', 
+                borderRadius: '25px',
+                fontSize: '15px',
+                fontWeight: 'bold'
+            }}>
+                {Object.values(pendingChanges).reduce((sum, changes) => 
+                    sum + changes.filter(c => !c.synced).length, 0
+                )} تغيير
+            </span>
+        </button>
+        
+        {/* مؤشرات الحالة أسفل الزر */}
         <div style={{ 
             display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            gap: '4px',
+            gap: '10px', 
+            fontSize: '12px',
+            color: 'rgba(255,255,255,0.6)',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
             width: '100%',
-            marginTop: '6px',
-            paddingTop: '6px',
-            borderTop: '1px solid rgba(255,255,255,0.08)'
+            marginTop: '2px'
         }}>
-            <button 
-                onClick={() => {
-                    const count = Object.values(pendingChanges).reduce((sum, changes) => 
-                        sum + changes.filter(c => !c.synced).length, 0
-                    );
-                    
-                    if (count === 0) {
-                        showSync('✅ لا توجد تغييرات معلقة', 'success', 2000);
-                        return;
-                    }
-                    
-                    if (!navigator.onLine) {
-                        showSync('📶 لا يوجد اتصال بالإنترنت!', 'error', 3000);
-                        return;
-                    }
-                    
-                    showSync('🔄 جاري مزامنة ' + count + ' تغيير يدوياً...', 'info', 3000);
-                    syncAllPendingChanges();
-                }} 
-                style={{ 
-                    width: '100%',
-                    padding: '14px 20px',
-                    borderRadius: '14px', 
-                    border: '3px solid rgba(255, 183, 3, 0.5)',
-                    background: 'linear-gradient(135deg, #ffb703, #fb8500)',
-                    color: '#1a1a2e', 
-                    cursor: 'pointer', 
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    transition: 'all 0.3s ease',
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    gap: '14px',
-                    boxShadow: '0 4px 25px rgba(255, 183, 3, 0.4)',
-                    fontFamily: 'Tajawal, sans-serif'
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.03)';
-                    e.currentTarget.style.boxShadow = '0 8px 45px rgba(255, 183, 3, 0.6)';
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = '0 4px 25px rgba(255, 183, 3, 0.4)';
-                }}
-                title="مزامنة يدوية - إرسال جميع التغييرات المعلقة"
-            >
-                <span style={{ fontSize: '28px' }}>🔄</span>
-                <span>مزامنة يدوية</span>
-                <span style={{ 
-                    background: 'rgba(0,0,0,0.15)', 
-                    padding: '2px 16px', 
-                    borderRadius: '25px',
-                    fontSize: '15px',
-                    fontWeight: 'bold'
-                }}>
-                    {Object.values(pendingChanges).reduce((sum, changes) => 
-                        sum + changes.filter(c => !c.synced).length, 0
-                    )} تغيير
-                </span>
-            </button>
-            
-            {/* مؤشرات الحالة أسفل الزر */}
-            <div style={{ 
+            <span style={{ 
                 display: 'flex', 
-                gap: '10px', 
-                fontSize: '12px',
-                color: 'rgba(255,255,255,0.6)',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-                width: '100%',
-                marginTop: '2px'
+                alignItems: 'center', 
+                gap: '6px',
+                background: navigator.onLine ? 'rgba(0,176,155,0.15)' : 'rgba(255,71,87,0.15)',
+                padding: '3px 12px',
+                borderRadius: '12px',
+                border: '1px solid ' + (navigator.onLine ? 'rgba(0,176,155,0.2)' : 'rgba(255,71,87,0.2)')
             }}>
                 <span style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '6px',
-                    background: navigator.onLine ? 'rgba(0,176,155,0.15)' : 'rgba(255,71,87,0.15)',
-                    padding: '3px 12px',
-                    borderRadius: '12px',
-                    border: '1px solid ' + (navigator.onLine ? 'rgba(0,176,155,0.2)' : 'rgba(255,71,87,0.2)')
-                }}>
-                    <span style={{ 
-                        width: '8px', 
-                        height: '8px', 
-                        borderRadius: '50%', 
-                        background: navigator.onLine ? '#00b09b' : '#ff4757',
-                        display: 'inline-block'
-                    }}></span>
-                    {navigator.onLine ? '🟢 متصل' : '🔴 غير متصل'}
-                </span>
-                
-                <span style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '6px',
-                    background: 'rgba(76,201,240,0.1)',
-                    padding: '3px 12px',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(76,201,240,0.15)'
-                }}>
-                    📤 {Object.values(pendingChanges).reduce((sum, changes) => 
-                        sum + changes.filter(c => !c.synced).length, 0
-                    )} في الانتظار
-                </span>
-                
-                <span style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '6px',
-                    background: 'rgba(0,176,155,0.1)',
-                    padding: '3px 12px',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(0,176,155,0.15)'
-                }}>
-                    ✅ {Object.values(pendingChanges).reduce((sum, changes) => 
-                        sum + changes.filter(c => c.synced).length, 0
-                    )} مزامنة
-                </span>
-            </div>
+                    width: '8px', 
+                    height: '8px', 
+                    borderRadius: '50%', 
+                    background: navigator.onLine ? '#00b09b' : '#ff4757',
+                    display: 'inline-block'
+                }}></span>
+                {navigator.onLine ? '🟢 متصل' : '🔴 غير متصل'}
+            </span>
+            
+            <span style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px',
+                background: 'rgba(76,201,240,0.1)',
+                padding: '3px 12px',
+                borderRadius: '12px',
+                border: '1px solid rgba(76,201,240,0.15)'
+            }}>
+                📤 {Object.values(pendingChanges).reduce((sum, changes) => 
+                    sum + changes.filter(c => !c.synced).length, 0
+                )} في الانتظار
+            </span>
+            
+            <span style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px',
+                background: 'rgba(0,176,155,0.1)',
+                padding: '3px 12px',
+                borderRadius: '12px',
+                border: '1px solid rgba(0,176,155,0.15)'
+            }}>
+                ✅ {Object.values(pendingChanges).reduce((sum, changes) => 
+                    sum + changes.filter(c => c.synced).length, 0
+                )} مزامنة
+            </span>
         </div>
-    )}
+    </div>
+)}
 </div>
         {/* ===== القوائم المنسدلة ===== */}
         <select value={village} onChange={(e) => { setVillage(e.target.value); handleCloseSearch(); }} style={{ width: '100%', padding: '10px 16px', borderRadius: '12px', border: '2px solid rgba(76, 201, 240, 0.3)', background: 'linear-gradient(135deg, rgba(0, 119, 182, 0.85), rgba(0, 180, 216, 0.85))', fontSize: '14px', fontWeight: 'bold', color: 'white', cursor: 'pointer', fontFamily: 'Tajawal', appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\' viewBox=\'0 0 12 8\'%3E%3Cpath d=\'M1 1l5 5 5-5\' stroke=\'white\' stroke-width=\'2\' fill=\'none\' stroke-linecap=\'round\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'left 15px center', paddingLeft: '40px' }}>
