@@ -6693,6 +6693,55 @@ button[title="إدارة الذاكرة"]:hover {
         font-size: 20px !important;
     }
 }
+/* ===== إصلاح حقل البحث - خلفية داكنة ونص أبيض ===== */
+.smart-search-box {
+    background: rgba(30, 41, 59, 0.9) !important;
+    border: 2px solid rgba(76, 201, 240, 0.3) !important;
+    border-radius: 50px !important;
+    padding: 4px 18px !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.smart-search-box input {
+    background: transparent !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    padding: 10px 10px !important;
+}
+
+.smart-search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.smart-search-box input:focus {
+    color: #ffffff !important;
+    outline: none !important;
+}
+
+/* ===== نتائج البحث ===== */
+.smart-search-results {
+    background: rgba(15, 23, 42, 0.98) !important;
+    backdrop-filter: blur(30px) !important;
+    border: 2px solid rgba(76, 201, 240, 0.2) !important;
+}
+
+.search-result-item {
+    color: #ffffff !important;
+}
+
+.search-result-item .name {
+    color: #ffffff !important;
+}
+
+.search-result-item .details {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* ===== أيقونة البحث ===== */
+.smart-search-box .search-icon {
+    color: #4cc9f0 !important;
+}
     </style>
 </head>
 <body>
@@ -12733,7 +12782,7 @@ useEffect(() => {
         root.render(<App />);
     </script>
 <script>
-//  نظام إرسال الرسائل - نسخة فائقة السرعة مع إصلاح الأزرار
+//  نظام إرسال الرسائل - نسخة مع تغيير اللون لمدة نصف دقيقة
 // ============================================================
 
 (function() {
@@ -12745,7 +12794,9 @@ useEffect(() => {
     
     const CONFIG = {
         BUTTON_SIZE: 28,
-        BUTTON_COLOR: '#25D366',
+        BUTTON_COLOR: '#25D366',       // اللون الأخضر الأصلي
+        BUTTON_CLICK_COLOR: '#FF4444', // اللون الأحمر عند النقر
+        CLICK_DURATION: 30000,         // 30 ثانية
         DEBOUNCE_DELAY: 30,
         CACHE_EXPIRY: 15000,
         TOAST_DURATION: 1500,
@@ -12758,7 +12809,11 @@ useEffect(() => {
         isProcessing: false,
         initialized: false,
         retryCount: 0,
-        renderTimeout: null
+        renderTimeout: null,
+        buttonTimeouts: new Map(),
+        
+        // حفظ حالة الأزرار المضغوطة
+        clickedButtons: new Map()
     };
     
     // ============================================================
@@ -12774,7 +12829,6 @@ useEffect(() => {
             if (this.cachedMonth) return this.cachedMonth;
             if (state.month) return state.month;
             
-            // محاولة الحصول على الشهر من مصادر مختلفة
             const sources = [
                 this.fromSelects.bind(this),
                 this.fromText.bind(this),
@@ -12789,6 +12843,7 @@ useEffect(() => {
             
             for (const source of sources) {
                 const result = source();
+                
                 if (result) {
                     this.cachedMonth = result;
                     state.month = result;
@@ -12796,94 +12851,206 @@ useEffect(() => {
                 }
             }
             
-            const fallback = (new Date().getMonth() + 1).toString();
+            const fallback =
+                (new Date().getMonth() + 1).toString();
+            
             this.cachedMonth = fallback;
             state.month = fallback;
+            
             return fallback;
         }
         
         fromSelects() {
-            const selects = document.querySelectorAll('select');
+            const selects =
+                document.querySelectorAll('select');
+            
             for (let i = 0; i < selects.length; i++) {
-                const text = selects[i].value || selects[i].textContent || '';
-                const match = text.match(/شهر\s*(\d+)/);
+                const text =
+                    selects[i].value ||
+                    selects[i].textContent ||
+                    '';
+                
+                const match =
+                    text.match(/شهر\s*(\d+)/);
+                
                 if (match) return match[1];
             }
+            
             return null;
         }
         
         fromText() {
-            const text = document.body.textContent || '';
-            const matches = text.match(/شهر\s*(\d+)/g);
-            if (matches && matches.length > 0) {
-                const last = matches[matches.length - 1];
-                const match = last.match(/\d+/);
-                return match ? match[0] : null;
+            const text =
+                document.body.textContent || '';
+            
+            const matches =
+                text.match(/شهر\s*(\d+)/g);
+            
+            if (
+                matches &&
+                matches.length > 0
+            ) {
+                const last =
+                    matches[matches.length - 1];
+                
+                const match =
+                    last.match(/\d+/);
+                
+                return match
+                    ? match[0]
+                    : null;
             }
+            
             return null;
         }
         
         fromElements() {
-            const elements = document.querySelectorAll('[class*="month" i], [id*="month" i], [data-month]');
-            for (let i = 0; i < elements.length; i++) {
-                const text = elements[i].textContent || elements[i].value || elements[i].dataset.month || '';
-                const match = text.match(/\d+/);
+            const elements =
+                document.querySelectorAll(
+                    '[class*="month" i], [id*="month" i], [data-month]'
+                );
+            
+            for (
+                let i = 0;
+                i < elements.length;
+                i++
+            ) {
+                const text =
+                    elements[i].textContent ||
+                    elements[i].value ||
+                    elements[i].dataset.month ||
+                    '';
+                
+                const match =
+                    text.match(/\d+/);
+                
                 if (match) return match[0];
             }
+            
             return null;
         }
         
         fromStorage() {
-            const storages = [localStorage, sessionStorage];
-            const keys = ['currentMonth', 'month', 'selectedMonth', 'monthNumber'];
+            const storages = [
+                localStorage,
+                sessionStorage
+            ];
             
-            for (let s = 0; s < storages.length; s++) {
+            const keys = [
+                'currentMonth',
+                'month',
+                'selectedMonth',
+                'monthNumber'
+            ];
+            
+            for (
+                let s = 0;
+                s < storages.length;
+                s++
+            ) {
                 try {
-                    for (let k = 0; k < keys.length; k++) {
-                        const value = storages[s].getItem(keys[k]);
+                    for (
+                        let k = 0;
+                        k < keys.length;
+                        k++
+                    ) {
+                        const value =
+                            storages[s].getItem(
+                                keys[k]
+                            );
+                        
                         if (value) {
-                            const match = value.match(/\d+/);
-                            if (match) return match[0];
+                            const match =
+                                value.match(/\d+/);
+                            
+                            if (match) {
+                                return match[0];
+                            }
                         }
                     }
                 } catch(e) {}
             }
+            
             return null;
         }
         
         fromWindow() {
-            const keys = ['__currentMonth', 'month', 'selectedMonth', 'currentMonth'];
-            for (let i = 0; i < keys.length; i++) {
+            const keys = [
+                '__currentMonth',
+                'month',
+                'selectedMonth',
+                'currentMonth'
+            ];
+            
+            for (
+                let i = 0;
+                i < keys.length;
+                i++
+            ) {
                 if (window[keys[i]]) {
-                    const value = window[keys[i]].toString();
-                    const match = value.match(/\d+/);
-                    if (match) return match[0];
+                    const value =
+                        window[keys[i]].toString();
+                    
+                    const match =
+                        value.match(/\d+/);
+                    
+                    if (match) {
+                        return match[0];
+                    }
                 }
             }
+            
             return null;
         }
         
         fromTitle() {
-            const match = document.title.match(/\d+/);
-            return match ? match[0] : null;
+            const match =
+                document.title.match(/\d+/);
+            
+            return match
+                ? match[0]
+                : null;
         }
         
         fromTableHeaders() {
-            const headers = document.querySelectorAll('th, caption, thead td');
-            for (let i = 0; i < headers.length; i++) {
-                const match = headers[i].textContent.match(/شهر\s*(\d+)/);
-                if (match) return match[1];
+            const headers =
+                document.querySelectorAll(
+                    'th, caption, thead td'
+                );
+            
+            for (
+                let i = 0;
+                i < headers.length;
+                i++
+            ) {
+                const match =
+                    headers[i]
+                        .textContent
+                        .match(/شهر\s*(\d+)/);
+                
+                if (match) {
+                    return match[1];
+                }
             }
+            
             return null;
         }
         
         fromURL() {
-            const match = window.location.href.match(/[?&]month=(\d+)/);
-            return match ? match[1] : null;
+            const match =
+                window.location.href.match(
+                    /[?&]month=(\d+)/
+                );
+            
+            return match
+                ? match[1]
+                : null;
         }
         
         fromDate() {
-            return (new Date().getMonth() + 1).toString();
+            return (
+                new Date().getMonth() + 1
+            ).toString();
         }
     }
     
@@ -12893,7 +13060,8 @@ useEffect(() => {
     
     class DataManager {
         constructor() {
-            this.monthDetector = new MonthDetector();
+            this.monthDetector =
+                new MonthDetector();
         }
         
         getMonth() {
@@ -12901,8 +13069,12 @@ useEffect(() => {
         }
         
         extractRowData(row) {
-            const cells = row.querySelectorAll('td');
-            if (cells.length < 13) return null;
+            const cells =
+                row.querySelectorAll('td');
+            
+            if (cells.length < 13) {
+                return null;
+            }
             
             const getText = (cell) => {
                 if (!cell) return '';
@@ -12923,45 +13095,93 @@ useEffect(() => {
         }
         
         getRowData(rowIndex) {
-            // من الكاش
             if (state.cache.has(rowIndex)) {
-                const cached = state.cache.get(rowIndex);
-                if (Date.now() - cached.timestamp < CONFIG.CACHE_EXPIRY) {
+                
+                const cached =
+                    state.cache.get(rowIndex);
+                
+                if (
+                    Date.now() -
+                    cached.timestamp <
+                    CONFIG.CACHE_EXPIRY
+                ) {
                     return cached.data;
                 }
             }
             
-            const tableWrapper = document.getElementById('tableWrapper');
-            if (!tableWrapper) return null;
+            const tableWrapper =
+                document.getElementById(
+                    'tableWrapper'
+                );
             
-            const rows = tableWrapper.querySelectorAll('tbody tr');
-            if (rowIndex >= rows.length) return null;
-            
-            const data = this.extractRowData(rows[rowIndex]);
-            if (data) {
-                state.cache.set(rowIndex, {
-                    data: data,
-                    timestamp: Date.now()
-                });
+            if (!tableWrapper) {
+                return null;
             }
+            
+            const rows =
+                tableWrapper.querySelectorAll(
+                    'tbody tr'
+                );
+            
+            if (rowIndex >= rows.length) {
+                return null;
+            }
+            
+            const data =
+                this.extractRowData(
+                    rows[rowIndex]
+                );
+            
+            if (data) {
+                state.cache.set(
+                    rowIndex,
+                    {
+                        data: data,
+                        timestamp: Date.now()
+                    }
+                );
+            }
+            
             return data;
         }
         
         getAllRows() {
-            const tableWrapper = document.getElementById('tableWrapper');
-            if (!tableWrapper) return [];
+            const tableWrapper =
+                document.getElementById(
+                    'tableWrapper'
+                );
             
-            const rows = tableWrapper.querySelectorAll('tbody tr');
+            if (!tableWrapper) {
+                return [];
+            }
+            
+            const rows =
+                tableWrapper.querySelectorAll(
+                    'tbody tr'
+                );
+            
             const result = [];
             const month = this.getMonth();
             const totalRows = rows.length;
             
-            // استثناء الصف الأخير فقط
-            for (let i = 0; i < totalRows - 1; i++) {
-                const data = this.extractRowData(rows[i]);
+            for (
+                let i = 0;
+                i < totalRows - 1;
+                i++
+            ) {
+                const data =
+                    this.extractRowData(
+                        rows[i]
+                    );
+                
                 if (data) {
                     data.month = month;
-                    result.push({ index: i, data, row: rows[i] });
+                    
+                    result.push({
+                        index: i,
+                        data: data,
+                        row: rows[i]
+                    });
                 }
             }
             
@@ -12975,19 +13195,44 @@ useEffect(() => {
     
     class UIManager {
         constructor(dataManager) {
-            this.dataManager = dataManager;
+            this.dataManager =
+                dataManager;
+            
             this.toastTimer = null;
         }
         
         createButton(index) {
-            const btn = document.createElement('button');
-            btn.className = 'send-btn-added';
+            const btn =
+                document.createElement('button');
+            
+            btn.className =
+                'send-btn-added';
+            
             btn.innerHTML = '💬';
-            btn.title = 'إرسال رسالة';
-            btn.setAttribute('data-index', index);
+            
+            btn.title =
+                'إرسال رسالة';
+            
+            btn.setAttribute(
+                'data-index',
+                index
+            );
+            
+            const defaultColor =
+                CONFIG.BUTTON_COLOR;
+            
+            const clickColor =
+                CONFIG.BUTTON_CLICK_COLOR;
+            
+            const clickDuration =
+                CONFIG.CLICK_DURATION;
+            
+            // ========================================================
+            // الشكل الأساسي للزر
+            // ========================================================
             
             btn.style.cssText = `
-                background: ${CONFIG.BUTTON_COLOR};
+                background: ${defaultColor};
                 border: none;
                 color: white;
                 border-radius: 50%;
@@ -13002,91 +13247,481 @@ useEffect(() => {
                 flex-shrink: 0;
                 vertical-align: middle;
                 box-shadow: 0 2px 8px rgba(37,211,102,0.4);
-                transition: all 0.15s ease;
+                transition: all 0.3s ease;
             `;
             
-            // أحداث الـ Hover
-            btn.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.1)';
-                this.style.boxShadow = '0 4px 16px rgba(37,211,102,0.6)';
-            });
+            // ========================================================
+            // استعادة حالة الزر إذا كانت الـ30 ثانية لم تنتهِ
+            // ========================================================
             
-            btn.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-                this.style.boxShadow = '0 2px 8px rgba(37,211,102,0.4)';
-            });
+            const clickedUntil =
+                state.clickedButtons.get(index);
             
-            // حدث النقر - الأهم
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                e.preventDefault();
-                const idx = parseInt(this.getAttribute('data-index'));
-                console.log('🔘 تم النقر على الزر رقم:', idx);
-                window.sendSMSOptimized(idx);
-            });
+            if (
+                clickedUntil &&
+                Date.now() < clickedUntil
+            ) {
+                
+                btn.style.background =
+                    clickColor;
+                
+                btn.style.transform =
+                    'scale(1)';
+                
+                btn.style.boxShadow =
+                    '0 2px 12px rgba(255,68,68,0.6)';
+                
+                btn.innerHTML =
+                    '✓';
+                
+                btn.style.fontSize =
+                    '18px';
+                
+                btn.style.fontWeight =
+                    'bold';
+                
+                btn.dataset.clicked =
+                    'true';
+                
+                // ====================================================
+                // إنشاء مؤقت جديد بالوقت المتبقي
+                // ====================================================
+                
+                if (
+                    state.buttonTimeouts.has(index)
+                ) {
+                    clearTimeout(
+                        state.buttonTimeouts.get(index)
+                    );
+                }
+                
+                const remainingTime =
+                    clickedUntil - Date.now();
+                
+                const timeoutId =
+                    setTimeout(() => {
+                        
+                        // حذف حالة الضغط
+                        state.clickedButtons.delete(
+                            index
+                        );
+                        
+                        // حذف المؤقت
+                        state.buttonTimeouts.delete(
+                            index
+                        );
+                        
+                        // البحث عن الزر الحالي
+                        const currentBtn =
+                            document.querySelector(
+                                `.send-btn-added[data-index="${index}"]`
+                            );
+                        
+                        if (currentBtn) {
+                            
+                            currentBtn.style.background =
+                                defaultColor;
+                            
+                            currentBtn.style.transform =
+                                'scale(1)';
+                            
+                            currentBtn.style.boxShadow =
+                                '0 2px 8px rgba(37,211,102,0.4)';
+                            
+                            currentBtn.innerHTML =
+                                '💬';
+                            
+                            currentBtn.style.fontSize =
+                                '14px';
+                            
+                            currentBtn.style.fontWeight =
+                                'normal';
+                            
+                            delete currentBtn.dataset.clicked;
+                            
+                            console.log(
+                                `🟢 انتهت مدة الزر ${index} - عاد للأخضر و💬`
+                            );
+                        }
+                        
+                    }, Math.max(0, remainingTime));
+                
+                state.buttonTimeouts.set(
+                    index,
+                    timeoutId
+                );
+            }
+            
+            // ========================================================
+            // حدث hover
+            // ========================================================
+            
+            btn.addEventListener(
+                'mouseenter',
+                function() {
+                    
+                    if (!this.dataset.clicked) {
+                        
+                        this.style.transform =
+                            'scale(1.1)';
+                        
+                        this.style.boxShadow =
+                            '0 4px 16px rgba(37,211,102,0.6)';
+                    }
+                }
+            );
+            
+            btn.addEventListener(
+                'mouseleave',
+                function() {
+                    
+                    if (!this.dataset.clicked) {
+                        
+                        this.style.transform =
+                            'scale(1)';
+                        
+                        this.style.boxShadow =
+                            '0 2px 8px rgba(37,211,102,0.4)';
+                    }
+                }
+            );
+            
+            // ========================================================
+            // حدث النقر
+            // ========================================================
+            
+            btn.addEventListener(
+                'click',
+                function(e) {
+                    
+                    e.stopPropagation();
+                    e.preventDefault();
+                    
+                    const idx =
+                        parseInt(
+                            this.getAttribute(
+                                'data-index'
+                            )
+                        );
+                    
+                    console.log(
+                        '🔘 تم النقر على الزر رقم:',
+                        idx
+                    );
+                    
+                    // ==================================================
+                    // إلغاء المؤقت السابق
+                    // ==================================================
+                    
+                    if (
+                        state.buttonTimeouts.has(idx)
+                    ) {
+                        
+                        clearTimeout(
+                            state.buttonTimeouts.get(idx)
+                        );
+                        
+                        state.buttonTimeouts.delete(
+                            idx
+                        );
+                    }
+                    
+                    // ==================================================
+                    // حفظ وقت انتهاء الـ30 ثانية
+                    // ==================================================
+                    
+                    const clickedUntil =
+                        Date.now() +
+                        clickDuration;
+                    
+                    state.clickedButtons.set(
+                        idx,
+                        clickedUntil
+                    );
+                    
+                    console.log(
+                        `🔴 الزر ${idx} أصبح أحمر لمدة 30 ثانية`
+                    );
+                    
+                    // ==================================================
+                    // تغيير اللون فورًا
+                    // ==================================================
+                    
+                    this.style.background =
+                        clickColor;
+                    
+                    this.style.transform =
+                        'scale(0.85)';
+                    
+                    this.style.boxShadow =
+                        '0 2px 12px rgba(255,68,68,0.6)';
+                    
+                    this.style.transition =
+                        'all 0.2s ease';
+                    
+                    this.dataset.clicked =
+                        'true';
+                    
+                    // ==================================================
+                    // علامة الصح
+                    // ==================================================
+                    
+                    this.innerHTML =
+                        '✓';
+                    
+                    this.style.fontSize =
+                        '18px';
+                    
+                    this.style.fontWeight =
+                        'bold';
+                    
+                    // ==================================================
+                    // مؤقت الـ30 ثانية
+                    // ==================================================
+                    
+                    const timeoutId =
+                        setTimeout(() => {
+                            
+                            // حذف الحالة أولًا
+                            state.clickedButtons.delete(
+                                idx
+                            );
+                            
+                            // حذف المؤقت
+                            state.buttonTimeouts.delete(
+                                idx
+                            );
+                            
+                            // البحث عن الزر الحالي
+                            const currentBtn =
+                                document.querySelector(
+                                    `.send-btn-added[data-index="${idx}"]`
+                                );
+                            
+                            if (currentBtn) {
+                                
+                                // اللون الأخضر
+                                currentBtn.style.background =
+                                    defaultColor;
+                                
+                                currentBtn.style.transform =
+                                    'scale(1)';
+                                
+                                currentBtn.style.boxShadow =
+                                    '0 2px 8px rgba(37,211,102,0.4)';
+                                
+                                // إعادة أيقونة الرسالة
+                                currentBtn.innerHTML =
+                                    '💬';
+                                
+                                currentBtn.style.fontSize =
+                                    '14px';
+                                
+                                currentBtn.style.fontWeight =
+                                    'normal';
+                                
+                                // إزالة حالة الضغط نهائيًا
+                                delete currentBtn.dataset.clicked;
+                                
+                                console.log(
+                                    `🟢 الزر ${idx}: انتهت 30 ثانية وتم حذف ✓`
+                                );
+                            }
+                            
+                        }, clickDuration);
+                    
+                    state.buttonTimeouts.set(
+                        idx,
+                        timeoutId
+                    );
+                    
+                    // ==================================================
+                    // استدعاء وظيفة الإرسال
+                    // ==================================================
+                    
+                    window.sendSMSOptimized(
+                        idx
+                    );
+                }
+            );
             
             return btn;
         }
         
+        // ============================================================
+        // رسم الأزرار
+        // ============================================================
+        
         renderButtons() {
-            // إلغاء أي عملية تقديم معلقة
+            
             if (state.renderTimeout) {
-                clearTimeout(state.renderTimeout);
+                
+                clearTimeout(
+                    state.renderTimeout
+                );
+                
                 state.renderTimeout = null;
             }
             
+            // ========================================================
             // حذف الأزرار القديمة
-            const oldButtons = document.querySelectorAll('.send-btn-added');
-            for (let i = 0; i < oldButtons.length; i++) {
+            // ========================================================
+            
+            const oldButtons =
+                document.querySelectorAll(
+                    '.send-btn-added'
+                );
+            
+            for (
+                let i = 0;
+                i < oldButtons.length;
+                i++
+            ) {
                 oldButtons[i].remove();
             }
             
-            const rows = this.dataManager.getAllRows();
+            // ========================================================
+            // الحصول على الصفوف
+            // ========================================================
+            
+            const rows =
+                this.dataManager.getAllRows();
+            
             if (rows.length === 0) {
-                if (state.retryCount < CONFIG.MAX_RETRIES) {
+                
+                if (
+                    state.retryCount <
+                    CONFIG.MAX_RETRIES
+                ) {
+                    
                     state.retryCount++;
-                    state.renderTimeout = setTimeout(() => this.renderButtons(), CONFIG.DEBOUNCE_DELAY * 2);
+                    
+                    state.renderTimeout =
+                        setTimeout(
+                            () =>
+                                this.renderButtons(),
+                            CONFIG.DEBOUNCE_DELAY * 2
+                        );
                 }
+                
                 return;
             }
             
             state.retryCount = 0;
             
-            // تخزين البيانات في الكاش
-            for (let i = 0; i < rows.length; i++) {
-                const { index, data } = rows[i];
-                state.cache.set(index, {
-                    data: data,
-                    timestamp: Date.now()
-                });
+            // ========================================================
+            // تحديث الكاش
+            // ========================================================
+            
+            for (
+                let i = 0;
+                i < rows.length;
+                i++
+            ) {
+                
+                const {
+                    index,
+                    data
+                } = rows[i];
+                
+                state.cache.set(
+                    index,
+                    {
+                        data: data,
+                        timestamp: Date.now()
+                    }
+                );
             }
             
+            // ========================================================
             // إضافة الأزرار
+            // ========================================================
+            
             let addedCount = 0;
-            for (let i = 0; i < rows.length; i++) {
-                const { index, row } = rows[i];
-                const cells = row.querySelectorAll('td');
-                if (cells.length < 2) continue;
+            
+            for (
+                let i = 0;
+                i < rows.length;
+                i++
+            ) {
                 
-                const meterCell = cells[0];
-                if (!meterCell || meterCell.querySelector('.send-btn-added')) continue;
+                const {
+                    index,
+                    row
+                } = rows[i];
                 
-                const btn = this.createButton(index);
-                meterCell.insertBefore(btn, meterCell.firstChild);
+                const cells =
+                    row.querySelectorAll(
+                        'td'
+                    );
+                
+                if (cells.length < 2) {
+                    continue;
+                }
+                
+                const meterCell =
+                    cells[0];
+                
+                if (!meterCell) {
+                    continue;
+                }
+                
+                if (
+                    meterCell.querySelector(
+                        '.send-btn-added'
+                    )
+                ) {
+                    continue;
+                }
+                
+                const btn =
+                    this.createButton(
+                        index
+                    );
+                
+                meterCell.insertBefore(
+                    btn,
+                    meterCell.firstChild
+                );
+                
                 addedCount++;
             }
             
-            console.log(`✅ تم إضافة ${addedCount} زر إرسال`);
+            console.log(
+                `✅ تم إضافة ${addedCount} زر إرسال`
+            );
+            
             state.initialized = true;
         }
         
-        showToast(message, type = 'success') {
-            const oldToast = document.querySelector('.custom-toast');
-            if (oldToast) oldToast.remove();
+        // ============================================================
+        // رسائل التنبيه
+        // ============================================================
+        
+        showToast(
+            message,
+            type = 'success'
+        ) {
             
-            const toast = document.createElement('div');
-            toast.className = 'custom-toast';
-            toast.textContent = message;
+            const oldToast =
+                document.querySelector(
+                    '.custom-toast'
+                );
+            
+            if (oldToast) {
+                oldToast.remove();
+            }
+            
+            const toast =
+                document.createElement(
+                    'div'
+                );
+            
+            toast.className =
+                'custom-toast';
+            
+            toast.textContent =
+                message;
             
             const colors = {
                 success: '#25D366',
@@ -13112,22 +13747,45 @@ useEffect(() => {
                 opacity: 1;
             `;
             
-            document.body.appendChild(toast);
+            document.body.appendChild(
+                toast
+            );
             
-            clearTimeout(this.toastTimer);
-            this.toastTimer = setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.25s';
-                setTimeout(() => toast.remove(), 250);
-            }, CONFIG.TOAST_DURATION);
+            clearTimeout(
+                this.toastTimer
+            );
+            
+            this.toastTimer =
+                setTimeout(() => {
+                    
+                    toast.style.opacity =
+                        '0';
+                    
+                    toast.style.transition =
+                        'opacity 0.25s';
+                    
+                    setTimeout(
+                        () => toast.remove(),
+                        250
+                    );
+                    
+                },
+                CONFIG.TOAST_DURATION
+            );
         }
         
         showError(message) {
-            this.showToast('❌ ' + message, 'error');
+            this.showToast(
+                '❌ ' + message,
+                'error'
+            );
         }
         
         showSuccess(message) {
-            this.showToast('✅ ' + message, 'success');
+            this.showToast(
+                '✅ ' + message,
+                'success'
+            );
         }
     }
     
@@ -13136,126 +13794,341 @@ useEffect(() => {
     // ============================================================
     
     class SMSManager {
+        
         constructor() {
-            this.dataManager = new DataManager();
-            this.uiManager = new UIManager(this.dataManager);
-            this.updateTimer = null;
+            this.dataManager =
+                new DataManager();
+            
+            this.uiManager =
+                new UIManager(
+                    this.dataManager
+                );
+            
+            this.updateTimer =
+                null;
         }
         
         init() {
-            // تأكد من وجود الجدول
+            
+            // ======================================================
+            // انتظار ظهور الجدول
+            // ======================================================
+            
             const checkTable = () => {
-                const tableWrapper = document.getElementById('tableWrapper');
+                
+                const tableWrapper =
+                    document.getElementById(
+                        'tableWrapper'
+                    );
+                
                 if (tableWrapper) {
-                    requestAnimationFrame(() => {
-                        this.uiManager.renderButtons();
-                    });
+                    
+                    requestAnimationFrame(
+                        () => {
+                            this.uiManager
+                                .renderButtons();
+                        }
+                    );
+                    
                 } else {
-                    setTimeout(checkTable, 100);
+                    
+                    setTimeout(
+                        checkTable,
+                        100
+                    );
                 }
             };
             
             checkTable();
             
-            // مراقبة التغييرات
-            const observer = new MutationObserver((mutations) => {
-                let shouldUpdate = false;
-                for (let i = 0; i < mutations.length; i++) {
-                    if (mutations[i].type === 'childList' && mutations[i].addedNodes.length > 0) {
-                        shouldUpdate = true;
-                        break;
+            // ======================================================
+            // مراقبة تغييرات الجدول
+            // ======================================================
+            
+            const observer =
+                new MutationObserver(
+                    (mutations) => {
+                        
+                        let shouldUpdate =
+                            false;
+                        
+                        for (
+                            let i = 0;
+                            i < mutations.length;
+                            i++
+                        ) {
+                            
+                            if (
+                                mutations[i]
+                                    .type ===
+                                'childList' &&
+                                mutations[i]
+                                    .addedNodes
+                                    .length > 0
+                            ) {
+                                
+                                shouldUpdate =
+                                    true;
+                                
+                                break;
+                            }
+                        }
+                        
+                        if (shouldUpdate) {
+                            
+                            clearTimeout(
+                                this.updateTimer
+                            );
+                            
+                            this.updateTimer =
+                                setTimeout(
+                                    () => {
+                                        
+                                        requestAnimationFrame(
+                                            () => {
+                                                this.uiManager
+                                                    .renderButtons();
+                                            }
+                                        );
+                                        
+                                    },
+                                    CONFIG.DEBOUNCE_DELAY
+                                );
+                        }
                     }
-                }
-                
-                if (shouldUpdate) {
-                    clearTimeout(this.updateTimer);
-                    this.updateTimer = setTimeout(() => {
-                        requestAnimationFrame(() => {
-                            this.uiManager.renderButtons();
-                        });
-                    }, CONFIG.DEBOUNCE_DELAY);
-                }
-            });
+                );
             
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
+            observer.observe(
+                document.body,
+                {
+                    childList: true,
+                    subtree: true
+                }
+            );
             
-            console.log('🚀 نظام الإرسال جاهز - يستثني الصف الأخير فقط');
+            console.log(
+                '🚀 نظام الإرسال جاهز - الأزرار تبقى حمراء لمدة 30 ثانية'
+            );
         }
         
+        // ============================================================
+        // إرسال الرسالة
+        // ============================================================
+        
         send(rowIndex) {
-            console.log('📤 محاولة إرسال للصف:', rowIndex);
+            
+            console.log(
+                '📤 محاولة إرسال للصف:',
+                rowIndex
+            );
             
             if (state.isProcessing) {
-                this.uiManager.showToast('⏳ جاري المعالجة...', 'warning');
+                
+                this.uiManager.showToast(
+                    '⏳ جاري المعالجة...',
+                    'warning'
+                );
+                
                 return;
             }
             
-            state.isProcessing = true;
+            state.isProcessing =
+                true;
             
             try {
-                const data = this.dataManager.getRowData(rowIndex);
-                console.log('📊 البيانات المستخرجة:', data);
+                
+                const data =
+                    this.dataManager
+                        .getRowData(
+                            rowIndex
+                        );
+                
+                console.log(
+                    '📊 البيانات المستخرجة:',
+                    data
+                );
                 
                 if (!data) {
-                    this.uiManager.showError('البيانات غير مكتملة');
-                    state.isProcessing = false;
+                    
+                    this.uiManager.showError(
+                        'البيانات غير مكتملة'
+                    );
+                    
+                    state.isProcessing =
+                        false;
+                    
                     return;
                 }
                 
-                // التحقق من وجود رقم هاتف
-                if (!data.phone || data.phone.trim() === '') {
-                    this.uiManager.showError('رقم الهاتف غير موجود');
-                    state.isProcessing = false;
+                if (
+                    !data.phone ||
+                    data.phone.trim() === ''
+                ) {
+                    
+                    this.uiManager.showError(
+                        'رقم الهاتف غير موجود'
+                    );
+                    
+                    state.isProcessing =
+                        false;
+                    
                     return;
                 }
                 
-                const diff = parseFloat(data.current) - parseFloat(data.previous);
-                const remainingNum = parseFloat(data.remaining);
-                const warning = remainingNum >= 5000 ? ' ⚠️ إنذار بالفصل' : '';
+                // ==================================================
+                // حساب الفرق
+                // ==================================================
                 
-                const message = `فاتورة شهر ${data.month}: سابقة: ${data.previous}, الحالية: ${data.current}, الفارق: ${diff}, القيمة: ${data.value}, الاشتراك: ${data.subscription}, المجموع: ${data.total}, المسلم: ${data.paid}, المتبقي: ${data.remaining}${warning}`;
+                const diff =
+                    parseFloat(
+                        data.current
+                    ) -
+                    parseFloat(
+                        data.previous
+                    );
                 
-                console.log('📝 الرسالة:', message);
+                const remainingNum =
+                    parseFloat(
+                        data.remaining
+                    );
                 
-                let phone = data.phone.toString().trim().replace(/\s/g, '');
-                if (phone.startsWith('0')) phone = phone.substring(1);
-                if (phone.length === 9 && phone.startsWith('7')) {
-                    phone = '+967' + phone;
+                const warning =
+                    remainingNum >= 5000
+                        ? ' ⚠️ إنذار بالفصل'
+                        : '';
+                
+                // ==================================================
+                // إنشاء الرسالة
+                // ==================================================
+                
+                const message =
+                    `فاتورة شهر ${data.month}: سابقة: ${data.previous}, الحالية: ${data.current}, الفارق: ${diff}, القيمة: ${data.value}, الاشتراك: ${data.subscription}, المجموع: ${data.total}, المسلم: ${data.paid}, المتبقي: ${data.remaining}${warning}`;
+                
+                console.log(
+                    '📝 الرسالة:',
+                    message
+                );
+                
+                // ==================================================
+                // تنسيق رقم الهاتف
+                // ==================================================
+                
+                let phone =
+                    data.phone
+                        .toString()
+                        .trim()
+                        .replace(/\s/g, '');
+                
+                if (
+                    phone.startsWith('0')
+                ) {
+                    phone =
+                        phone.substring(1);
                 }
                 
-                console.log('📱 رقم الهاتف بعد التنسيق:', phone);
+                if (
+                    phone.length === 9 &&
+                    phone.startsWith('7')
+                ) {
+                    phone =
+                        '+967' + phone;
+                }
                 
-                if (phone.length >= 9) {
-                    const smsUrl = `sms:${phone}?body=${encodeURIComponent(message)}`;
-                    console.log('🔗 فتح الرابط:', smsUrl);
-                    window.location.href = smsUrl;
-                    this.uiManager.showSuccess('تم فتح تطبيق الرسائل');
+                console.log(
+                    '📱 رقم الهاتف بعد التنسيق:',
+                    phone
+                );
+                
+                // ==================================================
+                // فتح تطبيق الرسائل
+                // ==================================================
+                
+                if (
+                    phone.length >= 9
+                ) {
+                    
+                    const smsUrl =
+                        `sms:${phone}?body=${encodeURIComponent(message)}`;
+                    
+                    console.log(
+                        '🔗 فتح الرابط:',
+                        smsUrl
+                    );
+                    
+                    window.location.href =
+                        smsUrl;
+                    
+                    this.uiManager.showSuccess(
+                        'تم فتح تطبيق الرسائل'
+                    );
+                    
                 } else {
-                    // نسخ الرسالة للحافظة
-                    navigator.clipboard.writeText(message).then(() => {
-                        this.uiManager.showSuccess('تم نسخ الرسالة');
-                    }).catch(() => {
-                        // طريقة بديلة للنسخ
-                        const textarea = document.createElement('textarea');
-                        textarea.value = message;
-                        document.body.appendChild(textarea);
-                        textarea.select();
-                        document.execCommand('copy');
-                        textarea.remove();
-                        this.uiManager.showSuccess('تم نسخ الرسالة');
-                    });
+                    
+                    // =================================================
+                    // نسخ الرسالة
+                    // =================================================
+                    
+                    navigator.clipboard
+                        .writeText(
+                            message
+                        )
+                        .then(() => {
+                            
+                            this.uiManager
+                                .showSuccess(
+                                    'تم نسخ الرسالة'
+                                );
+                            
+                        })
+                        .catch(() => {
+                            
+                            const textarea =
+                                document.createElement(
+                                    'textarea'
+                                );
+                            
+                            textarea.value =
+                                message;
+                            
+                            document.body.appendChild(
+                                textarea
+                            );
+                            
+                            textarea.select();
+                            
+                            document.execCommand(
+                                'copy'
+                            );
+                            
+                            textarea.remove();
+                            
+                            this.uiManager
+                                .showSuccess(
+                                    'تم نسخ الرسالة'
+                                );
+                        });
                 }
                 
             } catch (error) {
-                console.error('❌ خطأ:', error);
-                this.uiManager.showError(error.message || 'حدث خطأ غير متوقع');
+                
+                console.error(
+                    '❌ خطأ:',
+                    error
+                );
+                
+                this.uiManager.showError(
+                    error.message ||
+                    'حدث خطأ غير متوقع'
+                );
             }
             
+            // ========================================================
+            // السماح بإرسال جديد بعد 300ms
+            // ========================================================
+            
             setTimeout(() => {
-                state.isProcessing = false;
+                state.isProcessing =
+                    false;
             }, 300);
         }
     }
@@ -13264,7 +14137,9 @@ useEffect(() => {
     //  إضافة أنماط CSS المتحركة
     // ============================================================
     
-    const style = document.createElement('style');
+    const style =
+        document.createElement('style');
+    
     style.textContent = `
         @keyframes slideInRight {
             from {
@@ -13283,46 +14158,89 @@ useEffect(() => {
         }
         
         .send-btn-added:active {
-            transform: scale(0.9) !important;
+            transform: scale(0.85) !important;
         }
     `;
-    document.head.appendChild(style);
+    
+    document.head.appendChild(
+        style
+    );
     
     // ============================================================
     //  تشغيل النظام
     // ============================================================
     
-    const smsManager = new SMSManager();
+    const smsManager =
+        new SMSManager();
     
-    // تعريف الدوال العالمية
-    window.sendSMSOptimized = function(index) {
-        console.log('🌐 تم استدعاء sendSMSOptimized من العام:', index);
-        smsManager.send(index);
-    };
+    // ============================================================
+    // وظيفة الإرسال العامة
+    // ============================================================
     
-    window.initSendButtons = function() {
-        smsManager.uiManager.renderButtons();
-    };
+    window.sendSMSOptimized =
+        function(index) {
+            
+            console.log(
+                '🌐 تم استدعاء sendSMSOptimized من العام:',
+                index
+            );
+            
+            smsManager.send(index);
+        };
     
-    window.getMonth = function() {
-        return smsManager.dataManager.getMonth();
-    };
+    // ============================================================
+    // إعادة رسم الأزرار يدويًا
+    // ============================================================
     
-    // بدء التشغيل
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            smsManager.init();
-        });
+    window.initSendButtons =
+        function() {
+            smsManager.uiManager
+                .renderButtons();
+        };
+    
+    // ============================================================
+    // الحصول على الشهر
+    // ============================================================
+    
+    window.getMonth =
+        function() {
+            return smsManager
+                .dataManager
+                .getMonth();
+        };
+    
+    // ============================================================
+    // تشغيل النظام بعد تحميل الصفحة
+    // ============================================================
+    
+    if (
+        document.readyState ===
+        'loading'
+    ) {
+        
+        document.addEventListener(
+            'DOMContentLoaded',
+            function() {
+                smsManager.init();
+            }
+        );
+        
     } else {
+        
         smsManager.init();
     }
     
-    console.log('✅ تم تحميل نظام الإرسال - الأزرار تعمل الآن');
-    console.log('💡 اضغط F12 وافتح Console لمشاهدة السجلات');
+    console.log(
+        '✅ تم تحميل نظام الإرسال - ✓ تختفي بعد 30 ثانية'
+    );
+    
+    console.log(
+        '💡 اضغط F12 وافتح Console لمشاهدة السجلات'
+    );
     
 })();
 </script>
-<!-- ===== زر الخروج من وضع العرض السريع ===== -->
+
 <script>
 (function() {
     'use strict';
@@ -15767,7 +16685,7 @@ useEffect(() => {
     'use strict';
 
     // ============================================================
-    //  نظام البحث الصوتي المتطور - يدعم الحاليه ودفع
+    //  نظام البحث الصوتي المتطور - يدعم جميع الأزرار
     // ============================================================
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -15777,243 +16695,444 @@ useEffect(() => {
     }
 
     // ============================================================
+    //  خريطة الأوامر الصوتية والأزرار المقابلة لها
+    // ============================================================
+
+    const VOICE_COMMANDS = {
+        // ===== أزرار التبويبات الرئيسية =====
+        'تقرير': {
+            keywords: ['تقرير', 'تقرير القرى', 'إحصاء', 'ملخص', 'القرى', 'تقرير القرى'],
+            selector: '[title="تقرير القرى"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="تقرير القرى"]');
+                if (btn) btn.click();
+            }
+        },
+        'تحديث': {
+            keywords: ['تحديث', 'تحميل', 'تحديث البيانات', 'refresh'],
+            selector: '[title="تحديث"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="تحديث"]');
+                if (btn) btn.click();
+            }
+        },
+        'ذكاء': {
+            keywords: ['ذكاء', 'ai', 'تحليل', 'الذكاء', 'ذكاء اصطناعي'],
+            selector: '[title="عرض الذكاء"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="عرض الذكاء"]');
+                if (btn) btn.click();
+            }
+        },
+        'رسوم': {
+            keywords: ['رسوم', 'مخطط', 'charts', 'الرسوم', 'رسوم بيانية'],
+            selector: '[title="عرض الرسوم"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="عرض الرسوم"]');
+                if (btn) btn.click();
+            }
+        },
+        'خروج': {
+            keywords: ['خروج', 'logout', 'تسجيل خروج', 'اغلاق'],
+            selector: '[title="خروج"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="خروج"]');
+                if (btn) btn.click();
+            }
+        },
+        'تركيز': {
+            keywords: ['تركيز', 'وضع التركيز', 'focus'],
+            selector: '[title="وضع التركيز"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="وضع التركيز"]');
+                if (btn) btn.click();
+            }
+        },
+
+        // ===== أزرار الوضع =====
+        'طبيعي': {
+            keywords: ['طبيعي', 'وضع طبيعي', 'نهاري', 'يوم'],
+            selector: '[title="الوضع الطبيعي"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="الوضع الطبيعي"]');
+                if (btn) btn.click();
+            }
+        },
+        'ليلي': {
+            keywords: ['ليلي', 'وضع ليلي', 'ليل', 'مسائي'],
+            selector: '[title="الوضع الليلي"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="الوضع الليلي"]');
+                if (btn) btn.click();
+            }
+        },
+        'داكن': {
+            keywords: ['داكن', 'وضع داكن', 'داكنة', 'اسود'],
+            selector: '[title="الوضع الداكن"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="الوضع الداكن"]');
+                if (btn) btn.click();
+            }
+        },
+        'طليعي': {
+            keywords: ['طليعي', 'pro', 'وضع طليعي', 'متقدم'],
+            selector: '[title="الوضع الطليعي PRO"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="الوضع الطليعي PRO"]');
+                if (btn) btn.click();
+            }
+        },
+
+        // ===== أزرار الوظائف =====
+        'توفير': {
+            keywords: ['توفير', 'توفير البيانات', 'حفظ البيانات'],
+            selector: '[title="تفعيل توفير البيانات"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="تفعيل توفير البيانات"]');
+                if (btn) btn.click();
+            }
+        },
+        'سريع': {
+            keywords: ['سريع', 'عرض سريع', 'quick'],
+            selector: '[title="تفعيل العرض السريع"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="تفعيل العرض السريع"]');
+                if (btn) btn.click();
+            }
+        },
+
+        // ===== أزرار القرى =====
+        'السوفعي': {
+            keywords: ['السوفعي', 'سوفعي', 'قرية السوفعي'],
+            selector: 'select:first-of-type option[value="السوفعي"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:first-of-type');
+                if (select) { select.value = 'السوفعي'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'العليا': {
+            keywords: ['العليا', 'عليا', 'قرية العليا'],
+            selector: 'select:first-of-type option[value="العليا"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:first-of-type');
+                if (select) { select.value = 'العليا'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'السفلى': {
+            keywords: ['السفلى', 'سفلى', 'قرية السفلى'],
+            selector: 'select:first-of-type option[value="السفلى"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:first-of-type');
+                if (select) { select.value = 'السفلى'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'الشعابي': {
+            keywords: ['الشعابي', 'شعابي', 'قرية الشعابي'],
+            selector: 'select:first-of-type option[value="الشعابي"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:first-of-type');
+                if (select) { select.value = 'الشعابي'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'الجبل': {
+            keywords: ['الجبل', 'جبل', 'قرية الجبل'],
+            selector: 'select:first-of-type option[value="الجبل"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:first-of-type');
+                if (select) { select.value = 'الجبل'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'حيزان': {
+            keywords: ['حيزان', 'قرية حيزان'],
+            selector: 'select:first-of-type option[value="حيزان"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:first-of-type');
+                if (select) { select.value = 'حيزان'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'رقش': {
+            keywords: ['رقش', 'قرية رقش'],
+            selector: 'select:first-of-type option[value="رقش"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:first-of-type');
+                if (select) { select.value = 'رقش'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'الضرفة': {
+            keywords: ['الضرفة', 'ضرفة', 'قرية الضرفة'],
+            selector: 'select:first-of-type option[value="الضرفة"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:first-of-type');
+                if (select) { select.value = 'الضرفة'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+
+        // ===== أزرار الأشهر =====
+        'شهر 1': {
+            keywords: ['شهر 1', 'شهر واحد', 'الشهر الاول', 'محرم'],
+            selector: 'select:nth-of-type(2) option[value="شهر 1"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 1'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'شهر 2': {
+            keywords: ['شهر 2', 'شهر اثنين', 'الشهر الثاني', 'صفر'],
+            selector: 'select:nth-of-type(2) option[value="شهر 2"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 2'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'شهر 3': {
+            keywords: ['شهر 3', 'شهر ثلاثة', 'الشهر الثالث', 'ربيع اول'],
+            selector: 'select:nth-of-type(2) option[value="شهر 3"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 3'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'شهر 4': {
+            keywords: ['شهر 4', 'شهر اربعة', 'الشهر الرابع', 'ربيع ثاني'],
+            selector: 'select:nth-of-type(2) option[value="شهر 4"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 4'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'شهر 5': {
+            keywords: ['شهر 5', 'شهر خمسة', 'الشهر الخامس', 'جمادى اول'],
+            selector: 'select:nth-of-type(2) option[value="شهر 5"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 5'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'شهر 6': {
+            keywords: ['شهر 6', 'شهر ستة', 'الشهر السادس', 'جمادى ثاني'],
+            selector: 'select:nth-of-type(2) option[value="شهر 6"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 6'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'شهر 7': {
+            keywords: ['شهر 7', 'شهر سبعة', 'الشهر السابع', 'رجب'],
+            selector: 'select:nth-of-type(2) option[value="شهر 7"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 7'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'شهر 8': {
+            keywords: ['شهر 8', 'شهر ثمانية', 'الشهر الثامن', 'شعبان'],
+            selector: 'select:nth-of-type(2) option[value="شهر 8"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 8'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'شهر 9': {
+            keywords: ['شهر 9', 'شهر تسعة', 'الشهر التاسع', 'رمضان'],
+            selector: 'select:nth-of-type(2) option[value="شهر 9"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 9'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'شهر 10': {
+            keywords: ['شهر 10', 'شهر عشرة', 'الشهر العاشر', 'شوال'],
+            selector: 'select:nth-of-type(2) option[value="شهر 10"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 10'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'شهر 11': {
+            keywords: ['شهر 11', 'شهر احد عشر', 'الشهر الحادي عشر', 'ذو القعدة'],
+            selector: 'select:nth-of-type(2) option[value="شهر 11"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 11'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+        'شهر 12': {
+            keywords: ['شهر 12', 'شهر اثنا عشر', 'الشهر الثاني عشر', 'ذو الحجة'],
+            selector: 'select:nth-of-type(2) option[value="شهر 12"]',
+            fallback: () => {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) { select.value = 'شهر 12'; select.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+        },
+
+        // ===== الأزرار الإضافية =====
+        'مزامنة': {
+            keywords: ['مزامنة', 'مزامنة يدوية', 'sync', 'ارسال التغييرات'],
+            selector: 'button:has-text("مزامنة يدوية")',
+            fallback: () => {
+                const btn = document.querySelector('[title="مزامنة يدوية"]');
+                if (btn) btn.click();
+            }
+        },
+        'رسائل': {
+            keywords: ['رسائل', 'الرسائل النصية', 'sms', 'ارسال رسائل', 'جميع المشتركين'],
+            selector: '[title="الرسائل النصية - جميع المشتركين"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="الرسائل النصية - جميع المشتركين"]');
+                if (btn) btn.click();
+            }
+        },
+        'مديونيات': {
+            keywords: ['مديونيات', 'مديونيات عالية', 'ديون', 'المديونيات', '5000'],
+            selector: '[title="المديونيات العالية (5000+)"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="المديونيات العالية (5000+)"]');
+                if (btn) btn.click();
+            }
+        },
+        'ذاكرة': {
+            keywords: ['ذاكرة', 'ادارة الذاكرة', 'memory', 'مسح الكاش'],
+            selector: '[title="إدارة الذاكرة"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="إدارة الذاكرة"]');
+                if (btn) btn.click();
+            }
+        },
+        'مدير': {
+            keywords: ['مدير', 'لوحة المدير', 'المدير', 'ادارة'],
+            selector: '[title="لوحة المدير"]',
+            fallback: () => {
+                const btn = document.querySelector('[title="لوحة المدير"]');
+                if (btn) btn.click();
+            }
+        },
+
+        // ===== أزرار التقرير =====
+        'تصدير': {
+            keywords: ['تصدير', 'export', 'تحميل', 'تصدير التقرير'],
+            selector: 'button:has-text("تصدير Excel")',
+            fallback: () => {
+                const btns = document.querySelectorAll('button');
+                for (const btn of btns) {
+                    if (btn.textContent.includes('تصدير')) { btn.click(); break; }
+                }
+            }
+        },
+        'طباعة': {
+            keywords: ['طباعة', 'print', 'طباعة التقرير'],
+            selector: 'button:has-text("طباعة")',
+            fallback: () => {
+                const btns = document.querySelectorAll('button');
+                for (const btn of btns) {
+                    if (btn.textContent.includes('طباعة')) { btn.click(); break; }
+                }
+            }
+        },
+
+        // ===== أوامر البحث =====
+        'بحث': {
+            keywords: ['ابحث', 'بحث عن', 'search'],
+            selector: '.smart-search-box input',
+            fallback: () => {
+                const input = document.querySelector('.smart-search-box input');
+                if (input) input.focus();
+            }
+        }
+    };
+
+    // ============================================================
     //  دالة تنفيذ الأوامر الصوتية
     // ============================================================
 
     function executeVoiceCommand(command) {
         console.log('🎤 الأمر الصوتي:', command);
-        const trimmed = command.trim();
+        const trimmed = command.trim().toLowerCase();
 
-        // ============================================================
-        //  الصيغ المدعومة:
-        //  1. "نصر الحاليه 450"  ← تسجيل قراءة حالية
-        //  2. "نصر دفع 5000"     ← تسجيل مبلغ
-        //  3. "نصر"             ← بحث عن مشترك
-        // ============================================================
-
-        // ===== 1. صيغة: [الاسم] الحاليه [القيمة] =====
-        // مثال: "نصر الحاليه 450"
-        const currentMatch = trimmed.match(/^(.+?)\s+(الحاليه|الحالية|حالية|قراءة|عداد)\s+(\d+)$/);
-        if (currentMatch) {
-            const name = currentMatch[1].trim();
-            const value = currentMatch[3];
-            showToast(`📊 جاري تسجيل قراءة ${value} للمشترك ${name}...`, 'info');
-            
-            setTimeout(() => {
-                const searchInput = document.querySelector('.smart-search-box input');
-                if (searchInput) {
-                    searchInput.value = name;
-                    const event = new Event('input', { bubbles: true });
-                    searchInput.dispatchEvent(event);
+        // ===== 1. البحث عن تطابق في الأوامر الصوتية =====
+        for (const [commandName, config] of Object.entries(VOICE_COMMANDS)) {
+            for (const keyword of config.keywords) {
+                if (trimmed.includes(keyword.toLowerCase()) || command.includes(keyword)) {
+                    showToast(`✅ تم تنفيذ: ${commandName}`, 'success');
                     
-                    setTimeout(() => {
-                        const firstResult = document.querySelector('.search-result-item');
-                        if (firstResult) {
-                            firstResult.click();
-                            setTimeout(() => {
-                                // العمود 3 = القراءة الحالية
-                                const cells = document.querySelectorAll('td.editable[data-col="3"]');
-                                for (const cell of cells) {
-                                    const row = cell.closest('tr');
-                                    if (row && row.classList.contains('selected-row')) {
-                                        cell.textContent = value;
-                                        cell.dispatchEvent(new Event('blur', { bubbles: true }));
-                                        showToast(`✅ تم تسجيل قراءة ${value} بنجاح`, 'success');
-                                        break;
-                                    }
-                                }
-                            }, 800);
-                        } else {
-                            showToast(`❌ لم يتم العثور على ${name}`, 'error');
+                    // محاولة البحث عن الزر
+                    if (config.selector) {
+                        const element = document.querySelector(config.selector);
+                        if (element) {
+                            element.click();
+                            return true;
                         }
-                    }, 600);
+                    }
+                    
+                    // استخدام الدالة الاحتياطية
+                    if (config.fallback) {
+                        config.fallback();
+                        return true;
+                    }
+                    
+                    return true;
                 }
-            }, 300);
-            return true;
+            }
         }
 
-        // ===== 2. صيغة: [الاسم] دفع [المبلغ] =====
-        // مثال: "نصر دفع 5000"
-        const paidMatch = trimmed.match(/^(.+?)\s+(دفع|سلم|مسلم|ادفع|يسلم|يدفع|ادفعلي|سدد)\s+(\d+)$/);
-        if (paidMatch) {
-            const name = paidMatch[1].trim();
-            const amount = paidMatch[3];
-            showToast(`💰 جاري تسجيل ${amount} للمشترك ${name}...`, 'info');
-            
-            setTimeout(() => {
-                const searchInput = document.querySelector('.smart-search-box input');
-                if (searchInput) {
-                    searchInput.value = name;
-                    const event = new Event('input', { bubbles: true });
-                    searchInput.dispatchEvent(event);
-                    
-                    setTimeout(() => {
-                        const firstResult = document.querySelector('.search-result-item');
-                        if (firstResult) {
-                            firstResult.click();
-                            setTimeout(() => {
-                                // العمود 11 = المسلم
-                                const cells = document.querySelectorAll('td.editable[data-col="11"]');
-                                for (const cell of cells) {
-                                    const row = cell.closest('tr');
-                                    if (row && row.classList.contains('selected-row')) {
-                                        cell.textContent = amount;
-                                        cell.dispatchEvent(new Event('blur', { bubbles: true }));
-                                        showToast(`✅ تم تسجيل ${amount} بنجاح`, 'success');
-                                        break;
-                                    }
-                                }
-                            }, 800);
-                        } else {
-                            showToast(`❌ لم يتم العثور على ${name}`, 'error');
-                        }
-                    }, 600);
-                }
-            }, 300);
-            return true;
-        }
-
-        // ===== 3. صيغة: [الاسم] فقط = بحث =====
-        // مثال: "نصر"
+        // ===== 2. التعرف على اسم مشترك (بحث) =====
         if (trimmed.length > 1 && !trimmed.includes(' ')) {
             const searchInput = document.querySelector('.smart-search-box input');
             if (searchInput) {
-                searchInput.value = trimmed;
-                const event = new Event('input', { bubbles: true });
-                searchInput.dispatchEvent(event);
-                showToast(`🔍 جاري البحث عن: ${trimmed}`, 'info');
-            }
-            return true;
-        }
-
-        // ============================================================
-        //  الأوامر الإضافية
-        // ============================================================
-
-        // ===== 4. مساعدة =====
-        if (['مساعدة', 'شرح', 'كيف', 'طريقة', 'اوامر'].some(w => trimmed.includes(w))) {
-            const msg = '🎤 الأوامر الصوتية:\n' +
-                        '• "نصر الحاليه 450" → تسجيل قراءة\n' +
-                        '• "نصر دفع 5000" → تسجيل مبلغ\n' +
-                        '• "نصر" → بحث عن مشترك\n' +
-                        '• "تقرير" → فتح التقرير\n' +
-                        '• "ذكاء" → فتح الذكاء الاصطناعي\n' +
-                        '• "رسوم" → فتح الرسوم البيانية\n' +
-                        '• "السوفعي" → التبديل للقرية\n' +
-                        '• "شهر 3" → التبديل للشهر';
-            alert(msg);
-            showToast('💡 تم عرض الأوامر الصوتية', 'info');
-            return true;
-        }
-
-        // ===== 5. تقرير =====
-        if (['تقرير', 'إحصاء', 'ملخص'].some(w => trimmed.includes(w))) {
-            const reportBtn = document.querySelector('[title="تقرير القرى"]');
-            if (reportBtn) {
-                reportBtn.click();
-                showToast('📊 تم فتح التقرير', 'success');
-            }
-            return true;
-        }
-
-        // ===== 6. ذكاء =====
-        if (['ذكاء', 'ai', 'تحليل'].some(w => trimmed.includes(w))) {
-            const aiBtn = document.querySelector('[title="عرض الذكاء"]');
-            if (aiBtn) {
-                aiBtn.click();
-                showToast('🤖 تم فتح الذكاء الاصطناعي', 'success');
-            }
-            return true;
-        }
-
-        // ===== 7. رسوم =====
-        if (['رسوم', 'مخطط', 'charts'].some(w => trimmed.includes(w))) {
-            const chartBtn = document.querySelector('[title="عرض الرسوم"]');
-            if (chartBtn) {
-                chartBtn.click();
-                showToast('📈 تم فتح الرسوم البيانية', 'success');
-            }
-            return true;
-        }
-
-        // ===== 8. تغيير القرية =====
-        const villages = ['السوفعي', 'العليا', 'السفلى', 'الشعابي', 'الجبل', 'حيزان', 'رقش', 'الضرفة'];
-        for (const v of villages) {
-            if (trimmed === v || trimmed.includes(v)) {
-                const select = document.querySelector('.app-sidebar select:first-of-type');
-                if (select) {
-                    select.value = v;
-                    select.dispatchEvent(new Event('change', { bubbles: true }));
-                    showToast(`🏘️ تم التبديل إلى ${v}`, 'success');
-                }
+                searchInput.value = command.trim();
+                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                showToast(`🔍 جاري البحث عن: ${command.trim()}`, 'info');
                 return true;
             }
         }
 
-        // ===== 9. تغيير الشهر =====
-        const monthMatch = trimmed.match(/شهر\s*(\d+)/);
-        if (monthMatch) {
-            const monthNum = monthMatch[1];
-            const selects = document.querySelectorAll('.app-sidebar select');
-            if (selects.length >= 2) {
-                const monthSelect = selects[1];
-                const options = monthSelect.querySelectorAll('option');
-                for (const opt of options) {
-                    if (opt.textContent.includes(monthNum) || opt.value.includes(monthNum)) {
-                        monthSelect.value = opt.value;
-                        monthSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                        showToast(`📅 تم التبديل إلى شهر ${monthNum}`, 'success');
-                        break;
-                    }
-                }
-            }
+        // ===== 3. أوامر خاصة =====
+        if (['مساعدة', 'شرح', 'كيف', 'طريقة', 'اوامر'].some(w => trimmed.includes(w))) {
+            showHelp();
             return true;
         }
 
-        // ===== 10. تحديث =====
-        if (['تحديث', 'refresh'].some(w => trimmed.includes(w))) {
-            const refreshBtn = document.querySelector('[title="تحديث"]');
-            if (refreshBtn) {
-                refreshBtn.click();
-                showToast('🔄 جاري التحديث...', 'info');
-            }
-            return true;
-        }
-
-        // ===== 11. خروج =====
-        if (['خروج', 'logout'].some(w => trimmed.includes(w))) {
-            const logoutBtn = document.querySelector('[title="خروج"]');
-            if (logoutBtn) {
-                logoutBtn.click();
-                showToast('👋 تم تسجيل الخروج', 'info');
-            }
-            return true;
-        }
-
-        // ===== 12. إذا لم يتعرف على الأمر =====
-        showToast('❌ لم يتم التعرف على الأمر', 'error');
+        showToast('❌ لم يتم التعرف على الأمر: ' + command, 'error');
         return false;
+    }
+
+    // ============================================================
+    //  عرض المساعدة
+    // ============================================================
+
+    function showHelp() {
+        const commands = Object.keys(VOICE_COMMANDS);
+        const msg = '🎤 الأوامر الصوتية المتاحة:\n' +
+                    commands.map(c => `• "${c}"`).join('\n') +
+                    '\n\n📝 يمكنك أيضاً قول اسم مشترك للبحث عنه';
+        alert(msg);
+        showToast('💡 تم عرض الأوامر الصوتية', 'info');
     }
 
     // ============================================================
     //  دالة عرض الرسائل المنبثقة
     // ============================================================
 
-    function showToast(message, type) {
+    function showToast(message, type = 'info') {
         const old = document.querySelector('.voice-toast');
         if (old) old.remove();
 
         const toast = document.createElement('div');
         toast.className = 'voice-toast';
         toast.textContent = message;
+        
+        const colors = {
+            success: 'rgba(0, 176, 155, 0.95)',
+            error: 'rgba(255, 71, 87, 0.95)',
+            info: 'rgba(0, 119, 182, 0.95)',
+            warning: 'rgba(255, 183, 3, 0.95)'
+        };
+
         toast.style.cssText = `
             position: fixed;
             bottom: 180px;
             left: 50%;
             transform: translateX(-50%);
-            background: ${type === 'success' ? 'rgba(0, 176, 155, 0.95)' : 
-                         type === 'error' ? 'rgba(255, 71, 87, 0.95)' : 
-                         'rgba(0, 119, 182, 0.95)'};
+            background: ${colors[type] || colors.info};
             color: white;
             padding: 14px 28px;
             border-radius: 16px;
@@ -16034,7 +17153,7 @@ useEffect(() => {
             toast.style.opacity = '0';
             toast.style.transition = 'opacity 0.4s';
             setTimeout(() => toast.remove(), 400);
-        }, 3500);
+        }, 3000);
     }
 
     // ============================================================
@@ -16184,7 +17303,8 @@ useEffect(() => {
             });
             
             console.log('✅ تم تفعيل البحث الصوتي المتطور');
-            console.log('📋 الأوامر: "نصر الحاليه 450" أو "نصر دفع 5000"');
+            console.log('📋 الأوامر المتاحة:', Object.keys(VOICE_COMMANDS).join(', '));
+            console.log('💡 مثال: "رسائل", "رسوم", "تقرير", "مديونيات"');
             return true;
         }
         return false;
@@ -16205,9 +17325,10 @@ useEffect(() => {
     // جعل الدوال عامة
     window.executeVoiceCommand = executeVoiceCommand;
     window.showVoiceToast = showToast;
+    window.showVoiceHelp = showHelp;
 
     console.log('🎤 نظام البحث الصوتي جاهز');
-    console.log('📋 مثال: "نصر الحاليه 450" أو "نصر دفع 5000"');
+    console.log('📋 الأوامر المتاحة:', Object.keys(VOICE_COMMANDS).join(', '));
 
 })();
 // ============================================================
