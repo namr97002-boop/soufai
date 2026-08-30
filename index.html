@@ -9996,7 +9996,13 @@ setHasData(true);
             }, []);
 
             const renderTable = useCallback(() => {
+    // ===== 🧹 تنظيف الأزرار القديمة =====
+    try {
+        document.querySelectorAll('.send-btn-added').forEach(btn => btn.remove());
+    } catch(e) {}
+
     if (!data || data.length === 0) {
+    
         return (
             <div className="empty-state">
                 <span className="empty-icon">📭</span>
@@ -18040,7 +18046,7 @@ function showZeroSubscriptionResults(results, month) {
 
             <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; font-size: 12px; opacity: 0.4; flex-wrap: wrap; gap: 8px;">
                 <span>🚫 المشتركين غير النشطين (الاشتراك = 0)</span>
-                <span>🕐 ${new Date().toLocaleString('ar-EG')}</span>
+                <span>?? ${new Date().toLocaleString('ar-EG')}</span>
             </div>
         </div>
     `;
