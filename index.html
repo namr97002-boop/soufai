@@ -6742,6 +6742,32 @@ button[title="إدارة الذاكرة"]:hover {
 .smart-search-box .search-icon {
     color: #4cc9f0 !important;
 }
+/* زر خروج دائم في شريط الأزرار */
+.exit-mode-btn {
+    background: linear-gradient(135deg, #ff4757, #ff3838) !important;
+    color: white !important;
+    border: 2px solid white !important;
+    border-radius: 8px !important;
+    padding: 6px 12px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    font-family: 'Tajawal', sans-serif !important;
+}
+/* ===== تغيير لون خط البحث إلى أسود - يحافظ على التصميم ===== */
+.smart-search-box input,
+.smart-search-box input::placeholder,
+.smart-search-box input:focus {
+    color: #000000 !important;
+}
+
+.smart-search-box {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.smart-search-box:focus-within {
+    background: rgba(255, 255, 255, 0.15) !important;
+}
     </style>
 </head>
 <body>
@@ -6914,306 +6940,7 @@ if (window.speechSynthesis) {
         }
 
         // ============================================================
-        //  دوال البحث المتطورة
-        // ============================================================
-
-        function searchByNameTriplet(query, data) {
-            if (!data || !data.length || !query) return [];
-
-            const normalizedQuery = normalizeText(query);
-            const queryParts = normalizedQuery.split(/\s+/).filter(p => p.length > 0);
-            if (queryParts.length === 0) return [];
-
-            const results = [];
-
-            for (let i = 2; i < data.length; i++) {
-                const row = data[i];
-                if (i === 0 || i === 1 || i === data.length - 1) continue;
-                if (!row || !row[1]) continue;
-
-                const originalName = row[1].toString().trim();
-                if (!originalName) continue;
-
-                const cleanedDB = normalizeText(originalName);
-                const dbParts = cleanedDB.split(/\s+/).filter(p => p.length > 0);
-
-                let searchIndex = 0;
-                for (let j = 0; j < dbParts.length && searchIndex < queryParts.length; j++) {
-                    if (dbParts[j] === queryParts[searchIndex]) {
-                        searchIndex++;
-                    }
-                }
-
-                if (searchIndex === queryParts.length) {
-                    results.push({
-                        originalIndex: i,
-                        meterNumber: row[0] || '',
-                        name: originalName,
-                        rowData: row,
-                        score: 100,
-                        matchType: 'مطابقة تامة (ثلاثي)',
-                        remaining: parseNumber(row[12]),
-                        paid: parseNumber(row[11]),
-                        total: parseNumber(row[9])
-                    });
-                }
-            }
-
-            return results;
-        }
-
-        function smartSearch(query, data) {
-            if (!data || !data.length || !query) return [];
-
-            const q = convertArabicNumbers(query).trim();
-            const normalizedQ = normalizeText(q);
-            const isNumber = /^\d+$/.test(q);
-            const results = [];
-
-            for (let i = 2; i < data.length; i++) {
-                const row = data[i];
-                if (i === 0 || i === 1 || i === data.length - 1) continue;
-                if (!row || !row[1]) continue;
-
-                const name = row[1] ? row[1].toString() : '';
-                const meter = row[0] ? row[0].toString() : '';
-
-                if (!name && !meter) continue;
-
-                let score = 0;
-                let matchType = '';
-                let matchedParts = [];
-
-                if (isNumber) {
-                    if (meter === q) {
-                        score = 100;
-                        matchType = 'رقم عداد تام';
-                        matchedParts = [meter];
-                    } else if (meter.includes(q)) {
-                        score = 85;
-                        matchType = 'رقم عداد جزئي';
-                        matchedParts = [meter];
-                    }
-                }
-
-                if (score === 0) {
-                    const normalizedName = normalizeText(name);
-
-                    if (normalizedName === normalizedQ) {
-                        score = 100;
-                        matchType = 'اسم تام';
-                        matchedParts = [name];
-                    } else if (normalizedName.startsWith(normalizedQ)) {
-                        score = 90;
-                        matchType = 'يبدأ بـ';
-                        matchedParts = [name];
-                    } else if (normalizedName.includes(normalizedQ)) {
-                        score = 80;
-                        matchType = 'يحتوي على';
-                        matchedParts = [name];
-                    } else {
-                        const similarity = calculateSimilarity(normalizedName, normalizedQ);
-                        if (similarity > 0.5) {
-                            score = Math.round(similarity * 75);
-                            matchType = `تشابه ${Math.round(similarity * 100)}%`;
-                            matchedParts = [name];
-                        }
-                    }
-                }
-
-                if (score === 0 && q.length >= 3) {
-                    const tripletResults = searchByNameTriplet(q, data);
-                    const found = tripletResults.find(r => r.originalIndex === i);
-                    if (found) {
-                        score = found.score;
-                        matchType = found.matchType;
-                        matchedParts = [name];
-                    }
-                }
-
-                if (score > 0) {
-                    results.push({
-                        originalIndex: i,
-                        meterNumber: meter,
-                        name: name || 'غير معروف',
-                        rowData: row,
-                        score: score,
-                        matchType: matchType,
-                        remaining: parseNumber(row[12]),
-                        paid: parseNumber(row[11]),
-                        total: parseNumber(row[9]),
-                        matchedParts: matchedParts
-                    });
-                }
-            }
-
-            results.sort((a, b) => b.score - a.score);
-            return results.slice(0, 20);
-        }
-
-        function analyzeSearchQuery(query) {
-            const result = {
-                hasOperation: false,
-                hasVillageChange: false,
-                hasMonthChange: false,
-                hasAttendance: false,
-                village: '',
-                month: '',
-                name: '',
-                operation: '',
-                value: null,
-                rawQuery: query,
-                isHelp: false,
-                isReport: false
-            };
-
-            if (!query) return result;
-
-            const trimmed = convertArabicNumbers(query).trim();
-            const words = trimmed.split(/\s+/);
-
-            if (['مساعدة', 'شرح', 'كيف', 'طريقة'].some(w => words.includes(w))) {
-                result.isHelp = true;
-                return result;
-            }
-
-            if (['تقرير', 'إحصاء', 'ملخص'].some(w => words.includes(w))) {
-                result.isReport = true;
-                return result;
-            }
-
-            if (VILLAGES_LIST.includes(trimmed)) {
-                result.hasVillageChange = true;
-                result.village = trimmed;
-                return result;
-            }
-
-            if (trimmed.startsWith('شهر ')) {
-                const num = trimmed.substring(4).trim();
-                if (/^\d+$/.test(num)) {
-                    result.hasMonthChange = true;
-                    result.month = 'شهر ' + num;
-                    return result;
-                }
-            }
-
-            if (words.length >= 3 && VILLAGES_LIST.includes(words[0]) && words[1] === 'شهر' && /^\d+$/.test(words[2])) {
-                result.village = words[0];
-                result.month = 'شهر ' + words[2];
-                result.hasVillageChange = true;
-                result.hasMonthChange = true;
-
-                if (words.length >= 6) {
-                    const name = words.slice(3, words.length - 2).join(' ');
-                    const op = words[words.length - 2];
-                    const val = words[words.length - 1];
-                    if (/^\d+$/.test(val) && (op.includes('مسلم') || op.includes('حالي') || op.includes('قراءة'))) {
-                        result.hasOperation = true;
-                        result.name = name.trim();
-                        result.operation = op.includes('مسلم') ? 'paid' : 'current';
-                        result.value = parseInt(val);
-                    }
-                }
-                return result;
-            }
-
-            if (words.length >= 3) {
-                const last = words[words.length - 1];
-                const second = words[words.length - 2];
-                if (/^\d+$/.test(last) && (second.includes('مسلم') || second.includes('حالي') || second.includes('قراءة'))) {
-                    result.hasOperation = true;
-                    result.name = words.slice(0, words.length - 2).join(' ').trim();
-                    result.operation = second.includes('مسلم') ? 'paid' : 'current';
-                    result.value = parseInt(last);
-                    return result;
-                }
-            }
-
-            if (['حضور', 'سجل الحضور', 'دخول', 'موظفين'].some(w => words.includes(w))) {
-                result.hasAttendance = true;
-                return result;
-            }
-
-            if (trimmed.length >= 1) {
-                result.name = trimmed;
-            }
-
-            return result;
-        }
-
-        function getSearchSuggestions(query, context) {
-            const suggestions = [];
-            const q = query.trim();
-
-            if (!q) return suggestions;
-
-            VILLAGES_LIST.forEach(v => {
-                if (v.includes(q) || q.includes(v)) {
-                    suggestions.push({
-                        text: v,
-                        desc: '🏘️ التبديل إلى هذه القرية',
-                        type: 'village',
-                        icon: '🏘️',
-                        isSuggestion: true
-                    });
-                }
-            });
-
-            for (let i = 1; i <= 12; i++) {
-                const month = 'شهر ' + i;
-                if (month.includes(q) || q.includes(month)) {
-                    suggestions.push({
-                        text: month,
-                        desc: '📅 التبديل إلى هذا الشهر',
-                        type: 'month',
-                        icon: '📅',
-                        isSuggestion: true
-                    });
-                }
-            }
-
-            if (!q || 'مسلم'.includes(q)) {
-                suggestions.push({
-                    text: 'مسلم 5000',
-                    desc: '💰 تسديد مبلغ للمشترك',
-                    type: 'action',
-                    icon: '💰',
-                    isSuggestion: true
-                });
-            }
-
-            if (!q || 'قراءة'.includes(q)) {
-                suggestions.push({
-                    text: 'قراءة 250',
-                    desc: '📊 تسجيل قراءة جديدة',
-                    type: 'action',
-                    icon: '📊',
-                    isSuggestion: true
-                });
-            }
-
-            if (context?.lastSearch && (!q || context.lastSearch.includes(q))) {
-                suggestions.push({
-                    text: context.lastSearch,
-                    desc: '🕒 آخر بحث',
-                    type: 'recent',
-                    icon: '🕒',
-                    isSuggestion: true
-                });
-            }
-
-            if (!q || 'مساعدة'.includes(q)) {
-                suggestions.push({
-                    text: 'مساعدة',
-                    desc: '💡 عرض أوامر البحث المتاحة',
-                    type: 'help',
-                    icon: '💡',
-                    isSuggestion: true
-                });
-            }
-
-            return suggestions.slice(0, 8);
-        }
+     
 
         // ============================================================
         //  دوال التخزين المؤقت
@@ -11249,16 +10976,34 @@ useEffect(() => {
             }, [showMessage]);
 
             const handleLogout = useCallback(() => {
-                setIsLoggedIn(false);
-                setUser(null);
-                setData([]);
-                showMessage('👋 تم تسجيل الخروج', 'info');
-                setSearchVisible(false);
-                setSearchQuery('');
-                setReportVisible(false);
-                setChartsVisible(false);
-                setFullscreenChart(null);
-            }, []);
+    // ===== إلغاء جميع الأوضاع الخاصة =====
+    document.body.classList.remove('focus-mode', 'quick-view-mode');
+    
+    // ===== حذف الإعدادات من التخزين المحلي =====
+    localStorage.removeItem('focusMode');
+    localStorage.removeItem('waterSystem_quickView');
+    
+    // ===== إخفاء أزرار الخروج إن وجدت =====
+    const exitFocusBtn = document.getElementById('exitFocusBtn');
+    if (exitFocusBtn) exitFocusBtn.style.display = 'none';
+    
+    const exitQuickBtn = document.getElementById('exitQuickViewBtn');
+    if (exitQuickBtn) exitQuickBtn.style.display = 'none';
+    
+    // ===== إعادة تعيين حالة React =====
+    setIsLoggedIn(false);
+    setUser(null);
+    setData([]);
+    setSearchVisible(false);
+    setSearchQuery('');
+    setReportVisible(false);
+    setChartsVisible(false);
+    setFullscreenChart(null);
+    
+    // ===== رسالة الخروج =====
+    showMessage('👋 تم تسجيل الخروج', 'info');
+    
+}, []);
 // ===== دوال الوضعين الجديدين =====
 
 // ===== دوال الوضعين الجديدين =====
@@ -17456,7 +17201,7 @@ function showMemoryPanel() {
                     <div style="font-size: 12px; opacity: 0.5; margin-bottom: 8px;">📋 العمليات المعلقة:</div>
                     ${pendingItems.slice(0, 10).map(item => `
                         <div class="pending-item" style="display: flex; justify-content: space-between; padding: 4px 8px; border-radius: 6px; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.03);">
-                            <span>🏘️ ${item.village}</span>
+                            <span>??️ ${item.village}</span>
                             <span>📅 ${item.month}</span>
                             <span>💰 ${item.value}</span>
                             <span style="opacity: 0.4; font-size: 10px;">${item.time}</span>
@@ -18310,6 +18055,1273 @@ function showZeroSubscriptionResults(results, month) {
 window.showZeroSubscriptionModal = showZeroSubscriptionModal;
 
 </script>
+<script>
+// ============================================================
+//  🎯 نظام الأوامر المتكامل - مع بحث كامل وأزرار متطورة
+//  🔥 النسخة النهائية - حل مشكلة الصفوف
+// ============================================================
 
+(function() {
+    'use strict';
+
+    // ============================================================
+    //  📚 دوال البحث المتطورة
+    // ============================================================
+
+    function normalizeText(text) {
+        if (!text) return '';
+        return text.toString().trim()
+            .replace(/\s+/g, ' ')
+            .replace(/[أإآ]/g, 'ا')
+            .replace(/[ة]/g, 'ه')
+            .replace(/[ى]/g, 'ي')
+            .toLowerCase();
+    }
+
+    function parseNumber(value) {
+        if (!value) return 0;
+        const num = parseFloat(value.toString().replace(/,/g, ''));
+        return isNaN(num) ? 0 : num;
+    }
+
+    function calculateSimilarity(str1, str2) {
+        if (!str1 || !str2) return 0;
+        if (str1 === str2) return 1;
+        
+        const longer = str1.length > str2.length ? str1 : str2;
+        const shorter = str1.length > str2.length ? str2 : str1;
+        
+        if (longer.length === 0) return 1;
+        
+        const editDistance = levenshteinDistance(longer, shorter);
+        return (longer.length - editDistance) / longer.length;
+    }
+
+    function levenshteinDistance(a, b) {
+        if (a.length === 0) return b.length;
+        if (b.length === 0) return a.length;
+        
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) {
+            matrix[i] = [i];
+        }
+        for (let j = 0; j <= a.length; j++) {
+            matrix[0][j] = j;
+        }
+        
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b[i-1] === a[j-1]) {
+                    matrix[i][j] = matrix[i-1][j-1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i-1][j-1] + 1,
+                        matrix[i][j-1] + 1,
+                        matrix[i-1][j] + 1
+                    );
+                }
+            }
+        }
+        return matrix[b.length][a.length];
+    }
+
+    // ============================================================
+    //  🔍 البحث الثلاثي
+    // ============================================================
+
+    function searchByNameTriplet(query, data) {
+        if (!data || !data.length || !query) return [];
+
+        const normalizedQuery = normalizeText(query);
+        const queryParts = normalizedQuery.split(/\s+/).filter(p => p.length > 0);
+        if (queryParts.length === 0) return [];
+
+        const results = [];
+
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            if (!row || !row[1]) continue;
+            
+            // تخطي رأس الجدول إذا وجد
+            const secondCell = row[1]?.toString().trim() || '';
+            if (secondCell === 'الاسم' || secondCell === 'اسم المشترك' || secondCell === 'Name') {
+                continue;
+            }
+
+            const originalName = row[1].toString().trim();
+            if (!originalName) continue;
+
+            const cleanedDB = normalizeText(originalName);
+            const dbParts = cleanedDB.split(/\s+/).filter(p => p.length > 0);
+
+            let searchIndex = 0;
+            for (let j = 0; j < dbParts.length && searchIndex < queryParts.length; j++) {
+                if (dbParts[j] === queryParts[searchIndex]) {
+                    searchIndex++;
+                }
+            }
+
+            if (searchIndex === queryParts.length) {
+                let allPartsFound = true;
+                let lastIndex = -1;
+                for (const part of queryParts) {
+                    const found = cleanedDB.indexOf(part, lastIndex + 1);
+                    if (found === -1) {
+                        allPartsFound = false;
+                        break;
+                    }
+                    lastIndex = found;
+                }
+
+                if (allPartsFound) {
+                    results.push({
+                        dataIndex: i,
+                        meterNumber: row[0] || '',
+                        name: originalName,
+                        rowData: row,
+                        score: 100,
+                        matchType: '✅ مطابقة تامة (ثلاثي)',
+                        remaining: parseNumber(row[12]),
+                        paid: parseNumber(row[11]),
+                        total: parseNumber(row[9])
+                    });
+                    continue;
+                }
+            }
+
+            let partialScore = 0;
+            let matchedCount = 0;
+
+            for (const part of queryParts) {
+                if (cleanedDB.includes(part)) {
+                    matchedCount++;
+                }
+            }
+
+            partialScore = Math.round((matchedCount / queryParts.length) * 100);
+
+            if (partialScore >= 80 && queryParts.length >= 2) {
+                results.push({
+                    dataIndex: i,
+                    meterNumber: row[0] || '',
+                    name: originalName,
+                    rowData: row,
+                    score: partialScore,
+                    matchType: `🔍 تشابه ${partialScore}%`,
+                    remaining: parseNumber(row[12]),
+                    paid: parseNumber(row[11]),
+                    total: parseNumber(row[9])
+                });
+            }
+        }
+
+        results.sort((a, b) => b.score - a.score);
+
+        const uniqueResults = [];
+        const seenNames = new Set();
+
+        for (const r of results) {
+            const normalizedName = normalizeText(r.name);
+            if (!seenNames.has(normalizedName)) {
+                seenNames.add(normalizedName);
+                uniqueResults.push(r);
+            }
+        }
+
+        if (uniqueResults.length === 1) {
+            return uniqueResults;
+        }
+
+        if (uniqueResults.length > 0 && uniqueResults[0].score === 100) {
+            return [uniqueResults[0]];
+        }
+
+        return uniqueResults.slice(0, 3);
+    }
+
+    // ============================================================
+    //  🧠 البحث الذكي المتطور
+    // ============================================================
+
+    function smartSearch(query, data) {
+        if (!data || !data.length || !query) return [];
+
+        const q = query.toString().trim();
+        const normalizedQ = normalizeText(q);
+        const isNumber = /^\d+$/.test(q);
+        const results = [];
+
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            if (!row || !row[1]) continue;
+            
+            const secondCell = row[1]?.toString().trim() || '';
+            if (secondCell === 'الاسم' || secondCell === 'اسم المشترك' || secondCell === 'Name') {
+                continue;
+            }
+
+            const name = row[1] ? row[1].toString() : '';
+            const meter = row[0] ? row[0].toString() : '';
+
+            if (!name && !meter) continue;
+
+            let score = 0;
+            let matchType = '';
+            let matchedParts = [];
+
+            if (isNumber) {
+                if (meter === q) {
+                    score = 100;
+                    matchType = 'رقم عداد تام';
+                    matchedParts = [meter];
+                } else if (meter.includes(q)) {
+                    score = 85;
+                    matchType = 'رقم عداد جزئي';
+                    matchedParts = [meter];
+                }
+            }
+
+            if (score === 0) {
+                const normalizedName = normalizeText(name);
+
+                if (normalizedName === normalizedQ) {
+                    score = 100;
+                    matchType = 'اسم تام';
+                    matchedParts = [name];
+                } 
+                else if (normalizedName.startsWith(normalizedQ)) {
+                    score = 90;
+                    matchType = 'يبدأ بـ';
+                    matchedParts = [name];
+                } 
+                else if (normalizedName.includes(normalizedQ)) {
+                    score = 80;
+                    matchType = 'يحتوي على';
+                    matchedParts = [name];
+                } 
+                else {
+                    const similarity = calculateSimilarity(normalizedName, normalizedQ);
+                    if (similarity > 0.5) {
+                        score = Math.round(similarity * 75);
+                        matchType = `تشابه ${Math.round(similarity * 100)}%`;
+                        matchedParts = [name];
+                    }
+                }
+            }
+
+            if (score === 0 && q.length >= 3) {
+                const tripletResults = searchByNameTriplet(q, data);
+                const found = tripletResults.find(r => r.dataIndex === i);
+                if (found) {
+                    score = found.score;
+                    matchType = found.matchType;
+                    matchedParts = [name];
+                }
+            }
+
+            if (score > 0) {
+                results.push({
+                    dataIndex: i,
+                    meterNumber: meter,
+                    name: name || 'غير معروف',
+                    rowData: row,
+                    score: score,
+                    matchType: matchType,
+                    remaining: parseNumber(row[12]),
+                    paid: parseNumber(row[11]),
+                    total: parseNumber(row[9]),
+                    matchedParts: matchedParts
+                });
+            }
+        }
+
+        results.sort((a, b) => b.score - a.score);
+        return results.slice(0, 20);
+    }
+
+    // ============================================================
+    //  📊 تحليل استعلام البحث
+    // ============================================================
+
+    function analyzeSearchQuery(query) {
+        const result = {
+            hasOperation: false,
+            hasVillageChange: false,
+            hasMonthChange: false,
+            hasAttendance: false,
+            hasButton: false,
+            hasTheme: false,
+            village: '',
+            month: '',
+            name: '',
+            operation: '',
+            value: null,
+            button: '',
+            theme: '',
+            rawQuery: query,
+            isHelp: false,
+            isReport: false
+        };
+
+        if (!query) return result;
+
+        const trimmed = query.toString().trim();
+        const words = trimmed.split(/\s+/);
+
+        if (['مساعدة', 'شرح', 'كيف', 'طريقة', 'help'].some(w => words.includes(w))) {
+            result.isHelp = true;
+            return result;
+        }
+
+        if (['تقرير', 'إحصاء', 'ملخص', 'report'].some(w => words.includes(w))) {
+            result.isReport = true;
+            return result;
+        }
+
+        const buttonMap = {
+            'تقرير': { texts: ['تقرير القرى', 'تقرير'], type: 'report' },
+            'تحديث': { texts: ['تحديث'], type: 'update' },
+            'ذكاء': { texts: ['عرض الذكاء', 'ذكاء', 'ai'], type: 'ai' },
+            'رسوم': { texts: ['عرض الرسوم', 'رسوم', 'charts'], type: 'charts' },
+            'خروج': { texts: ['خروج', 'exit'], type: 'exit' },
+            'طبيعي': { texts: ['الوضع الطبيعي', 'طبيعي', 'normal'], type: 'normal' },
+            'ليلي': { texts: ['الوضع الليلي', 'ليلي', 'night'], type: 'night' },
+            'داكن': { texts: ['الوضع الداكن', 'داكن', 'dark'], type: 'dark' },
+            'طليعي': { texts: ['الوضع الطليعي', 'طليعي', 'futuristic'], type: 'futuristic' },
+            'توفير': { texts: ['توفير البيانات', 'توفير', 'save'], type: 'save' },
+            'سريع': { texts: ['العرض السريع', 'سريع', 'fast'], type: 'fast' },
+            'رسائل': { texts: ['الرسائل النصية', 'رسائل', 'sms'], type: 'sms' },
+            'مديونيات': { texts: ['المديونيات العالية', 'مديونيات', 'debts'], type: 'debts' },
+            'ذاكرة': { texts: ['إدارة الذاكرة', 'ذاكرة', 'memory'], type: 'memory' },
+            'مدير': { texts: ['لوحة المدير', 'مدير', 'admin'], type: 'admin' },
+            'مزامنة': { texts: ['مزامنة يدوية', 'مزامنة', 'sync'], type: 'sync' },
+            'نسخ': { texts: ['نسخ احتياطي', 'نسخ', 'backup'], type: 'backup' },
+            'استعادة': { texts: ['استعادة', 'restore'], type: 'restore' },
+            'تصدير': { texts: ['تصدير', 'export'], type: 'export' },
+            'استيراد': { texts: ['استيراد', 'import'], type: 'import' },
+            'طباعة': { texts: ['طباعة', 'print'], type: 'print' },
+            'بحث': { texts: ['بحث متقدم', 'بحث'], type: 'search' },
+            'فلتر': { texts: ['فلتر', 'filter'], type: 'filter' },
+            'ترتيب': { texts: ['ترتيب', 'sort'], type: 'sort' },
+            'تنظيف': { texts: ['تنظيف', 'clear'], type: 'clear' },
+            'إعادة': { texts: ['إعادة تحميل', 'إعادة', 'reload'], type: 'reload' }
+        };
+
+        for (const [key, val] of Object.entries(buttonMap)) {
+            if (val.texts.some(t => trimmed.includes(t) || words.includes(t))) {
+                result.hasButton = true;
+                result.button = key;
+                result.theme = val.type;
+                return result;
+            }
+        }
+
+        if (trimmed.includes('وضع') || words.includes('وضع')) {
+            if (trimmed.includes('طبيعي') || words.includes('طبيعي')) {
+                result.hasTheme = true;
+                result.theme = 'normal';
+                result.button = 'طبيعي';
+                return result;
+            }
+            if (trimmed.includes('ليلي') || words.includes('ليلي')) {
+                result.hasTheme = true;
+                result.theme = 'night';
+                result.button = 'ليلي';
+                return result;
+            }
+            if (trimmed.includes('داكن') || words.includes('داكن')) {
+                result.hasTheme = true;
+                result.theme = 'dark';
+                result.button = 'داكن';
+                return result;
+            }
+            if (trimmed.includes('طليعي') || words.includes('طليعي')) {
+                result.hasTheme = true;
+                result.theme = 'futuristic';
+                result.button = 'طليعي';
+                return result;
+            }
+        }
+
+        if (['حضور', 'سجل الحضور', 'دخول', 'موظفين', 'attendance'].some(w => words.includes(w))) {
+            result.hasAttendance = true;
+            return result;
+        }
+
+        const VILLAGES_LIST = ['السوفعي', 'العليا', 'السفلى', 'الشعابي', 'الجبل', 'حيزان', 'رقش', 'الضرفة'];
+        if (VILLAGES_LIST.includes(trimmed)) {
+            result.hasVillageChange = true;
+            result.village = trimmed;
+            return result;
+        }
+
+        if (trimmed.startsWith('شهر ')) {
+            const num = trimmed.substring(4).trim();
+            if (/^\d+$/.test(num)) {
+                result.hasMonthChange = true;
+                result.month = 'شهر ' + num;
+                return result;
+            }
+        }
+
+        if (words.length >= 3 && VILLAGES_LIST.includes(words[0]) && words[1] === 'شهر' && /^\d+$/.test(words[2])) {
+            result.village = words[0];
+            result.month = 'شهر ' + words[2];
+            result.hasVillageChange = true;
+            result.hasMonthChange = true;
+
+            if (words.length >= 6) {
+                const name = words.slice(3, words.length - 2).join(' ');
+                const op = words[words.length - 2];
+                const val = words[words.length - 1];
+                if (/^\d+$/.test(val) && (op.includes('مسلم') || op.includes('حالي') || op.includes('قراءة'))) {
+                    result.hasOperation = true;
+                    result.name = name.trim();
+                    result.operation = op.includes('مسلم') ? 'paid' : 'current';
+                    result.value = parseInt(val);
+                }
+            }
+            return result;
+        }
+
+        if (words.length >= 3) {
+            const last = words[words.length - 1];
+            const second = words[words.length - 2];
+            if (/^\d+$/.test(last) && (second.includes('مسلم') || second.includes('حالي') || second.includes('قراءة'))) {
+                result.hasOperation = true;
+                result.name = words.slice(0, words.length - 2).join(' ').trim();
+                result.operation = second.includes('مسلم') ? 'paid' : 'current';
+                result.value = parseInt(last);
+                return result;
+            }
+        }
+
+        if (trimmed.length >= 1) {
+            result.name = trimmed;
+        }
+
+        return result;
+    }
+
+    // ============================================================
+    //  💡 اقتراحات البحث
+    // ============================================================
+
+    function getSearchSuggestions(query, context) {
+        const suggestions = [];
+        const q = query ? query.toString().trim() : '';
+        const VILLAGES_LIST = ['السوفعي', 'العليا', 'السفلى', 'الشعابي', 'الجبل', 'حيزان', 'رقش', 'الضرفة'];
+
+        if (!q) return suggestions;
+
+        const buttonSuggestions = [
+            { text: 'تقرير', icon: '📊', desc: 'عرض تقرير القرى' },
+            { text: 'تحديث', icon: '🔄', desc: 'تحديث البيانات' },
+            { text: 'ذكاء', icon: '🤖', desc: 'عرض الذكاء الاصطناعي' },
+            { text: 'رسوم', icon: '📈', desc: 'عرض الرسوم البيانية' },
+            { text: 'خروج', icon: '🚪', desc: 'الخروج من التطبيق' },
+            { text: 'طبيعي', icon: '☀️', desc: 'الوضع الطبيعي' },
+            { text: 'ليلي', icon: '🌙', desc: 'الوضع الليلي' },
+            { text: 'داكن', icon: '🌑', desc: 'الوضع الداكن' },
+            { text: 'طليعي', icon: '🚀', desc: 'الوضع الطليعي' },
+            { text: 'توفير', icon: '💾', desc: 'توفير البيانات' },
+            { text: 'سريع', icon: '⚡', desc: 'العرض السريع' },
+            { text: 'رسائل', icon: '💬', desc: 'الرسائل النصية' },
+            { text: 'مديونيات', icon: '💰', desc: 'المديونيات العالية' },
+            { text: 'ذاكرة', icon: '🧠', desc: 'إدارة الذاكرة' },
+            { text: 'مدير', icon: '👨‍💼', desc: 'لوحة المدير' },
+            { text: 'مزامنة', icon: '🔄', desc: 'مزامنة يدوية' }
+        ];
+
+        buttonSuggestions.forEach(s => {
+            if (s.text.includes(q) || q.includes(s.text)) {
+                suggestions.push({
+                    text: s.text,
+                    desc: s.desc,
+                    type: 'button',
+                    icon: s.icon,
+                    isSuggestion: true
+                });
+            }
+        });
+
+        VILLAGES_LIST.forEach(v => {
+            if (v.includes(q) || q.includes(v)) {
+                suggestions.push({
+                    text: v,
+                    desc: '🏘️ التبديل إلى هذه القرية',
+                    type: 'village',
+                    icon: '🏘️',
+                    isSuggestion: true
+                });
+            }
+        });
+
+        for (let i = 1; i <= 12; i++) {
+            const month = 'شهر ' + i;
+            if (month.includes(q) || q.includes(month)) {
+                suggestions.push({
+                    text: month,
+                    desc: '📅 التبديل إلى هذا الشهر',
+                    type: 'month',
+                    icon: '📅',
+                    isSuggestion: true
+                });
+            }
+        }
+
+        if (!q || 'مسلم'.includes(q)) {
+            suggestions.push({
+                text: 'مسلم 5000',
+                desc: '💰 تسديد مبلغ للمشترك',
+                type: 'action',
+                icon: '💰',
+                isSuggestion: true
+            });
+        }
+
+        if (!q || 'قراءة'.includes(q)) {
+            suggestions.push({
+                text: 'قراءة 250',
+                desc: '📊 تسجيل قراءة جديدة',
+                type: 'action',
+                icon: '📊',
+                isSuggestion: true
+            });
+        }
+
+        if (!q || 'وضع'.includes(q)) {
+            suggestions.push({
+                text: 'وضع طبيعي',
+                desc: '☀️ التبديل للوضع الطبيعي',
+                type: 'theme',
+                icon: '☀️',
+                isSuggestion: true
+            });
+            suggestions.push({
+                text: 'وضع ليلي',
+                desc: '🌙 التبديل للوضع الليلي',
+                type: 'theme',
+                icon: '🌙',
+                isSuggestion: true
+            });
+            suggestions.push({
+                text: 'وضع داكن',
+                desc: '🌑 التبديل للوضع الداكن',
+                type: 'theme',
+                icon: '🌑',
+                isSuggestion: true
+            });
+            suggestions.push({
+                text: 'وضع طليعي',
+                desc: '🚀 التبديل للوضع الطليعي',
+                type: 'theme',
+                icon: '🚀',
+                isSuggestion: true
+            });
+        }
+
+        if (context?.lastSearch && (!q || context.lastSearch.includes(q))) {
+            suggestions.push({
+                text: context.lastSearch,
+                desc: '🕒 آخر بحث',
+                type: 'recent',
+                icon: '🕒',
+                isSuggestion: true
+            });
+        }
+
+        if (!q || 'مساعدة'.includes(q) || 'help'.includes(q)) {
+            suggestions.push({
+                text: 'مساعدة',
+                desc: '💡 عرض جميع الأوامر المتاحة',
+                type: 'help',
+                icon: '💡',
+                isSuggestion: true
+            });
+        }
+
+        return suggestions.slice(0, 10);
+    }
+
+    // ============================================================
+    //  🔥 البحث المتطور في الجدول - الحل النهائي
+    // ============================================================
+
+    function advancedFindInTable(query) {
+        // ✅ الحصول على الجدول
+        const table = document.querySelector('#tableWrapper table');
+        if (!table) return [];
+
+        // ✅ الحصول على tbody مباشرة
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return [];
+
+        // ✅ بناء مصفوفة البيانات من tbody فقط
+        const data = [];
+        const tbodyRows = tbody.querySelectorAll('tr');
+        
+        tbodyRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const rowData = [];
+            cells.forEach(cell => {
+                rowData.push(cell.textContent?.trim() || '');
+            });
+            data.push(rowData);
+        });
+
+        if (!data.length) return [];
+
+        // ✅ البحث في البيانات (التي تتطابق مع tbody)
+        const results = smartSearch(query, data);
+        
+        // ✅ النتائج ترجع dataIndex الذي يتطابق مع tbody مباشرة
+        return results.map(result => {
+            const row = tbodyRows[result.dataIndex];
+            return {
+                ...result,
+                rowIndex: result.dataIndex,  // نفس الفهرس
+                row: row,
+                cells: row?.querySelectorAll('td') || []
+            };
+        }).filter(r => r.row);
+    }
+
+    // ============================================================
+    //  🎤 تنفيذ الأوامر الرئيسية
+    // ============================================================
+
+    window.runSmartCommand = function(command) {
+        const cmd = command.toString().trim();
+        console.log('🎯 تنفيذ الأمر:', cmd);
+
+        if (cmd.includes('الغاء التركيز') || 
+            cmd.includes('الغاء وضع التركيز') || 
+            cmd.includes('خروج من التركيز') ||
+            cmd.includes('الغاء focus') ||
+            cmd.includes('خروج focus')) {
+            exitFocusMode();
+            return;
+        }
+
+        if (cmd.includes('تفعيل التركيز') || 
+            cmd.includes('وضع التركيز') || 
+            cmd.includes('تركيز')) {
+            enterFocusMode();
+            return;
+        }
+
+        const analysis = analyzeSearchQuery(cmd);
+        
+        if (analysis.isHelp) {
+            showHelpMessage();
+            return;
+        }
+
+        if (analysis.isReport) {
+            const btn = findButton(['تقرير القرى', 'تقرير']);
+            if (btn) { btn.click(); showMessage('✅ تم عرض التقرير'); return; }
+        }
+
+        if (analysis.hasButton || analysis.hasTheme) {
+            const buttonMap = {
+                'تقرير': { texts: ['تقرير القرى', 'تقرير'], msg: 'تقرير القرى' },
+                'تحديث': { texts: ['تحديث'], msg: 'تحديث البيانات' },
+                'ذكاء': { texts: ['عرض الذكاء', 'ذكاء', 'ai'], msg: 'الذكاء الاصطناعي' },
+                'رسوم': { texts: ['عرض الرسوم', 'رسوم', 'charts'], msg: 'الرسوم البيانية' },
+                'خروج': { texts: ['خروج', 'exit'], msg: 'الخروج' },
+                'طبيعي': { texts: ['الوضع الطبيعي', 'طبيعي', 'normal'], msg: 'الوضع الطبيعي' },
+                'ليلي': { texts: ['الوضع الليلي', 'ليلي', 'night'], msg: 'الوضع الليلي' },
+                'داكن': { texts: ['الوضع الداكن', 'داكن', 'dark'], msg: 'الوضع الداكن' },
+                'طليعي': { texts: ['الوضع الطليعي', 'طليعي', 'futuristic'], msg: 'الوضع الطليعي' },
+                'توفير': { texts: ['توفير البيانات', 'توفير', 'save'], msg: 'توفير البيانات' },
+                'سريع': { texts: ['العرض السريع', 'سريع', 'fast'], msg: 'العرض السريع' },
+                'رسائل': { texts: ['الرسائل النصية', 'رسائل', 'sms'], msg: 'الرسائل النصية' },
+                'مديونيات': { texts: ['المديونيات العالية', 'مديونيات', 'debts'], msg: 'المديونيات العالية' },
+                'ذاكرة': { texts: ['إدارة الذاكرة', 'ذاكرة', 'memory'], msg: 'إدارة الذاكرة' },
+                'مدير': { texts: ['لوحة المدير', 'مدير', 'admin'], msg: 'لوحة المدير' },
+                'مزامنة': { texts: ['مزامنة يدوية', 'مزامنة', 'sync'], msg: 'المزامنة' },
+                'نسخ': { texts: ['نسخ احتياطي', 'نسخ', 'backup'], msg: 'النسخ الاحتياطي' },
+                'استعادة': { texts: ['استعادة', 'restore'], msg: 'الاستعادة' },
+                'تصدير': { texts: ['تصدير', 'export'], msg: 'التصدير' },
+                'استيراد': { texts: ['استيراد', 'import'], msg: 'الاستيراد' },
+                'طباعة': { texts: ['طباعة', 'print'], msg: 'الطباعة' },
+                'بحث': { texts: ['بحث متقدم', 'بحث'], msg: 'البحث المتقدم' },
+                'فلتر': { texts: ['فلتر', 'filter'], msg: 'التصفية' },
+                'ترتيب': { texts: ['ترتيب', 'sort'], msg: 'الترتيب' },
+                'تنظيف': { texts: ['تنظيف', 'clear'], msg: 'التنظيف' },
+                'إعادة': { texts: ['إعادة تحميل', 'إعادة', 'reload'], msg: 'إعادة التحميل' }
+            };
+
+            const key = analysis.button || analysis.theme;
+            if (key && buttonMap[key]) {
+                const btn = findButton(buttonMap[key].texts);
+                if (btn) {
+                    btn.click();
+                    showMessage(`✅ تم تنفيذ: ${buttonMap[key].msg}`);
+                    return;
+                }
+                const altBtn = findButton([key, key + ' button', 'btn-' + key]);
+                if (altBtn) {
+                    altBtn.click();
+                    showMessage(`✅ تم تنفيذ: ${key}`);
+                    return;
+                }
+            }
+        }
+
+        if (analysis.hasVillageChange) {
+            const select = document.querySelector('.app-sidebar select:first-of-type');
+            if (select) {
+                for (const opt of select.options) {
+                    if (opt.value === analysis.village) {
+                        select.value = analysis.village;
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                        showMessage('✅ تم التبديل إلى قرية ' + analysis.village);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (analysis.hasMonthChange) {
+            const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+            if (select) {
+                for (const opt of select.options) {
+                    if (opt.value === analysis.month) {
+                        select.value = analysis.month;
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                        showMessage('✅ تم التبديل إلى ' + analysis.month);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (analysis.hasOperation && analysis.name) {
+            const results = advancedFindInTable(analysis.name);
+            
+            if (results.length === 1) {
+                const row = results[0];
+                const colIndex = analysis.operation === 'paid' ? 11 : 3;
+                updateCell(row.rowIndex, colIndex, analysis.value);
+                scrollToRow(row.rowIndex);
+                const opName = analysis.operation === 'paid' ? 'تسديد' : 'قراءة';
+                showMessage(`✅ تم تسجيل ${opName} ${analysis.value} للمشترك: ${row.name}`);
+                return;
+            } else if (results.length > 1) {
+                showResults(results, `اختر مشتركاً لتسجيل ${analysis.operation === 'paid' ? 'المبلغ' : 'القراءة'}`);
+                return;
+            } else {
+                showMessage(`❌ لم أجد مشتركاً باسم: ${analysis.name}`);
+                return;
+            }
+        }
+
+        const results = advancedFindInTable(cmd);
+        
+        if (results.length === 1) {
+            const row = results[0];
+            scrollToRow(row.rowIndex);
+            showMessage(`🔍 تم العثور على: ${row.name} (عداد: ${row.meterNumber}) - ${row.matchType}`);
+            return;
+        } else if (results.length > 1) {
+            showResults(results, `🔍 نتائج البحث عن: "${cmd}" (${results.length} نتيجة)`);
+            return;
+        }
+
+        const VILLAGES_LIST = ['السوفعي', 'العليا', 'السفلى', 'الشعابي', 'الجبل', 'حيزان', 'رقش', 'الضرفة'];
+        for (const v of VILLAGES_LIST) {
+            if (cmd.includes(v)) {
+                const select = document.querySelector('.app-sidebar select:first-of-type');
+                if (select) {
+                    for (const opt of select.options) {
+                        if (opt.value === v) {
+                            select.value = v;
+                            select.dispatchEvent(new Event('change', { bubbles: true }));
+                            showMessage('✅ تم التبديل إلى قرية ' + v);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (let i = 1; i <= 12; i++) {
+            const month = 'شهر ' + i;
+            if (cmd.includes(month) || cmd.includes(i.toString())) {
+                const select = document.querySelector('.app-sidebar select:nth-of-type(2)');
+                if (select) {
+                    for (const opt of select.options) {
+                        if (opt.value === month) {
+                            select.value = month;
+                            select.dispatchEvent(new Event('change', { bubbles: true }));
+                            showMessage('✅ تم التبديل إلى ' + month);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (analysis.hasAttendance) {
+            const btn = findButton(['حضور', 'سجل الحضور', 'تسجيل حضور']);
+            if (btn) { btn.click(); showMessage('✅ تم فتح سجل الحضور'); return; }
+        }
+
+        showHelpMessage();
+    };
+
+    // ============================================================
+    //  عرض المساعدة
+    // ============================================================
+
+    function showHelpMessage() {
+        showMessage(
+            '📋 الأوامر المتاحة:\n\n' +
+            '🔘 أزرار: تقرير, تحديث, ذكاء, رسوم, خروج\n' +
+            '🎨 أوضاع: طبيعي, ليلي, داكن, طليعي\n' +
+            '📋 إضافية: توفير, سريع, رسائل, مديونيات\n' +
+            '🔧 إدارة: ذاكرة, مدير, مزامنة, نسخ, استعادة\n' +
+            '📂 بيانات: تصدير, استيراد, طباعة, بحث, فلتر\n' +
+            '🔍 تركيز: تفعيل التركيز, إلغاء التركيز\n' +
+            '🏘️ قرى: السوفعي, العليا, السفلى, الشعابي, الجبل, حيزان, رقش, الضرفة\n' +
+            '📅 أشهر: شهر 1 إلى شهر 12\n' +
+            '💰 مسلم: "نصر مسلم 5000"\n' +
+            '📊 قراءة: "نصر قراءة 250"\n' +
+            '🔍 بحث متطور: اسم المشترك أو رقم العداد\n' +
+            '💡 البحث يدعم التشابه والبحث الثلاثي\n' +
+            '🎤 بحث صوتي: اضغط على زر الميكروفون'
+        );
+    }
+
+    // ============================================================
+    //  دوال مساعدة
+    // ============================================================
+
+    function findButton(texts) {
+        const all = document.querySelectorAll('button, .btn, [role="button"], .button, input[type="button"], input[type="submit"]');
+        for (const btn of all) {
+            const t = btn.textContent?.trim() || '';
+            const title = btn.getAttribute('title') || '';
+            const aria = btn.getAttribute('aria-label') || '';
+            const id = btn.id || '';
+            const className = btn.className || '';
+            const value = btn.value || '';
+            
+            const searchText = (t + ' ' + title + ' ' + aria + ' ' + id + ' ' + className + ' ' + value).toLowerCase();
+            
+            for (const text of texts) {
+                if (searchText.includes(text.toLowerCase())) {
+                    return btn;
+                }
+            }
+        }
+        return null;
+    }
+
+    function exitFocusMode() {
+        document.body.classList.remove('focus-mode');
+        localStorage.setItem('focusMode', 'false');
+        const exitBtn = document.getElementById('exitFocusBtnFixed');
+        if (exitBtn) exitBtn.style.display = 'none';
+        const controlBtn = document.getElementById('exitFocusBtnControl');
+        if (controlBtn) controlBtn.style.display = 'none';
+        showMessage('👁️ تم إلغاء وضع التركيز');
+        return true;
+    }
+
+    function enterFocusMode() {
+        document.body.classList.add('focus-mode');
+        localStorage.setItem('focusMode', 'true');
+        const exitBtn = document.getElementById('exitFocusBtnFixed');
+        if (exitBtn) exitBtn.style.display = 'flex';
+        const controlBtn = document.getElementById('exitFocusBtnControl');
+        if (controlBtn) controlBtn.style.display = 'block';
+        showMessage('🔍 تم تفعيل وضع التركيز');
+        return true;
+    }
+
+    function scrollToRow(index) {
+        const tbody = document.querySelector('#tableWrapper tbody');
+        if (!tbody) return false;
+        
+        const rows = tbody.querySelectorAll('tr');
+        if (rows[index]) {
+            document.querySelectorAll('#tableWrapper tbody tr.selected-row').forEach(r => {
+                r.classList.remove('selected-row');
+            });
+            rows[index].classList.add('selected-row');
+            rows[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            console.log(`✅ تم التمرير إلى الصف رقم ${index}`);
+            return true;
+        }
+        console.log(`❌ لم يتم العثور على الصف رقم ${index}`);
+        return false;
+    }
+
+    function updateCell(rowIndex, colIndex, value) {
+        const tbody = document.querySelector('#tableWrapper tbody');
+        if (!tbody) return false;
+        
+        const rows = tbody.querySelectorAll('tr');
+        if (!rows[rowIndex]) return false;
+
+        const cells = rows[rowIndex].querySelectorAll('td');
+        if (!cells[colIndex]) return false;
+
+        cells[colIndex].textContent = value;
+        cells[colIndex].dataset.original = value;
+
+        const event = new Event('blur', { bubbles: true });
+        cells[colIndex].dispatchEvent(event);
+
+        return true;
+    }
+
+    // ============================================================
+    //  عرض النتائج
+    // ============================================================
+
+    function showResults(results, title) {
+        const old = document.querySelector('.cmd-results');
+        if (old) old.remove();
+
+        const div = document.createElement('div');
+        div.className = 'cmd-results';
+        div.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            color: #fff;
+            padding: 25px;
+            border-radius: 20px;
+            z-index: 999999;
+            font-family: 'Tajawal', sans-serif;
+            border: 2px solid #4cc9f0;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            max-width: 500px;
+            width: 90%;
+            max-height: 70vh;
+            overflow-y: auto;
+            direction: rtl;
+        `;
+
+        let html = `<div style="text-align:center;margin-bottom:15px;font-size:18px;color:#4cc9f0;">${title}</div>`;
+        results.forEach((r, i) => {
+            const matchType = r.matchType || 'بحث';
+            html += `
+                <div onclick="window.selectSearchResult(${r.rowIndex})" style="
+                    padding: 12px 15px;
+                    margin: 5px 0;
+                    background: rgba(255,255,255,0.05);
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    border: 1px solid rgba(255,255,255,0.05);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                " onmouseenter="this.style.background='rgba(76,201,240,0.15)'" onmouseleave="this.style.background='rgba(255,255,255,0.05)'">
+                    <span>${r.name}</span>
+                    <span style="color:#4cc9f0;font-size:13px;">عداد: ${r.meterNumber} | ${matchType}</span>
+                </div>
+            `;
+        });
+
+        html += `
+            <div style="text-align:center;margin-top:15px;">
+                <button onclick="document.querySelector('.cmd-results').remove()" style="
+                    padding: 8px 30px;
+                    border: none;
+                    border-radius: 10px;
+                    background: #ff4757;
+                    color: white;
+                    cursor: pointer;
+                    font-family: 'Tajawal';
+                    font-size: 14px;
+                ">إغلاق</button>
+            </div>
+        `;
+
+        div.innerHTML = html;
+        document.body.appendChild(div);
+
+        window.selectSearchResult = function(index) {
+            scrollToRow(index);
+            document.querySelector('.cmd-results')?.remove();
+            showMessage('✅ تم التحديد');
+        };
+    }
+
+    // ============================================================
+    //  عرض الرسالة
+    // ============================================================
+
+    function showMessage(text) {
+        const old = document.querySelector('.cmd-result');
+        if (old) old.remove();
+
+        const div = document.createElement('div');
+        div.className = 'cmd-result';
+        div.textContent = text;
+        div.style.cssText = `
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.92);
+            color: #fff;
+            padding: 16px 30px;
+            border-radius: 16px;
+            font-size: 17px;
+            z-index: 999998;
+            font-family: 'Tajawal', sans-serif;
+            border: 2px solid #4cc9f0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            text-align: center;
+            max-width: 90%;
+            direction: rtl;
+            white-space: pre-line;
+            line-height: 1.8;
+            animation: fadeIn 0.3s ease;
+        `;
+        document.body.appendChild(div);
+
+        setTimeout(() => {
+            div.style.opacity = '0';
+            div.style.transition = 'opacity 0.4s';
+            setTimeout(() => div.remove(), 400);
+        }, 5000);
+    }
+
+    // ============================================================
+    //  ربط البحث مع الاقتراحات
+    // ============================================================
+
+    function connectSearch() {
+        const input = document.querySelector('.smart-search-box input');
+        if (!input) {
+            setTimeout(connectSearch, 500);
+            return;
+        }
+
+        console.log('✅ نظام الأوامر المتكامل مع الأزرار والبحث المتطور جاهز!');
+
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+
+        let suggestionsContainer = document.createElement('div');
+        suggestionsContainer.className = 'suggestions-container';
+        suggestionsContainer.style.cssText = `
+            position: absolute;
+            top: 100%;
+            right: 0;
+            left: 0;
+            background: rgba(0,0,0,0.95);
+            border-radius: 12px;
+            margin-top: 5px;
+            padding: 10px;
+            z-index: 999999;
+            display: none;
+            border: 1px solid rgba(76,201,240,0.3);
+            max-height: 350px;
+            overflow-y: auto;
+        `;
+        newInput.parentNode.style.position = 'relative';
+        newInput.parentNode.appendChild(suggestionsContainer);
+
+        newInput.addEventListener('input', function() {
+            const val = this.value.trim();
+            if (val.length < 1) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+
+            const context = { lastSearch: localStorage.getItem('lastSearch') || '' };
+            const suggestions = getSearchSuggestions(val, context);
+            
+            if (suggestions.length === 0) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+
+            let html = '';
+            suggestions.forEach(s => {
+                html += `
+                    <div class="suggestion-item" data-text="${s.text}" style="
+                        padding: 10px 15px;
+                        margin: 3px 0;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        transition: background 0.2s;
+                        color: #fff;
+                        font-family: 'Tajawal', sans-serif;
+                    " onmouseenter="this.style.background='rgba(76,201,240,0.15)'" onmouseleave="this.style.background='transparent'">
+                        <span style="font-size:20px;">${s.icon || '📌'}</span>
+                        <div>
+                            <div style="font-weight:bold;">${s.text}</div>
+                            <div style="font-size:12px;color:#aaa;">${s.desc || ''}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            suggestionsContainer.innerHTML = html;
+            suggestionsContainer.style.display = 'block';
+
+            suggestionsContainer.querySelectorAll('.suggestion-item').forEach(el => {
+                el.addEventListener('click', function() {
+                    const text = this.dataset.text;
+                    newInput.value = text;
+                    suggestionsContainer.style.display = 'none';
+                    window.runSmartCommand(text);
+                    newInput.value = '';
+                });
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!newInput.parentNode.contains(e.target)) {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+
+        newInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = this.value.trim();
+                if (val) {
+                    localStorage.setItem('lastSearch', val);
+                    suggestionsContainer.style.display = 'none';
+                    window.runSmartCommand(val);
+                    this.value = '';
+                }
+            }
+            if (e.key === 'Escape') {
+                suggestionsContainer.style.display = 'none';
+                this.value = '';
+            }
+        });
+
+        const box = newInput.closest('.smart-search-box');
+        if (box) {
+            const btn = document.createElement('button');
+            btn.textContent = '▶️';
+            btn.style.cssText = `
+                background: transparent;
+                border: none;
+                color: #4cc9f0;
+                font-size: 22px;
+                cursor: pointer;
+                padding: 0 10px;
+                transition: all 0.3s ease;
+            `;
+            btn.title = 'تنفيذ الأمر';
+            btn.onmouseenter = function() { this.style.transform = 'scale(1.2)'; };
+            btn.onmouseleave = function() { this.style.transform = 'scale(1)'; };
+            btn.onclick = function() {
+                const val = newInput.value.trim();
+                if (val) {
+                    localStorage.setItem('lastSearch', val);
+                    suggestionsContainer.style.display = 'none';
+                    window.runSmartCommand(val);
+                    newInput.value = '';
+                }
+            };
+            box.appendChild(btn);
+        }
+    }
+
+    // ============================================================
+    //  🎤 البحث الصوتي
+    // ============================================================
+
+    function setupVoiceSearch() {
+        const voiceBtn = document.querySelector('.voice-btn');
+        if (!voiceBtn) {
+            setTimeout(setupVoiceSearch, 500);
+            return;
+        }
+
+        voiceBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showMessage('❌ المتصفح لا يدعم الصوت');
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'ar-SA';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = function() {
+                voiceBtn.classList.add('recording');
+                voiceBtn.innerHTML = '⏺️';
+                showMessage('🎤 استمع... تحدث الآن');
+            };
+
+            recognition.onresult = function(event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                if (transcript) {
+                    voiceBtn.classList.remove('recording');
+                    voiceBtn.innerHTML = '🎤';
+                    window.runSmartCommand(transcript);
+                }
+            };
+
+            recognition.onerror = function() {
+                voiceBtn.classList.remove('recording');
+                voiceBtn.innerHTML = '🎤';
+                showMessage('❌ فشل التعرف الصوتي');
+            };
+
+            recognition.onend = function() {
+                voiceBtn.classList.remove('recording');
+                voiceBtn.innerHTML = '🎤';
+            };
+
+            recognition.start();
+        });
+
+        console.log('✅ البحث الصوتي جاهز');
+    }
+
+    // ============================================================
+    //  بدء التشغيل
+    // ============================================================
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(connectSearch, 2000);
+            setTimeout(setupVoiceSearch, 2500);
+        });
+    } else {
+        setTimeout(connectSearch, 2000);
+        setTimeout(setupVoiceSearch, 2500);
+    }
+
+    console.log('✅ نظام الأوامر المتكامل مع الأزرار والبحث المتطور جاهز!');
+    console.log('📋 الأزرار المدعومة:');
+    console.log('   📊 تقرير, 🔄 تحديث, 🤖 ذكاء, 📈 رسوم, 🚪 خروج');
+    console.log('   🎨 طبيعي, ليلي, داكن, طليعي');
+    console.log('   💾 توفير, ⚡ سريع, 💬 رسائل, 💰 مديونيات');
+    console.log('   🧠 ذاكرة, 👨‍💼 مدير, 🔄 مزامنة');
+    console.log('🔍 البحث يدعم: اسم, رقم عداد, تشابه, ثلاثي');
+    console.log('💡 اكتب أي حرف وستظهر اقتراحات ذكية');
+
+})();
+</script>
 </body>
 </html>
