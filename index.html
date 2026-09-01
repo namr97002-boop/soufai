@@ -18087,7 +18087,69 @@ window.showZeroSubscriptionModal = showZeroSubscriptionModal;
         const cmd = command.toString().trim();
         window._lastSmartCommand = cmd;
         console.log('🎯 تنفيذ الأمر:', cmd);
+// ===== دعم "سدد" و "مسلم" و "قراءة" و "حالية" =====
+const words = cmd.split(/\s+/);
+let hasPaymentWord = words.some(w => w.includes('سلم') || w.includes('سدد') || w.includes('دفع'));
+let hasReadingWord = words.some(w => w.includes('قراءة') || w.includes('حالية') || w.includes('حالي'));
+let hasNumber = words.some(w => /^\d+$/.test(w));
 
+if (hasPaymentWord && hasNumber && !cmd.includes('شهر')) {
+    let name = '';
+    let amount = 0;
+    for (const word of words) {
+        if (/^\d+$/.test(word)) {
+            amount = parseInt(word);
+        } else if (!word.includes('سلم') && !word.includes('سدد') && !word.includes('دفع')) {
+            name += word + ' ';
+        }
+    }
+    name = name.trim();
+    if (name && amount > 0) {
+        const results = advancedFindInTable(name);
+        if (results.length === 1) {
+            const row = results[0];
+            updateCell(row.rowIndex, 11, amount);
+            scrollToRow(row.rowIndex);
+            showMessage(`✅ تم تسجيل مبلغ ${amount} للمشترك: ${row.name}`);
+            return;
+        } else if (results.length > 1) {
+            showResults(results, `اختر مشتركاً لتسديد ${amount}`);
+            return;
+        } else {
+            showMessage(`❌ لم أجد مشتركاً باسم: ${name}`);
+            return;
+        }
+    }
+}
+
+if (hasReadingWord && hasNumber && !cmd.includes('شهر')) {
+    let name = '';
+    let reading = 0;
+    for (const word of words) {
+        if (/^\d+$/.test(word)) {
+            reading = parseInt(word);
+        } else if (!word.includes('قراءة') && !word.includes('حالية') && !word.includes('حالي')) {
+            name += word + ' ';
+        }
+    }
+    name = name.trim();
+    if (name && reading > 0) {
+        const results = advancedFindInTable(name);
+        if (results.length === 1) {
+            const row = results[0];
+            updateCell(row.rowIndex, 3, reading);
+            scrollToRow(row.rowIndex);
+            showMessage(`✅ تم تسجيل قراءة ${reading} للمشترك: ${row.name}`);
+            return;
+        } else if (results.length > 1) {
+            showResults(results, `اختر مشتركاً لتسجيل قراءة ${reading}`);
+            return;
+        } else {
+            showMessage(`❌ لم أجد مشتركاً باسم: ${name}`);
+            return;
+        }
+    }
+}
         if (cmd.includes('الغاء التركيز') || 
             cmd.includes('الغاء وضع التركيز') || 
             cmd.includes('خروج من التركيز') ||
