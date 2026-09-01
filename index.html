@@ -11043,28 +11043,9 @@ if (data[0] && Array.isArray(data[0]) && data[0].length === 1) {
 
                             syncImmediately(village, month, rowIndex, cellIndex, newValue, meterNumber);
 
-                            if (cellIndex === 11 || cellIndex === 9) {
-                                const total = parseNumber(data[rowIndex][9]);
-                                const paid = parseNumber(data[rowIndex][11]);
-                                data[rowIndex][12] = total - paid;
-
-                                syncImmediately(
-                                    village,
-                                    month,
-                                    rowIndex,
-                                    12,
-                                    data[rowIndex][12],
-                                    data[rowIndex][0] || ''
-                                );
-
-                                const remCell = document.querySelector(
-                                    `td[data-row="${rowIndex}"][data-col="12"]`
-                                );
-                                if (remCell) {
-                                    remCell.textContent = data[rowIndex][12];
-                                    remCell.dataset.original = data[rowIndex][12];
-                                }
-                            }
+                            // المتبقي (العمود 12) لا نعدله من الواجهة.
+                            // السيرفر هو المسؤول عن حسابه بعد حفظ المسلم،
+                            // كما هو الحال في التعديل اليدوي الصحيح.
 
                             // ===== معالجة عمود المسلم (العمود 11) وإرسال رسالة =====
                             if (cellIndex === 11) {
@@ -18104,6 +18085,7 @@ window.showZeroSubscriptionModal = showZeroSubscriptionModal;
 
     window.runSmartCommand = function(command) {
         const cmd = command.toString().trim();
+        window._lastSmartCommand = cmd;
         console.log('🎯 تنفيذ الأمر:', cmd);
 
         if (cmd.includes('الغاء التركيز') || 
@@ -18381,11 +18363,12 @@ window.showZeroSubscriptionModal = showZeroSubscriptionModal;
         const cells = rows[rowIndex].querySelectorAll('td');
         if (!cells[colIndex]) return false;
 
+        // مهم: نستخدم نفس مسار التعديل اليدوي حتى يتم تشغيل onBlur
+        // الذي يحتوي على الحفظ المحلي والمزامنة.
+        // click() ضروري لأن مستمع blur يتم ربطه عند الضغط على الخلية.
+        cells[colIndex].click();
         cells[colIndex].textContent = value;
-        cells[colIndex].dataset.original = value;
-
-        const event = new Event('blur', { bubbles: true });
-        cells[colIndex].dispatchEvent(event);
+        cells[colIndex].blur();
 
         return true;
     }
@@ -18460,10 +18443,48 @@ window.showZeroSubscriptionModal = showZeroSubscriptionModal;
         div.innerHTML = html;
         document.body.appendChild(div);
 
+        // ============================================================
+        //  حفظ العملية المعلقة عند عرض عدة نتائج
+        //  مثال: "نصر مسلم 2000" ثم اختيار أحد نتائج نصر
+        // ============================================================
+        window._pendingSearchAction = null;
+        try {
+            const currentCmd = (window._lastSmartCommand || '').toString().trim();
+            const pendingAnalysis = analyzeSearchQuery(currentCmd);
+            if (pendingAnalysis && pendingAnalysis.hasOperation && pendingAnalysis.name) {
+                window._pendingSearchAction = {
+                    operation: pendingAnalysis.operation,
+                    value: pendingAnalysis.value
+                };
+            }
+        } catch (e) {
+            console.warn('⚠️ تعذر تجهيز عملية البحث المعلقة:', e);
+        }
+
         window.selectSearchResult = function(index) {
-            scrollToRow(index);
+            const action = window._pendingSearchAction;
+            const row = document.querySelector(`#tableWrapper tbody tr:nth-child(${index + 1})`);
+
+            if (action && row) {
+                // نستخدم نفس updateCell الذي يستخدم مسار التعديل اليدوي،
+                // وبالتالي يتم الحفظ المحلي والمزامنة تلقائياً.
+                const colIndex = action.operation === 'paid' ? 11 : 3;
+                const cells = row.querySelectorAll('td');
+                const meterNumber = cells[0]?.textContent?.trim() || '';
+                const name = cells[1]?.textContent?.trim() || 'المشترك';
+
+                updateCell(index, colIndex, String(action.value));
+                scrollToRow(index);
+
+                const opName = action.operation === 'paid' ? 'المسلم' : 'القراءة';
+                showMessage(`✅ تم تسجيل ${action.value} في ${opName} للمشترك: ${name}`);
+            } else {
+                scrollToRow(index);
+                showMessage('✅ تم التحديد');
+            }
+
+            window._pendingSearchAction = null;
             document.querySelector('.cmd-results')?.remove();
-            showMessage('✅ تم التحديد');
         };
     }
 
