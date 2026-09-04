@@ -18440,36 +18440,65 @@ if (hasReadingWord && hasNumber && !cmd.includes('شهر')) {
     // ============================================================
 
     function showResults(results, title) {
-        const old = document.querySelector('.cmd-results');
-        if (old) old.remove();
+    const old = document.querySelector('.cmd-results');
+    if (old) old.remove();
 
-        const div = document.createElement('div');
-        div.className = 'cmd-results';
-        div.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.95);
-            color: #fff;
-            padding: 25px;
-            border-radius: 20px;
-            z-index: 999999;
-            font-family: 'Tajawal', sans-serif;
-            border: 2px solid #4cc9f0;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            max-width: 500px;
-            width: 90%;
-            max-height: 70vh;
-            overflow-y: auto;
-            direction: rtl;
-        `;
+    if (!results || !results.length) {
+        showMessage('❌ لا توجد نتائج');
+        return;
+    }
 
-        let html = `<div style="text-align:center;margin-bottom:15px;font-size:18px;color:#4cc9f0;">${title}</div>`;
-        results.forEach((r, i) => {
-            const matchType = r.matchType || 'بحث';
-            html += `
-                <div onclick="window.selectSearchResult(${r.rowIndex})" style="
+    const div = document.createElement('div');
+    div.className = 'cmd-results';
+
+    div.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.95);
+        color: #fff;
+        padding: 25px;
+        border-radius: 20px;
+        z-index: 999999;
+        font-family: 'Tajawal', sans-serif;
+        border: 2px solid #4cc9f0;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        max-width: 500px;
+        width: 90%;
+        max-height: 70vh;
+        overflow-y: auto;
+        direction: rtl;
+    `;
+
+    let html = `
+        <div style="
+            text-align:center;
+            margin-bottom:15px;
+            font-size:18px;
+            color:#4cc9f0;
+            font-weight:bold;
+        ">
+            ${title}
+        </div>
+    `;
+
+    results.forEach((r, i) => {
+
+        // ========================================================
+        // مهم:
+        // نرسل rowIndex الحقيقي القادم من advancedFindInTable
+        // وليس رقم ترتيب النتيجة i
+        // ========================================================
+
+        const rowIndex = Number(r.rowIndex);
+
+        const matchType = r.matchType || 'بحث';
+
+        html += `
+            <div
+                onclick="window.selectSearchResult(${rowIndex})"
+                style="
                     padding: 12px 15px;
                     margin: 5px 0;
                     background: rgba(255,255,255,0.05);
@@ -18480,16 +18509,36 @@ if (hasReadingWord && hasNumber && !cmd.includes('شهر')) {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                " onmouseenter="this.style.background='rgba(76,201,240,0.15)'" onmouseleave="this.style.background='rgba(255,255,255,0.05)'">
-                    <span>${r.name}</span>
-                    <span style="color:#4cc9f0;font-size:13px;">عداد: ${r.meterNumber} | ${matchType}</span>
-                </div>
-            `;
-        });
+                    gap: 10px;
+                "
+                onmouseenter="
+                    this.style.background='rgba(76,201,240,0.15)'
+                "
+                onmouseleave="
+                    this.style.background='rgba(255,255,255,0.05)'
+                "
+            >
+                <span>${r.name || ''}</span>
 
-        html += `
-            <div style="text-align:center;margin-top:15px;">
-                <button onclick="document.querySelector('.cmd-results').remove()" style="
+                <span style="
+                    color:#4cc9f0;
+                    font-size:13px;
+                    text-align:left;
+                ">
+                    عداد: ${r.meterNumber || ''} | ${matchType}
+                </span>
+            </div>
+        `;
+    });
+
+    html += `
+        <div style="text-align:center;margin-top:15px;">
+            <button
+                onclick="
+                    window._pendingSearchAction = null;
+                    document.querySelector('.cmd-results')?.remove();
+                "
+                style="
                     padding: 8px 30px;
                     border: none;
                     border-radius: 10px;
@@ -18498,58 +18547,298 @@ if (hasReadingWord && hasNumber && !cmd.includes('شهر')) {
                     cursor: pointer;
                     font-family: 'Tajawal';
                     font-size: 14px;
-                ">إغلاق</button>
-            </div>
-        `;
+                "
+            >
+                إغلاق
+            </button>
+        </div>
+    `;
 
-        div.innerHTML = html;
-        document.body.appendChild(div);
+    div.innerHTML = html;
+    document.body.appendChild(div);
 
-        // ============================================================
-        //  حفظ العملية المعلقة عند عرض عدة نتائج
-        //  مثال: "نصر مسلم 2000" ثم اختيار أحد نتائج نصر
-        // ============================================================
-        window._pendingSearchAction = null;
-        try {
-            const currentCmd = (window._lastSmartCommand || '').toString().trim();
-            const pendingAnalysis = analyzeSearchQuery(currentCmd);
-            if (pendingAnalysis && pendingAnalysis.hasOperation && pendingAnalysis.name) {
-                window._pendingSearchAction = {
-                    operation: pendingAnalysis.operation,
-                    value: pendingAnalysis.value
-                };
-            }
-        } catch (e) {
-            console.warn('⚠️ تعذر تجهيز عملية البحث المعلقة:', e);
+    // ============================================================
+    // 🔥 حفظ العملية المعلقة عند وجود أكثر من نتيجة
+    //
+    // مثال:
+    // نصر مسلم 2000
+    //
+    // البحث يجد أكثر من "نصر"
+    // نحفظ:
+    // operation = paid
+    // value     = 2000
+    //
+    // ثم عند اختيار نصر نطبق 2000 عليه
+    // ============================================================
+
+    window._pendingSearchAction = null;
+
+    try {
+
+        const currentCmd =
+            (window._lastSmartCommand || '').toString().trim();
+
+        const pendingAnalysis =
+            analyzeSearchQuery(currentCmd);
+
+        if (
+            pendingAnalysis &&
+            pendingAnalysis.hasOperation &&
+            pendingAnalysis.name &&
+            pendingAnalysis.value !== null &&
+            pendingAnalysis.value !== undefined
+        ) {
+
+            window._pendingSearchAction = {
+                operation: pendingAnalysis.operation,
+                value: Number(pendingAnalysis.value),
+                name: pendingAnalysis.name
+            };
+
+            console.log(
+                '🟢 تم حفظ العملية المعلقة:',
+                window._pendingSearchAction
+            );
         }
 
-        window.selectSearchResult = function(index) {
-            const action = window._pendingSearchAction;
-            const row = document.querySelector(`#tableWrapper tbody tr:nth-child(${index + 1})`);
+    } catch (e) {
 
-            if (action && row) {
-                // نستخدم نفس updateCell الذي يستخدم مسار التعديل اليدوي،
-                // وبالتالي يتم الحفظ المحلي والمزامنة تلقائياً.
-                const colIndex = action.operation === 'paid' ? 11 : 3;
-                const cells = row.querySelectorAll('td');
-                const meterNumber = cells[0]?.textContent?.trim() || '';
-                const name = cells[1]?.textContent?.trim() || 'المشترك';
+        console.warn(
+            '⚠️ تعذر تجهيز عملية البحث المعلقة:',
+            e
+        );
 
-                updateCell(index, colIndex, String(action.value));
-                scrollToRow(index);
-
-                const opName = action.operation === 'paid' ? 'المسلم' : 'القراءة';
-                showMessage(`✅ تم تسجيل ${action.value} في ${opName} للمشترك: ${name}`);
-            } else {
-                scrollToRow(index);
-                showMessage('✅ تم التحديد');
-            }
-
-            window._pendingSearchAction = null;
-            document.querySelector('.cmd-results')?.remove();
-        };
     }
 
+    // ============================================================
+    // 🔥 اختيار نتيجة البحث
+    // ============================================================
+
+    window.selectSearchResult = function(rowIndex) {
+
+        const action = window._pendingSearchAction;
+
+        // ========================================================
+        // rowIndex هو الفهرس الحقيقي داخل tbody
+        // ========================================================
+
+        const table =
+            document.querySelector('#tableWrapper table');
+
+        const tbody =
+            table?.querySelector('tbody');
+
+        const rows =
+            tbody?.querySelectorAll('tr') || [];
+
+        const row =
+            rows[rowIndex];
+
+        console.log(
+            '🎯 اختيار نتيجة البحث:',
+            {
+                rowIndex: rowIndex,
+                action: action,
+                rowFound: !!row
+            }
+        );
+
+        // ========================================================
+        // 🔥 توجد عملية معلقة
+        //
+        // مثال:
+        // نصر مسلم 2000
+        // ========================================================
+
+        if (
+            action &&
+            action.operation &&
+            action.value !== null &&
+            action.value !== undefined &&
+            !isNaN(Number(action.value)) &&
+            row
+        ) {
+
+            // ----------------------------------------------------
+            // paid  = المسلم / سدد / دفع
+            // reading = القراءة / حالية
+            // ----------------------------------------------------
+
+            const colIndex =
+                action.operation === 'paid'
+                    ? 11
+                    : 3;
+
+            const cells =
+                row.querySelectorAll('td');
+
+            const meterNumber =
+                cells[0]?.textContent?.trim() || '';
+
+            const name =
+                cells[1]?.textContent?.trim() ||
+                action.name ||
+                'المشترك';
+
+            const value =
+                Number(action.value);
+
+            console.log(
+                '💾 تنفيذ العملية:',
+                {
+                    name: name,
+                    meterNumber: meterNumber,
+                    rowIndex: rowIndex,
+                    colIndex: colIndex,
+                    value: value,
+                    operation: action.operation
+                }
+            );
+
+            // ====================================================
+            // 🔥 نفس updateCell المستخدم في النظام الأصلي
+            // للحفاظ على الحفظ المحلي والمزامنة
+            // ====================================================
+
+            updateCell(
+    rowIndex,
+    colIndex,
+    value
+);
+
+// ====================================================
+// 🔥 تحديد الصف + التمرير إليه
+// ====================================================
+
+const allRows = document.querySelectorAll(
+    '#tableWrapper tbody tr'
+);
+
+// إزالة التحديد السابق
+allRows.forEach(r => {
+    r.classList.remove('selected-row', 'search-selected-row');
+    r.style.outline = '';
+    r.style.boxShadow = '';
+});
+
+// تحديد الصف المختار
+if (allRows[rowIndex]) {
+
+    const selectedRow = allRows[rowIndex];
+
+    selectedRow.classList.add('selected-row');
+    selectedRow.classList.add('search-selected-row');
+
+    // تمييز واضح للصف
+    selectedRow.style.outline = '3px solid #4cc9f0';
+    selectedRow.style.boxShadow =
+        '0 0 15px rgba(76,201,240,0.7)';
+
+    // التمرير للصف
+    selectedRow.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+    });
+
+    console.log(
+        '🎯 تم تحديد الصف بعد العملية:',
+        rowIndex
+    );
+}
+            // ====================================================
+            // رسالة النجاح
+            // ====================================================
+
+            const opName =
+                action.operation === 'paid'
+                    ? 'المسلم'
+                    : 'القراءة';
+
+            showMessage(
+                `✅ تم تسجيل ${value} في ${opName} للمشترك: ${name}`
+            );
+
+            // ====================================================
+            // تنظيف العملية
+            // ====================================================
+
+            window._pendingSearchAction = null;
+
+            document
+                .querySelector('.cmd-results')
+                ?.remove();
+
+            return;
+        }
+
+        // ========================================================
+        // 🔍 بحث عادي بدون عملية
+        // ========================================================
+
+        if (row) {
+
+            scrollToRow(rowIndex);
+
+            const cells =
+                row.querySelectorAll('td');
+
+            const name =
+                cells[1]?.textContent?.trim() ||
+                'المشترك';
+
+            const meterNumber =
+                cells[0]?.textContent?.trim() ||
+                '';
+
+            showMessage(
+                `🔍 تم العثور على: ${name}` +
+                (meterNumber
+                    ? ` (عداد: ${meterNumber})`
+                    : '')
+            );
+
+        } else {
+
+            // ----------------------------------------------------
+            // حماية إضافية:
+            // إذا لم نجد الصف بالـ rowIndex
+            // نحاول استخدام الدالة الأصلية للتمرير
+            // ----------------------------------------------------
+
+            try {
+
+                scrollToRow(rowIndex);
+
+                showMessage(
+                    '✅ تم تحديد المشترك'
+                );
+
+            } catch (e) {
+
+                console.warn(
+                    '⚠️ تعذر تحديد الصف:',
+                    e
+                );
+
+                showMessage(
+                    '❌ تعذر تحديد صف المشترك'
+                );
+
+            }
+
+        }
+
+        // ========================================================
+        // تنظيف
+        // ========================================================
+
+        window._pendingSearchAction = null;
+
+        document
+            .querySelector('.cmd-results')
+            ?.remove();
+    };
+}
     // ============================================================
     //  عرض الرسالة
     // ============================================================
