@@ -7645,7 +7645,70 @@ textarea:focus {
 
     <!-- ===== نقطة ربط React ===== -->
     <div id="root"></div>
+<!-- ============================================================ -->
+<!-- 🗓️ زر تبديل السنة المرئي                                     -->
+<!-- ============================================================ -->
+<div id="yearSwitcher" onclick="switchYearClick()" style="
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #6f42c1, #5a32a3);
+    border: 3px solid #ffd700;
+    border-radius: 14px;
+    padding: 10px 16px;
+    box-shadow: 0 4px 25px rgba(111, 66, 193, 0.5);
+    font-family: Tajawal, sans-serif;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s ease;
+">
+    <span style="font-size: 20px;">🗓️</span>
+    <span id="yearLabel" style="
+        color: #ffd700;
+        font-weight: 900;
+        font-size: 18px;
+        letter-spacing: 1px;
+    ">2026</span>
+    <span style="color: #ffffff; font-size: 14px; opacity: 0.8;">↔️</span>
+</div>
 
+<script>
+    // تحديث رقم السنة على الزر
+    (function() {
+        function updateYearLabel() {
+            var label = document.getElementById('yearLabel');
+            if (label) {
+                label.textContent = window.CURRENT_YEAR || '2026';
+            }
+        }
+        
+        // عند تحميل الصفحة
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updateYearLabel);
+        } else {
+            updateYearLabel();
+        }
+        
+        // تأثير عند اللمس/الضغط
+        setTimeout(function() {
+            var btn = document.getElementById('yearSwitcher');
+            if (btn) {
+                btn.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                    this.style.boxShadow = '0 6px 35px rgba(255, 215, 0, 0.6)';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                    this.style.boxShadow = '0 4px 25px rgba(111, 66, 193, 0.5)';
+                });
+            }
+        }, 500);
+    })();
+</script>
     <!-- ===== كود React ===== -->
     <script type="text/babel">
     
@@ -7737,18 +7800,22 @@ if (window.speechSynthesis) {
         const BACKUP_KEY = 'soufai_backups';
         const REPORT_CACHE_KEY = 'soufai_report_cache';
 
-        const villageAPIs = {
-            "السوفعي": "https://script.google.com/macros/s/AKfycbxwk4kUq6iKrILZZj97hoHw4x8oJLTcJW_imP3J7LloQBR79DDlY31AAcRRHytcJNon/exec",
-            "العليا": "https://script.google.com/macros/s/AKfycbwxfCWbufmKMvNZXzmuK6PqbmUSH7px3HmIQcJl2Am8vM5FCCNZHQ_kIrTBbzdDe6-aMQ/exec",
-            "السفلى": "https://script.google.com/macros/s/AKfycbwrtgwr8WYMlNcQzj3qCF6-OvAei6EFK_e2LzuMLAfc4WDVlguqdCOzdF9gTWh8mYA/exec",
-            "الشعابي": "https://script.google.com/macros/s/AKfycbyAcUuicFALQFVgMjc7TSCmZ1lzCzoMFjHOZy2q-nlZv2nq0bCY77-0BpY7U2zFRWJ2AA/exec",
-            "الجبل": "https://script.google.com/macros/s/AKfycbzr81y7Am5rC4VGOwwzFDpACNzIe9sE9DW9zy1SFy4HNSOrWs4gshHBlCCCXKYnPFFC/exec",
-            "حيزان": "https://script.google.com/macros/s/AKfycbyZZ5AAuEineNuWWMsMYJaqTcsH7KA8l2Xov6AC_qJn4uAFhNRxRW1A1icCVYlH79bK/exec",
-            "رقش": "https://script.google.com/macros/s/AKfycbxMD6WXWvALfYxuCre5On3yS1u7HqxxdjYUqVF8s1KfNgcQTqKQXQ3DxbEh0RHX08gA/exec",
-            "الضرفة": "https://script.google.com/macros/s/AKfycbzgjurHK5GQX43r7aqP_365sL-2CQksnwqlkdYP03pcZLna-6it60FfpcQ0TasMAG0/exec"
-        };
+        // ✅ روابط ديناميكية حسب السنة النشطة
+const villageAPIs = {
+    get "السوفعي"() { return (window.YEAR_LINKS?.[window.CURRENT_YEAR]?.["السوفعي"]) || ''; },
+    get "العليا"() { return (window.YEAR_LINKS?.[window.CURRENT_YEAR]?.["العليا"]) || ''; },
+    get "السفلى"() { return (window.YEAR_LINKS?.[window.CURRENT_YEAR]?.["السفلى"]) || ''; },
+    get "الشعابي"() { return (window.YEAR_LINKS?.[window.CURRENT_YEAR]?.["الشعابي"]) || ''; },
+    get "الجبل"() { return (window.YEAR_LINKS?.[window.CURRENT_YEAR]?.["الجبل"]) || ''; },
+    get "حيزان"() { return (window.YEAR_LINKS?.[window.CURRENT_YEAR]?.["حيزان"]) || ''; },
+    get "رقش"() { return (window.YEAR_LINKS?.[window.CURRENT_YEAR]?.["رقش"]) || ''; },
+    get "الضرفة"() { return (window.YEAR_LINKS?.[window.CURRENT_YEAR]?.["الضرفة"]) || ''; }
+};
 
-        const MONTHLY_REPORT_URL = 'https://script.google.com/macros/s/AKfycbwCLB2B8LGwefWiNDacjM4YX8N86NWu-GgM8i6V3cm0PkxG-OQ1bFiNNuPyYHuvwnLXvA/exec';
+// ✅ رابط التقرير حسب السنة النشطة
+const getMonthlyReportURL = () => {
+    return (window.YEAR_LINKS?.[window.CURRENT_YEAR]?.['report']) || '';
+};
 
         const USERS = {
             "5674": { name: "نصر العامري", role: "مدير المشروع", permissions: { canEdit: [3, 10, 11, 12] } },
@@ -9721,6 +9788,55 @@ if (window.speechSynthesis) {
         // ---- التطبيق الرئيسي السينمائي ----
         const App = () => {
             const [isLoggedIn, setIsLoggedIn] = useState(false);
+            // ============================================================
+//  🔒 قفل السنة - يمنع جميع الزملاء من التعديل
+// ============================================================
+
+// 🔑 كلمة سر فتح القفل (غيّرها كما تريد)
+const YEAR_LOCK_CODE = '7788';
+
+// 🔒 هل السنة مقفلة؟ (تُقرأ من التخزين المحلي)
+const [isYearLocked, setIsYearLocked] = useState(() => {
+    try {
+        return JSON.parse(localStorage.getItem('soufai_year_locked') || '{}')[window.CURRENT_YEAR] || false;
+    } catch {
+        return false;
+    }
+});
+
+// 🔒 دالة قفل/فتح السنة
+const toggleYearLock = useCallback(() => {
+    const year = window.CURRENT_YEAR;
+    
+    if (isYearLocked) {
+        // ===== فتح السنة (يحتاج كلمة سر) =====
+        const code = prompt('🔓 أدخل كلمة السر لفتح سنة ' + year + ':');
+        if (code === null) return;
+        
+        if (code !== YEAR_LOCK_CODE) {
+            showSync('❌ كلمة السر غير صحيحة', 'error', 3000);
+            return;
+        }
+        
+        const locks = JSON.parse(localStorage.getItem('soufai_year_locked') || '{}');
+        locks[year] = false;
+        localStorage.setItem('soufai_year_locked', JSON.stringify(locks));
+        setIsYearLocked(false);
+        showSync('🔓 تم فتح سنة ' + year, 'success', 3000);
+        
+    } else {
+        // ===== قفل السنة =====
+        if (!confirm('🔒 هل تريد قفل سنة ' + year + ' نهائياً؟\n\nلن يتمكن أي زميل من التعديل بعد الآن.')) {
+            return;
+        }
+        
+        const locks = JSON.parse(localStorage.getItem('soufai_year_locked') || '{}');
+        locks[year] = true;
+        localStorage.setItem('soufai_year_locked', JSON.stringify(locks));
+        setIsYearLocked(true);
+        showSync('🔒 تم قفل سنة ' + year + ' نهائياً', 'success', 4000);
+    }
+}, [isYearLocked, showSync]);
             const [user, setUser] = useState(null);
             const [time, setTime] = useState('--:--:--');
             const [date, setDate] = useState('--');
@@ -9939,6 +10055,11 @@ const [loadingVillages, setLoadingVillages] = useState(false);
 }, []);
 
             const syncImmediately = useCallback(async (village, month, rowIndex, cellIndex, value, meterNumber, retryCount = 0) => {
+            // 🔒 إذا السنة مقفلة → ارفض المزامنة
+if (isYearLocked) {
+    showSync('🔒 سنة ' + window.CURRENT_YEAR + ' مقفلة - لا يمكن التعديل', 'error', 3000);
+    return false;
+}
     const MAX_RETRIES = 5;
     const RETRY_DELAY = 3000;
 
@@ -10699,7 +10820,7 @@ setHasData(true);
                 setReportLoading(true);
                 
                 try {
-                    const url = `${MONTHLY_REPORT_URL}?month=${encodeURIComponent(month)}&t=${Date.now()}`;
+                    const url = `${getMonthlyReportURL()}?month=${encodeURIComponent(month)}&t=${Date.now()}`;
                     const response = await fetch(url);
                     
                     if (!response.ok) {
@@ -10877,8 +10998,10 @@ setHasData(true);
         );
     }
     const canEdit = (rowIndex, cellIndex) => {
-        if (!user || !user.permissions) return false;
-        if (rowIndex === 0 || rowIndex === 1 || rowIndex === data.length - 1) return false;
+    // 🔒 لا تعديل إذا السنة مقفلة
+    if (isYearLocked) return false;
+    
+    if (!user || !user.permissions) return false;
         return user.permissions.canEdit.includes(cellIndex);
     };
 
@@ -10929,95 +11052,145 @@ if (data[0] && Array.isArray(data[0]) && data[0].length === 1) {
     
     html += '</thead><tbody>';
 
-    // ✅ صفوف البيانات (من الصف 2 فما فوق، مع تخطي الصفوف المكررة)
-    data.forEach((row, index) => {
-        // ✅ تخطي الصفوف الخاصة (0 و 1) لأننا عالجناها بالفعل
-        if (index === 0 || index === 1) return;
-        
-        if (!row || !Array.isArray(row) || row.length === 0) return;
-        
-        // ✅ التحقق من أن هذا الصف ليس اسم قرية مكرر
-        if (row.length === 1 && typeof row[0] === 'string' && 
-            (row[0].includes('السوفعي') || row[0].includes('العليا') || 
-             row[0].includes('السفلى') || row[0].includes('الشعابي') || 
-             row[0].includes('الجبل') || row[0].includes('حيزان') || 
-             row[0].includes('رقش') || row[0].includes('الضرفة') ||
-             row[0].includes('🏘️'))) {
-            return; // ✅ تخطي صف اسم القرية المكرر
+// ✅ فصل صفوف البيانات عن صف الإجمالي
+let totalRowHTML = '';
+let dataRowsHTML = '';
+
+// ✅ صفوف البيانات (من الصف 2 فما فوق، مع تخطي الصفوف المكررة)
+data.forEach((row, index) => {
+    // تخطي الصفوف الخاصة (0 و 1) لأننا عالجناها بالفعل
+    if (index === 0 || index === 1) return;
+    
+    if (!row || !Array.isArray(row) || row.length === 0) return;
+    // ✅ تخطي الصفوف الفارغة تماماً
+const isEmptyRow = !row.some(function(cell) {
+    return String(cell || '').trim() !== '';
+});
+if (isEmptyRow) return;
+    // ✅ التحقق من أن هذا الصف ليس اسم قرية مكرر
+    if (row.length === 1 && typeof row[0] === 'string' && 
+        (row[0].includes('السوفعي') || row[0].includes('العليا') || 
+         row[0].includes('السفلى') || row[0].includes('الشعابي') || 
+         row[0].includes('الجبل') || row[0].includes('حيزان') || 
+         row[0].includes('رقش') || row[0].includes('الضرفة') ||
+         row[0].includes('🏘️'))) {
+        return;
+    }
+
+    let rowClass = '';
+
+    // ✅ كشف صف الإجمالي بالبحث عن كلمة "الإجمالي" أو "المجموع"
+    let isTotalRow = false;
+    for (let i = 0; i < Math.min(3, row.length); i++) {
+        const cellText = String(row[i] || '').trim();
+        if (cellText === 'الإجمالي' || 
+            cellText === 'المجموع' || 
+            cellText === 'الاجمالي' ||
+            cellText.includes('الإجمالي') || 
+            cellText.includes('المجموع') ||
+            cellText.includes('الاجمالي')) {
+            isTotalRow = true;
+            break;
         }
+    }
 
-        let rowClass = '';
-        const isTotalRow = (index === data.length - 1);
-        if (isTotalRow) rowClass = 'total-row';
+// ✅ احتياط: آخر صفين (لأن الإجمالي قد يكون قبل الأخير)
+if (!isTotalRow) {
+    if (index === data.length - 1 || index === data.length - 2) {
+        // التأكد من أن الصف يحتوي على أرقام (ليس صف فارغ)
+        const hasNumbers = row.some(cell => {
+            const num = parseFloat(String(cell || '').replace(/,/g, ''));
+            return !isNaN(num) && num > 0;
+        });
         
-        let isDebtRow = false;
-        if (Array.isArray(row) && row.length > 12) {
-            const remaining = parseNumber(row[12]);
-            if (remaining > 5000 && index > 1 && index < data.length - 1) {
-                isDebtRow = true;
-                rowClass += ' debt-row';
-            }
+        if (hasNumbers) {
+            isTotalRow = true;
         }
-        
-        html += `<tr class="${rowClass}" data-row="${index}">`;
-        
-        if (Array.isArray(row)) {
-            row.forEach((cell, cellIndex) => {
-                const pendingChange = pending.find(
-                    c => c.rowIndex === index && c.cellIndex === cellIndex && !c.synced
-                );
-                const isSynced = pending.find(
-                    c => c.rowIndex === index && c.cellIndex === cellIndex && c.synced
-                );
-                const displayValue = pendingChange ? pendingChange.value : (cell || '');
-                const isEditable = canEdit(index, cellIndex);
-                const hasUnsaved = !!pendingChange && !pendingChange.synced;
+    }
+}
 
-                let extraClass = '';
-                if (isEditable) extraClass += ' editable';
-                if (hasUnsaved) extraClass += ' unsaved-change';
-                if (isSynced && !hasUnsaved) extraClass += ' synced-success';
-
-                html += `<td 
-                    contenteditable="${isEditable ? 'true' : 'false'}"
-                    class="${extraClass}"
-                    data-row="${index}"
-                    data-col="${cellIndex}"
-                    data-meter="${row[0] || ''}"
-                    data-original="${cell || ''}"
-                >${displayValue}</td>`;
-            });
-        } else {
-            for (let i = 0; i < 14; i++) {
-                const pendingChange = pending.find(
-                    c => c.rowIndex === index && c.cellIndex === i && !c.synced
-                );
-                const isSynced = pending.find(
-                    c => c.rowIndex === index && c.cellIndex === i && c.synced
-                );
-                const displayValue = pendingChange ? pendingChange.value : (row[i] || '');
-                const isEditable = canEdit(index, i);
-                const hasUnsaved = !!pendingChange && !pendingChange.synced;
-
-                let extraClass = '';
-                if (isEditable) extraClass += ' editable';
-                if (hasUnsaved) extraClass += ' unsaved-change';
-                if (isSynced && !hasUnsaved) extraClass += ' synced-success';
-
-                html += `<td 
-                    contenteditable="${isEditable ? 'true' : 'false'}"
-                    class="${extraClass}"
-                    data-row="${index}"
-                    data-col="${i}"
-                    data-meter="${row[0] || ''}"
-                    data-original="${row[i] || ''}"
-                >${displayValue}</td>`;
-            }
+    if (isTotalRow) rowClass = 'total-row';
+    
+    let isDebtRow = false;
+    if (Array.isArray(row) && row.length > 12 && !isTotalRow) {
+        const remaining = parseNumber(row[12]);
+        if (remaining > 5000) {
+            isDebtRow = true;
+            rowClass += ' debt-row';
         }
-        html += '</tr>';
-    });
+    }
+    
+    // بناء محتوى الصف في متغير منفصل
+    let rowHTML = `<tr class="${rowClass}" data-row="${index}">`;
+    
+    if (Array.isArray(row)) {
+        row.forEach((cell, cellIndex) => {
+            const pendingChange = pending.find(
+                c => c.rowIndex === index && c.cellIndex === cellIndex && !c.synced
+            );
+            const isSynced = pending.find(
+                c => c.rowIndex === index && c.cellIndex === cellIndex && c.synced
+            );
+            const displayValue = pendingChange ? pendingChange.value : (cell || '');
+            const isEditable = canEdit(index, cellIndex);
+            const hasUnsaved = !!pendingChange && !pendingChange.synced;
 
-    html += '</tbody></table>';
+            let extraClass = '';
+            if (isEditable) extraClass += ' editable';
+            if (hasUnsaved) extraClass += ' unsaved-change';
+            if (isSynced && !hasUnsaved) extraClass += ' synced-success';
+
+            rowHTML += `<td 
+                contenteditable="${isEditable ? 'true' : 'false'}"
+                class="${extraClass}"
+                data-row="${index}"
+                data-col="${cellIndex}"
+                data-meter="${row[0] || ''}"
+                data-original="${cell || ''}"
+            >${displayValue}</td>`;
+        });
+    } else {
+        for (let i = 0; i < 14; i++) {
+            const pendingChange = pending.find(
+                c => c.rowIndex === index && c.cellIndex === i && !c.synced
+            );
+            const isSynced = pending.find(
+                c => c.rowIndex === index && c.cellIndex === i && c.synced
+            );
+            const displayValue = pendingChange ? pendingChange.value : (row[i] || '');
+            const isEditable = canEdit(index, i);
+            const hasUnsaved = !!pendingChange && !pendingChange.synced;
+
+            let extraClass = '';
+            if (isEditable) extraClass += ' editable';
+            if (hasUnsaved) extraClass += ' unsaved-change';
+            if (isSynced && !hasUnsaved) extraClass += ' synced-success';
+
+            rowHTML += `<td 
+                contenteditable="${isEditable ? 'true' : 'false'}"
+                class="${extraClass}"
+                data-row="${index}"
+                data-col="${i}"
+                data-meter="${row[0] || ''}"
+                data-original="${row[i] || ''}"
+            >${displayValue}</td>`;
+        }
+    }
+    rowHTML += '</tr>';
+    
+    // ✅ إذا كان صف الإجمالي → احفظه جانباً
+    if (isTotalRow) {
+        totalRowHTML = rowHTML;
+    } else {
+        dataRowsHTML += rowHTML;
+    }
+});
+
+// ✅ عرض البيانات أولاً، ثم الإجمالي في النهاية
+html += dataRowsHTML;
+html += totalRowHTML;
+
+html += '</tbody></table>';
 
     return (
         <div
@@ -12177,6 +12350,33 @@ useEffect(() => {
         {/* ===== الأزرار الصغيرة ===== */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+            {/* ===== 🔒 زر قفل السنة ===== */}
+<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+    <button 
+        onClick={toggleYearLock} 
+        style={{ 
+            width: '32px', 
+            height: '32px', 
+            borderRadius: '8px', 
+            border: isYearLocked ? '2px solid #ff4757' : '2px solid rgba(0, 176, 155, 0.3)',
+            background: isYearLocked 
+                ? 'linear-gradient(135deg, #ff4757, #d50000)' 
+                : 'linear-gradient(135deg, #00b09b, #128c7e)',
+            color: 'white', 
+            cursor: 'pointer', 
+            fontSize: '14px',
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center'
+        }} 
+        title={isYearLocked ? 'فتح السنة' : 'قفل السنة'}
+    >
+        {isYearLocked ? '🔒' : '🔓'}
+    </button>
+    <span style={{ fontSize: '12px', color: isYearLocked ? '#ff4757' : '#00b09b', fontWeight: 'bold' }}>
+        {isYearLocked ? 'مقفلة' : 'مفتوحة'}
+    </span>
+</div>
                 <button onClick={openReport} style={{ width: '32px', height: '32px', borderRadius: '8px', border: '2px solid rgba(76, 201, 240, 0.3)', background: 'linear-gradient(135deg, rgba(0, 119, 182, 0.85), rgba(0, 180, 216, 0.85))', color: 'white', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="تقرير القرى">📊</button>
                 <span style={{ fontSize: '12px', color: '#0a58ca', textAlign: 'center', fontWeight: 'bold' }}>تقرير</span>
             </div>
@@ -12541,6 +12741,20 @@ useEffect(() => {
                                 )}
 
                                 {/* ===== الجدول ===== */}
+                             {isYearLocked && (
+    <div style={{
+        background: 'linear-gradient(135deg, #ff4757, #d50000)',
+        color: 'white',
+        padding: '12px',
+        borderRadius: '12px',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        fontSize: '16px',
+        marginBottom: '10px'
+    }}>
+        🔒 سنة {window.CURRENT_YEAR} مقفلة - القراءة فقط
+    </div>
+)}   
                                 <div className={`table-container ${loading ? 'loading' : ''}`}>
                                     {loading ? (
                                         <div className="loading-spinner">
@@ -17004,84 +17218,153 @@ const sendSingleSmsAll = useCallback((subscriber) => {
     'use strict';
     
     // ============================================================
-    //  🎯 تلوين العمود 13 (المتبقي) - نسخة مبسطة
+    //  🎯 تلوين العمود 13 (المتبقي) - النسخة المحسّنة
+    //  ✅ يعمل مع 2026 و 2027
+    //  ✅ يعمل عند تبديل السنة
+    //  ✅ يعمل عند تبديل القرية
     // ============================================================
     
+    let isProcessing = false;
+    
     function colorRemainingColumn() {
-        const table = document.querySelector('#tableWrapper table');
-        if (!table) {
-            setTimeout(colorRemainingColumn, 500);
-            return;
-        }
+        if (isProcessing) return;
+        isProcessing = true;
         
-        const rows = table.querySelectorAll('tbody tr');
-        const totalRows = rows.length;
-        
-        rows.forEach((row, index) => {
-            // تخطي الصفوف الخاصة والصف الأخير
-            if (row.classList.contains('row-0') || 
-                row.classList.contains('row-1') || 
-                row.classList.contains('total-row') ||
-                index === totalRows - 1) {
+        try {
+            const table = document.querySelector('#tableWrapper table');
+            if (!table) {
+                isProcessing = false;
                 return;
             }
             
-            const cells = row.querySelectorAll('td');
-            if (cells.length < 13) return;
+            const rows = table.querySelectorAll('tbody tr');
+            const totalRows = rows.length;
             
-            const remainingCell = cells[12];
-            const remaining = parseFloat(remainingCell.textContent.trim()) || 0;
+            rows.forEach((row, index) => {
+                // تخطي الصفوف الخاصة والصف الأخير
+                if (row.classList.contains('row-0') || 
+                    row.classList.contains('row-1') || 
+                    row.classList.contains('total-row') ||
+                    index === totalRows - 1) {
+                    return;
+                }
+                
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 13) return;
+                
+                const remainingCell = cells[12];
+                const remaining = parseFloat(
+    remainingCell.textContent.trim().replace(/,/g, '').replace(/[٠-٩]/g, function(d) {
+        return String.fromCharCode(d.charCodeAt(0) - 1584);
+    })
+) || 0;
+                
+                // إزالة الكلاسات القديمة
+                remainingCell.classList.remove('low-debt', 'high-debt', 'zero-debt');
+                
+                // إضافة الكلاس المناسب
+                if (remaining >= 5000) {
+                    remainingCell.classList.add('high-debt');
+                    remainingCell.style.background = 'linear-gradient(135deg, #ff1744, #d50000)';
+                    remainingCell.style.color = '#ffffff';
+                    remainingCell.style.fontWeight = '900';
+                    remainingCell.style.borderLeft = '3px solid #ff1744';
+                    remainingCell.style.borderRight = '3px solid #ff1744';
+                    remainingCell.style.animation = 'debtPulse 1.5s ease-in-out infinite';
+                    remainingCell.style.borderRadius = '8px';
+                    remainingCell.style.boxShadow = '0 0 30px rgba(255, 23, 68, 0.4)';
+                } else if (remaining === 0) {
+                    remainingCell.classList.add('zero-debt');
+                    remainingCell.style.background = '#000000';
+                    remainingCell.style.color = '#4cc9f0';
+                    remainingCell.style.fontWeight = '900';
+                    remainingCell.style.borderLeft = '3px solid #4cc9f0';
+                    remainingCell.style.borderRight = '3px solid #4cc9f0';
+                    remainingCell.style.animation = 'none';
+                    remainingCell.style.borderRadius = '0';
+                    remainingCell.style.boxShadow = 'none';
+                } else {
+                    remainingCell.classList.add('low-debt');
+                    remainingCell.style.background = '#000000';
+                    remainingCell.style.color = '#ffffff';
+                    remainingCell.style.fontWeight = '900';
+                    remainingCell.style.borderLeft = '3px solid #333333';
+                    remainingCell.style.borderRight = '3px solid #333333';
+                    remainingCell.style.animation = 'none';
+                    remainingCell.style.borderRadius = '0';
+                    remainingCell.style.boxShadow = 'none';
+                }
+            });
             
-            // إزالة الكلاسات القديمة
-            remainingCell.classList.remove('low-debt', 'high-debt', 'zero-debt');
+            console.log('✅ تم تلوين العمود 13 - عدد الصفوف: ' + rows.length);
             
-            // إضافة الكلاسة المناسبة
-            if (remaining >= 5000) {
-                remainingCell.classList.add('high-debt');
-            } else if (remaining === 0) {
-                remainingCell.classList.add('zero-debt');
-            } else {
-                remainingCell.classList.add('low-debt');
-            }
-            
-            // ✅ تطبيق التلوين مباشرة (ضمان)
-            if (remaining >= 5000) {
-                remainingCell.style.background = 'linear-gradient(135deg, #ff1744, #d50000)';
-                remainingCell.style.color = '#ffffff';
-                remainingCell.style.borderLeft = '3px solid #ff1744';
-                remainingCell.style.borderRight = '3px solid #ff1744';
-                remainingCell.style.animation = 'debtPulse 1.5s ease-in-out infinite';
-                remainingCell.style.borderRadius = '8px';
-            } else {
-                remainingCell.style.background = '#000000';
-                remainingCell.style.color = '#ffffff';
-                remainingCell.style.borderLeft = '3px solid #333333';
-                remainingCell.style.borderRight = '3px solid #333333';
-                remainingCell.style.animation = 'none';
-                remainingCell.style.borderRadius = '0';
-            }
-        });
+        } catch (error) {
+            console.error('❌ خطأ في التلوين:', error);
+        }
         
-        console.log('✅ تم تلوين العمود 13');
+        isProcessing = false;
     }
     
     // ============================================================
-    //  تشغيل عند تحميل الصفحة
+    //  🎯 مراقبة الجدول بدقة
     // ============================================================
     
-    // تشغيل فوري
-    setTimeout(colorRemainingColumn, 1000);
+    function startTableObserver() {
+        const tableWrapper = document.getElementById('tableWrapper');
+        if (!tableWrapper) {
+            setTimeout(startTableObserver, 500);
+            return;
+        }
+        
+        const observer = new MutationObserver(function(mutations) {
+            let shouldRecolor = false;
+            
+            for (const mutation of mutations) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    shouldRecolor = true;
+                    break;
+                }
+                if (mutation.type === 'characterData') {
+                    shouldRecolor = true;
+                    break;
+                }
+            }
+            
+            if (shouldRecolor) {
+                setTimeout(colorRemainingColumn, 100);
+            }
+        });
+        
+        observer.observe(tableWrapper, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+        
+        console.log('👀 تم تشغيل مراقبة الجدول للتلوين');
+    }
     
-    // مراقبة التغييرات
-    const observer = new MutationObserver(function() {
-        colorRemainingColumn();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+    // ============================================================
+    //  🚀 تشغيل
+    // ============================================================
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(colorRemainingColumn, 800);
+            startTableObserver();
+        });
+    } else {
+        setTimeout(colorRemainingColumn, 800);
+        startTableObserver();
+    }
+    
+    // ✅ فحص دوري كل 2 ثانية (احتياط)
+    setInterval(colorRemainingColumn, 2000);
     
     // جعل الدالة عامة
     window.colorRemainingColumn = colorRemainingColumn;
     
-    console.log('✅ تم تفعيل تلوين العمود 13 (المتبقي)');
+    console.log('✅ تم تفعيل تلوين العمود 13 (يعمل مع 2026 و 2027)');
     
 })();
 </script>
@@ -19617,6 +19900,60 @@ if (allRows[rowIndex]) {
     console.log('  • clearCache() - مسح الذاكرة المؤقتة');
 })();
 </script>
-
+<!-- ============================================================ -->
+<!-- 🗓️ نظام تبديل السنة - 2026 / 2027                           -->
+<!-- ============================================================ -->
+<script>
+(function() {
+    'use strict';
+    
+    // ============================================================
+    //  روابط السنوات
+    // ============================================================
+    window.YEAR_LINKS = {
+        '2026': {
+            'السوفعي': 'https://script.google.com/macros/s/AKfycbxwk4kUq6iKrILZZj97hoHw4x8oJLTcJW_imP3J7LloQBR79DDlY31AAcRRHytcJNon/exec',
+            'العليا': 'https://script.google.com/macros/s/AKfycbwxfCWbufmKMvNZXzmuK6PqbmUSH7px3HmIQcJl2Am8vM5FCCNZHQ_kIrTBbzdDe6-aMQ/exec',
+            'السفلى': 'https://script.google.com/macros/s/AKfycbwrtgwr8WYMlNcQzj3qCF6-OvAei6EFK_e2LzuMLAfc4WDVlguqdCOzdF9gTWh8mYA/exec',
+            'الشعابي': 'https://script.google.com/macros/s/AKfycbyAcUuicFALQFVgMjc7TSCmZ1lzCzoMFjHOZy2q-nlZv2nq0bCY77-0BpY7U2zFRWJ2AA/exec',
+            'الجبل': 'https://script.google.com/macros/s/AKfycbzr81y7Am5rC4VGOwwzFDpACNzIe9sE9DW9zy1SFy4HNSOrWs4gshHBlCCCXKYnPFFC/exec',
+            'حيزان': 'https://script.google.com/macros/s/AKfycbyZZ5AAuEineNuWWMsMYJaqTcsH7KA8l2Xov6AC_qJn4uAFhNRxRW1A1icCVYlH79bK/exec',
+            'رقش': 'https://script.google.com/macros/s/AKfycbxMD6WXWvALfYxuCre5On3yS1u7HqxxdjYUqVF8s1KfNgcQTqKQXQ3DxbEh0RHX08gA/exec',
+            'الضرفة': 'https://script.google.com/macros/s/AKfycbzgjurHK5GQX43r7aqP_365sL-2CQksnwqlkdYP03pcZLna-6it60FfpcQ0TasMAG0/exec',
+            'report': 'https://script.google.com/macros/s/AKfycbwCLB2B8LGwefWiNDacjM4YX8N86NWu-GgM8i6V3cm0PkxG-OQ1bFiNNuPyYHuvwnLXvA/exec'
+        },
+        '2027': {
+            'السوفعي': 'https://script.google.com/macros/s/AKfycbzs8KMMJtz_hiiSGiMaEnogPN9emtSFdN8MJYDmW154cs4rLgvxT7LlYkIt1WcwJ7ULLw/exec',
+            'العليا': 'https://script.google.com/macros/s/AKfycbycQnvU2SWnWVLlJ0p8XL2i7tflNnhJsGBtna-ph31bahuRmW36iyuAbb17fHrCUkB7xQ/exec',
+            'السفلى': 'https://script.google.com/macros/s/AKfycbwy9mwarQNmJtwq23eVNJ-kGsZhONoSZWTND6WE7_5ZLmgbs3fWgn7mYK0VVNyJtF81/exec',
+            'الشعابي': 'https://script.google.com/macros/s/AKfycbwO-C9sycQSbqR7MsZhLbaZhowkhrw7_TTOie7CfrlBaCyxZYOXpyJYk6DVUhkGjw41lg/exec',
+            'الجبل': 'https://script.google.com/macros/s/AKfycbyUEe4Jej-4tVhbsYOwv2jJbiq-0o5B8MDZeCPh1TxQRivkZotx9ik2IeALsUO4Q3g5vA/exec',
+            'حيزان': 'https://script.google.com/macros/s/AKfycbz2KCgPbheuPUCEGqErLOU6KACwJEGcv8CucuL3-pjO8dTkVgs9x4oespffZDGt5qk9vg/exec',
+            'رقش': 'https://script.google.com/macros/s/AKfycbzFnsJvsKAYTbQaxwTlQy08PuPBSUchd-BEa2YZvaD7ef_RUQrUYAMI2xvdlFwQBYWj/exec',
+            'الضرفة': 'https://script.google.com/macros/s/AKfycbwdLwS6W8pS6UMmKGrL42l8sOJvkcihcbi6K3WUJlYSwvTrY-Pj8znYIRk0WCC-u1ST/exec',
+            'report': 'https://script.google.com/macros/s/AKfycbwtwaC2KwdQLKI-0gvEleuS9_EMe8kT0ahPXKRUIwKNpVv6zlY8wdUfnN4M5fJK-XZ1/exec'
+        }
+    };
+    
+    // السنة النشطة
+    window.CURRENT_YEAR = localStorage.getItem('soufai_year') || '2026';
+    
+    // دالة تبديل السنة
+    window.switchYearClick = function() {
+        var newYear = window.CURRENT_YEAR === '2026' ? '2027' : '2026';
+        
+        if (!confirm('هل تريد التبديل إلى سنة ' + newYear + '؟')) return;
+        
+        localStorage.setItem('soufai_year', newYear);
+        window.CURRENT_YEAR = newYear;
+        
+        alert('✅ تم التبديل إلى سنة ' + newYear);
+        window.location.reload();
+    };
+    
+    console.log('🗓️ نظام السنوات جاهز - السنة النشطة: ' + window.CURRENT_YEAR);
+    
+})();
+</script>
 </body>
 </html>
