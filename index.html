@@ -7645,70 +7645,7 @@ textarea:focus {
 
     <!-- ===== نقطة ربط React ===== -->
     <div id="root"></div>
-<!-- ============================================================ -->
-<!-- 🗓️ زر تبديل السنة المرئي                                     -->
-<!-- ============================================================ -->
-<div id="yearSwitcher" onclick="switchYearClick()" style="
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 999999;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, #6f42c1, #5a32a3);
-    border: 3px solid #ffd700;
-    border-radius: 14px;
-    padding: 10px 16px;
-    box-shadow: 0 4px 25px rgba(111, 66, 193, 0.5);
-    font-family: Tajawal, sans-serif;
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.3s ease;
-">
-    <span style="font-size: 20px;">🗓️</span>
-    <span id="yearLabel" style="
-        color: #ffd700;
-        font-weight: 900;
-        font-size: 18px;
-        letter-spacing: 1px;
-    ">2026</span>
-    <span style="color: #ffffff; font-size: 14px; opacity: 0.8;">↔️</span>
-</div>
 
-<script>
-    // تحديث رقم السنة على الزر
-    (function() {
-        function updateYearLabel() {
-            var label = document.getElementById('yearLabel');
-            if (label) {
-                label.textContent = window.CURRENT_YEAR || '2026';
-            }
-        }
-        
-        // عند تحميل الصفحة
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', updateYearLabel);
-        } else {
-            updateYearLabel();
-        }
-        
-        // تأثير عند اللمس/الضغط
-        setTimeout(function() {
-            var btn = document.getElementById('yearSwitcher');
-            if (btn) {
-                btn.addEventListener('mouseenter', function() {
-                    this.style.transform = 'scale(1.05)';
-                    this.style.boxShadow = '0 6px 35px rgba(255, 215, 0, 0.6)';
-                });
-                btn.addEventListener('mouseleave', function() {
-                    this.style.transform = 'scale(1)';
-                    this.style.boxShadow = '0 4px 25px rgba(111, 66, 193, 0.5)';
-                });
-            }
-        }, 500);
-    })();
-</script>
     <!-- ===== كود React ===== -->
     <script type="text/babel">
     
@@ -9976,7 +9913,7 @@ const [loadingVillages, setLoadingVillages] = useState(false);
     // ❌ العمود 12 لا يتم تعليمه كمزامن لأنه ليس في القائمة أصلاً
     if (cellIndex === 12) return;
 
-    const key = `${village}_${month}`;
+    const key = `${window.CURRENT_YEAR}_${village}_${month}`;
     setPendingChanges(prev => {
         const newChanges = { ...prev };
         if (newChanges[key]) {
@@ -10008,7 +9945,7 @@ const [loadingVillages, setLoadingVillages] = useState(false);
         return;
     }
 
-    const key = `${village}_${month}`;
+    const key = `${window.CURRENT_YEAR}_${village}_${month}`;
     
     setPendingChanges(prev => {
         const newChanges = { ...prev };
@@ -10316,7 +10253,7 @@ const loadData = useCallback(async (forceRefresh = false) => {
     const result = await fetchData(village, month, forceRefresh);
 
     if (result) {
-        const key = `${village}_${month}`;
+        const key = `${window.CURRENT_YEAR}_${village}_${month}`;
         const pending = pendingChanges[key] || [];
 
         pending.forEach(change => {
@@ -11005,7 +10942,7 @@ setHasData(true);
         return user.permissions.canEdit.includes(cellIndex);
     };
 
-    const key = `${village}_${month}`;
+    const key = `${window.CURRENT_YEAR}_${village}_${month}`;
     const pending = pendingChanges[key] || [];
 
     let html = '<table><thead><tr>';
@@ -12335,48 +12272,118 @@ useEffect(() => {
         </span>
     </div>
 
+{/* ===== 🗓️ قائمة اختيار السنة ===== */}
+<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+    <button
+        onClick={() => {
+            const current = window.CURRENT_YEAR || '2026';
+            const input = prompt(
+                '🗓️ اختر السنة:\n\n' +
+                'اكتب:\n' +
+                '  2026\n' +
+                '  2027\n' +
+                '  2028\n\n' +
+                'السنة الحالية: ' + current,
+                current
+            );
+            
+            if (!input) return;
+            const newYear = input.trim();
+            
+            if (!['2026', '2027', '2028'].includes(newYear)) {
+                alert('❌ السنة غير صحيحة. اختر: 2026 أو 2027 أو 2028');
+                return;
+            }
+            
+            if (newYear === current) {
+                alert('ℹ️ أنت بالفعل في سنة ' + current);
+                return;
+            }
+            
+            if (!confirm('🗓️ هل تريد التبديل إلى سنة ' + newYear + '؟\n\n⚠️ سيتم إعادة تحميل الصفحة.')) return;
+            
+            try {
+                localStorage.removeItem('soufai_cache_data');
+                localStorage.removeItem('soufai_report_cache');
+                localStorage.removeItem('soufai_backups');
+            } catch(err) {}
+            
+            localStorage.setItem('soufai_year', newYear);
+            window.CURRENT_YEAR = newYear;
+            window.location.reload();
+        }}
+        style={{
+            width: '80px',
+            height: '34px',
+            borderRadius: '8px',
+            border: '2px solid rgba(255, 215, 0, 0.7)',
+            background: 'linear-gradient(135deg, #6f42c1, #5a32a3)',
+            color: '#ffffff',
+            cursor: 'pointer',
+            fontSize: '15px',
+            fontWeight: '900',
+            fontFamily: 'Tajawal, sans-serif',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0',
+            direction: 'ltr'
+        }}
+        title="🗓️ اختر السنة"
+    >
+        {window.CURRENT_YEAR || '2026'}
+    </button>
+    <span style={{ 
+        fontSize: '12px', 
+        color: '#ffd700', 
+        textAlign: 'center', 
+        fontWeight: 'bold',
+        whiteSpace: 'nowrap'
+    }}>
+        السنة
+    </span>
 </div>
+    {/* ===== 🔒 زر قفل السنة (بجانب زر تبديل السنة) ===== */}
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+        <button 
+            onClick={toggleYearLock} 
+            style={{ 
+                width: '32px', 
+                height: '32px', 
+                borderRadius: '8px', 
+                border: isYearLocked ? '2px solid #ff4757' : '2px solid rgba(0, 176, 155, 0.3)',
+                background: isYearLocked 
+                    ? 'linear-gradient(135deg, #ff4757, #d50000)' 
+                    : 'linear-gradient(135deg, #00b09b, #128c7e)',
+                color: 'white', 
+                cursor: 'pointer', 
+                fontSize: '14px',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                transition: 'all 0.3s ease'
+            }} 
+            title={isYearLocked ? '🔓 فتح السنة' : '🔒 قفل السنة'}
+        >
+            {isYearLocked ? '🔒' : '🔓'}
+        </button>
+        <span style={{ 
+            fontSize: '12px', 
+            color: isYearLocked ? '#ff4757' : '#00b09b', 
+            fontWeight: 'bold',
+            textAlign: 'center',
+            whiteSpace: 'nowrap'
+        }}>
+            {isYearLocked ? 'مقفلة' : 'مفتوحة'}
+        </span>
+    </div>
 
-        {/* ===== مؤشر حالة الاتصال ===== */}
-        <div className={`connection-status ${isOnline ? 'online' : 'offline'}`}>
-            <span className="dot"></span>
-            <span>{isOnline ? '🟢 متصل' : '🔴 غير متصل'}</span>
-            {pendingCount > 0 && !isOnline && (<span className="pending-badge">⏳ {pendingCount} في الانتظار</span>)}
-            {pendingCount > 0 && isOnline && syncInProgress && (<span className="pending-badge" style={{ color: '#ffb703' }}>🔄 جاري المزامنة...</span>)}
-            {pendingCount > 0 && isOnline && !syncInProgress && (<span className="pending-badge" style={{ color: '#ffb703' }}>📤 {pendingCount} تغيير</span>)}
-        </div>
-
+</div>
 
         {/* ===== الأزرار الصغيرة ===== */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-            {/* ===== 🔒 زر قفل السنة ===== */}
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-    <button 
-        onClick={toggleYearLock} 
-        style={{ 
-            width: '32px', 
-            height: '32px', 
-            borderRadius: '8px', 
-            border: isYearLocked ? '2px solid #ff4757' : '2px solid rgba(0, 176, 155, 0.3)',
-            background: isYearLocked 
-                ? 'linear-gradient(135deg, #ff4757, #d50000)' 
-                : 'linear-gradient(135deg, #00b09b, #128c7e)',
-            color: 'white', 
-            cursor: 'pointer', 
-            fontSize: '14px',
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center'
-        }} 
-        title={isYearLocked ? 'فتح السنة' : 'قفل السنة'}
-    >
-        {isYearLocked ? '🔒' : '🔓'}
-    </button>
-    <span style={{ fontSize: '12px', color: isYearLocked ? '#ff4757' : '#00b09b', fontWeight: 'bold' }}>
-        {isYearLocked ? 'مقفلة' : 'مفتوحة'}
-    </span>
-</div>
+
                 <button onClick={openReport} style={{ width: '32px', height: '32px', borderRadius: '8px', border: '2px solid rgba(76, 201, 240, 0.3)', background: 'linear-gradient(135deg, rgba(0, 119, 182, 0.85), rgba(0, 180, 216, 0.85))', color: 'white', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="تقرير القرى">📊</button>
                 <span style={{ fontSize: '12px', color: '#0a58ca', textAlign: 'center', fontWeight: 'bold' }}>تقرير</span>
             </div>
@@ -19305,7 +19312,7 @@ if (allRows[rowIndex]) {
     }
 
     // ============================================================
-    //  🎤 البحث الصوتي
+    //  ?? البحث الصوتي
     // ============================================================
 
     function setupVoiceSearch() {
@@ -19901,14 +19908,14 @@ if (allRows[rowIndex]) {
 })();
 </script>
 <!-- ============================================================ -->
-<!-- 🗓️ نظام تبديل السنة - 2026 / 2027                           -->
+<!-- 🗓️ نظام تبديل السنة - 2026 / 2027 / 2028                    -->
 <!-- ============================================================ -->
 <script>
 (function() {
     'use strict';
     
     // ============================================================
-    //  روابط السنوات
+    //  روابط السنوات (2026 / 2027 / 2028)
     // ============================================================
     window.YEAR_LINKS = {
         '2026': {
@@ -19932,18 +19939,45 @@ if (allRows[rowIndex]) {
             'رقش': 'https://script.google.com/macros/s/AKfycbzFnsJvsKAYTbQaxwTlQy08PuPBSUchd-BEa2YZvaD7ef_RUQrUYAMI2xvdlFwQBYWj/exec',
             'الضرفة': 'https://script.google.com/macros/s/AKfycbwdLwS6W8pS6UMmKGrL42l8sOJvkcihcbi6K3WUJlYSwvTrY-Pj8znYIRk0WCC-u1ST/exec',
             'report': 'https://script.google.com/macros/s/AKfycbwtwaC2KwdQLKI-0gvEleuS9_EMe8kT0ahPXKRUIwKNpVv6zlY8wdUfnN4M5fJK-XZ1/exec'
+        },
+        '2028': {
+            'السوفعي': 'https://script.google.com/macros/s/AKfycbyVBNpzzf65cm8FG1PUC2koCYJBf2qCDGdywajH_-c1HpM17dxnmHbUXWmWGDNUZZ8d/exec',
+            'العليا': 'https://script.google.com/macros/s/AKfycbxiXBUIZkW6wRYJK6cHB_yR37My8AIJuLtsBw-TX1_Ev3j5_6PwaEwrTFL-LoEBB5PLQQ/exec',
+            'السفلى': 'https://script.google.com/macros/s/AKfycbyXWUh2-F4v-BDQOHftJRaaQJbIh_55dppHUHYsUmuqZJziERWU6qu7WLdpC6WwtFw/exec',
+            'الجبل': 'https://script.google.com/macros/s/AKfycbyvbBhNoWHI-TSJeF70UAZQM0nha6lY90hjQc7zQ3xdMBYetB426_Fx8n0KI4b7eHeZ/exec',
+            'الشعابي': 'https://script.google.com/macros/s/AKfycbyOD__5Yc8rzDeNZYM4MJBgEEjUVANek5BStBpYlC-KhNR8Wsu8p9JapnOOg1NEtfu9dA/exec',
+            'حيزان': 'https://script.google.com/macros/s/AKfycbzOCneM1q-xAq3EwFAttQCOXl7p6XSjKcadYN6spSe1W6v-8W6lHgyI9j-IBBYlcfZjeA/exec',
+            'رقش': 'https://script.google.com/macros/s/AKfycbywvf8PvrwAPCFOeXhuhkQrCRA7UPed3gtuDCSwbX8Oh_Qct39cwBSowEthgBhmFnW7/exec',
+            'الضرفة': 'https://script.google.com/macros/s/AKfycbya3zbNpvF2VQP9L59vMX6VjpD2oSZxrAZFhQ6MkyeaiSWUNQh6K_hHXIIkNKt7xouAjw/exec',
+            'report': 'https://script.google.com/macros/s/AKfycbxmbcV4rzXaDwovyX6JdMrNIZRJPH4c83hNuOywUf71YQDwwFeFNHbIkALYNMoNXppjLA/exec'
         }
     };
     
     // السنة النشطة
     window.CURRENT_YEAR = localStorage.getItem('soufai_year') || '2026';
     
-    // دالة تبديل السنة
+    // ============================================================
+    //  🔄 دالة تبديل السنة (تدعم 3 سنوات)
+    // ============================================================
     window.switchYearClick = function() {
-        var newYear = window.CURRENT_YEAR === '2026' ? '2027' : '2026';
+        const YEARS = ['2026', '2027', '2028'];
+        const currentYear = window.CURRENT_YEAR || '2026';
+        const currentIndex = YEARS.indexOf(currentYear);
+        const nextIndex = (currentIndex + 1) % YEARS.length;
+        const newYear = YEARS[nextIndex];
         
-        if (!confirm('هل تريد التبديل إلى سنة ' + newYear + '؟')) return;
+        if (!confirm('🗓️ هل تريد التبديل إلى سنة ' + newYear + '؟\n\n⚠️ سيتم مسح الكاش وإعادة تحميل الصفحة.')) return;
         
+        // ✅ مسح الكاش لتجنب الخلط بين السنوات
+        try {
+            localStorage.removeItem('soufai_cache_data');
+            localStorage.removeItem('soufai_report_cache');
+            localStorage.removeItem('soufai_backups');
+        } catch(e) {
+            console.warn('فشل مسح الكاش:', e);
+        }
+        
+        // حفظ السنة الجديدة
         localStorage.setItem('soufai_year', newYear);
         window.CURRENT_YEAR = newYear;
         
@@ -19952,6 +19986,7 @@ if (allRows[rowIndex]) {
     };
     
     console.log('🗓️ نظام السنوات جاهز - السنة النشطة: ' + window.CURRENT_YEAR);
+    console.log('📋 السنوات المتاحة: 2026 / 2027 / 2028');
     
 })();
 </script>
