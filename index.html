@@ -7826,15 +7826,15 @@ const getMonthlyReportURL = () => {
         }
 
         function getFromCache(key) {
-            try {
-                const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-                const item = cache[key];
-                if (item && Date.now() - item.timestamp < 24 * 60 * 60 * 1000) {
-                    return item.data;
-                }
-                return null;
-            } catch (e) { return null; }
+    try {
+        const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+        const item = cache[key];
+        if (item && item.data) {
+            return item.data;
         }
+        return null;
+    } catch (e) { return null; }
+}
 
         function saveReportToCache(data) {
             try {
@@ -7845,9 +7845,9 @@ const getMonthlyReportURL = () => {
         function getReportFromCache() {
             try {
                 const item = JSON.parse(localStorage.getItem(REPORT_CACHE_KEY) || 'null');
-                if (item && Date.now() - item.timestamp < 24 * 60 * 60 * 1000) {
-                    return item.data;
-                }
+                if (item && item.data) {
+            return item.data;
+        }
                 return null;
             } catch (e) { return null; }
         }
@@ -10273,8 +10273,10 @@ setHasData(true);
             showSync('✅ تم تحميل البيانات', 'success', 2000);
         }
     } else {
-        setData([]);
-        setHasData(false);
+        if (!data || data.length === 0) {
+            setData([]);
+            setHasData(false);
+        }
         if (navigator.onLine) {
             showSync('❌ فشل تحميل البيانات من السيرفر', 'error', 4000);
         } else {
@@ -11908,7 +11910,7 @@ const printDirectorReport = useCallback(() => {
 // تحميل البيانات عند تغيير القرية أو الشهر
 useEffect(() => {
     if (isLoggedIn && user && village) {
-        loadData(true);
+        loadData(navigator.onLine);
     }
 }, [village, month]); // <-- يتشغل عند تغيير القرية أو الشهر فقط
             useEffect(() => {
