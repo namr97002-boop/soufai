@@ -3,23 +3,16 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0077b6" />
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="السوفعي">
-    <title>نظام مياه السوفعي - React Pro 2026 🚀</title>
-    <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="https://i.postimg.cc/wTffqvP6/1776187446226.png">
-    <!-- ===== PWA Meta Tags ===== -->
-<meta name="theme-color" content="#0077b6"/>
+<meta name="theme-color" content="#0077b6" />
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="السوفعي">
 <meta name="application-name" content="نظام مياه السوفعي">
+<title>نظام مياه السوفعي - React Pro 2026 🚀</title>
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="https://i.postimg.cc/wTffqvP6/1776187446226.png">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
     <!-- ===== Chart.js ===== -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     
@@ -7812,72 +7805,144 @@ const getMonthlyReportURL = () => {
         }
 
         // ============================================================
-     
+     // ============================================================
+//  🗄️ طبقة التخزين الجديدة - localForage
+// ============================================================
+
+const storage = localforage.createInstance({
+    name: 'SoufaiWaterSystem',
+    storeName: 'soufai_store',
+    description: 'قاعدة بيانات نظام مياه السوفعي'
+});
+
+async function saveToStorage(key, data) {
+    try {
+        await storage.setItem(key, data);
+        return true;
+    } catch (error) {
+        console.error('❌ فشل حفظ ' + key + ':', error);
+        return false;
+    }
+}
+
+async function getFromStorage(key) {
+    try {
+        const data = await storage.getItem(key);
+        return data;
+    } catch (error) {
+        console.error('❌ فشل قراءة ' + key + ':', error);
+        return null;
+    }
+}
+
+async function removeFromStorage(key) {
+    try {
+        await storage.removeItem(key);
+        return true;
+    } catch (error) {
+        console.error('❌ فشل حذف ' + key + ':', error);
+        return false;
+    }
+}
+
+async function clearAllStorage() {
+    try {
+        await storage.clear();
+        return true;
+    } catch (error) {
+        console.error('❌ فشل مسح التخزين:', error);
+        return false;
+    }
+}
+
 
         // ============================================================
         //  دوال التخزين المؤقت
         // ============================================================
-        function saveToCache(key, data) {
-            try {
-                const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-                cache[key] = { data: data, timestamp: Date.now() };
-                localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-            } catch (e) { console.warn('فشل حفظ الكاش:', e); }
-        }
+        // ============================================================
+//  دوال الكاش (localForage)
+// ============================================================
 
-        function getFromCache(key) {
+async function saveToCache(key, data) {
     try {
-        const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+        const cache = await getFromStorage(CACHE_KEY) || {};
+        cache[key] = { data: data, timestamp: Date.now() };
+        await saveToStorage(CACHE_KEY, cache);
+    } catch (e) { 
+        console.warn('فشل حفظ الكاش:', e); 
+    }
+}
+
+async function getFromCache(key) {
+    try {
+        const cache = await getFromStorage(CACHE_KEY) || {};
         const item = cache[key];
         if (item && item.data) {
             return item.data;
         }
         return null;
-    } catch (e) { return null; }
+    } catch (e) { 
+        return null; 
+    }
 }
 
-        function saveReportToCache(data) {
-            try {
-                localStorage.setItem(REPORT_CACHE_KEY, JSON.stringify({ data: data, timestamp: Date.now() }));
-            } catch (e) { console.warn('فشل حفظ كاش التقرير:', e); }
-        }
+// ============================================================
+//  دوال كاش التقرير (localForage)
+// ============================================================
 
-        function getReportFromCache() {
-            try {
-                const item = JSON.parse(localStorage.getItem(REPORT_CACHE_KEY) || 'null');
-                if (item && item.data) {
+async function saveReportToCache(data) {
+    try {
+        await saveToStorage(REPORT_CACHE_KEY, { data: data, timestamp: Date.now() });
+    } catch (e) { 
+        console.warn('فشل حفظ كاش التقرير:', e); 
+    }
+}
+
+async function getReportFromCache() {
+    try {
+        const item = await getFromStorage(REPORT_CACHE_KEY);
+        if (item && item.data) {
             return item.data;
         }
-                return null;
-            } catch (e) { return null; }
-        }
+        return null;
+    } catch (e) { 
+        return null; 
+    }
+}
 
-        function saveBackup(village, month, data) {
-            try {
-                const backup = {
-                    village: village,
-                    month: month,
-                    data: data,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem(BACKUP_KEY, JSON.stringify(backup));
-            } catch (e) { console.warn('فشل حفظ النسخة الاحتياطية:', e); }
-        }
+// ============================================================
+//  دوال النسخ الاحتياطي (localForage)
+// ============================================================
 
-        function getBackup() {
-            try {
-                return JSON.parse(localStorage.getItem(BACKUP_KEY) || 'null');
-            } catch (e) { return null; }
-        }
+async function saveBackup(village, month, data) {
+    try {
+        const backup = {
+            village: village,
+            month: month,
+            data: data,
+            timestamp: Date.now()
+        };
+        await saveToStorage(BACKUP_KEY, backup);
+    } catch (e) { 
+        console.warn('فشل حفظ النسخة الاحتياطية:', e); 
+    }
+}
 
-        function isValidBackup(backup) {
-            if (!backup) return false;
-            if (!backup.data || !Array.isArray(backup.data)) return false;
-            if (backup.data.length < 3) return false;
-            if (!backup.village || !backup.month) return false;
-            return true;
-        }
+async function getBackup() {
+    try {
+        return await getFromStorage(BACKUP_KEY);
+    } catch (e) { 
+        return null; 
+    }
+}
 
+function isValidBackup(backup) {
+    if (!backup) return false;
+    if (!backup.data || !Array.isArray(backup.data)) return false;
+    if (backup.data.length < 3) return false;
+    if (!backup.village || !backup.month) return false;
+    return true;
+}
         // ============================================================
         //  دوال الذكاء الاصطناعي
         // ============================================================
@@ -9741,39 +9806,7 @@ const [isYearLocked, setIsYearLocked] = useState(() => {
     }
 });
 
-// 🔒 دالة قفل/فتح السنة
-const toggleYearLock = useCallback(() => {
-    const year = window.CURRENT_YEAR;
-    
-    if (isYearLocked) {
-        // ===== فتح السنة (يحتاج كلمة سر) =====
-        const code = prompt('🔓 أدخل كلمة السر لفتح سنة ' + year + ':');
-        if (code === null) return;
-        
-        if (code !== YEAR_LOCK_CODE) {
-            showSync('❌ كلمة السر غير صحيحة', 'error', 3000);
-            return;
-        }
-        
-        const locks = JSON.parse(localStorage.getItem('soufai_year_locked') || '{}');
-        locks[year] = false;
-        localStorage.setItem('soufai_year_locked', JSON.stringify(locks));
-        setIsYearLocked(false);
-        showSync('🔓 تم فتح سنة ' + year, 'success', 3000);
-        
-    } else {
-        // ===== قفل السنة =====
-        if (!confirm('🔒 هل تريد قفل سنة ' + year + ' نهائياً؟\n\nلن يتمكن أي زميل من التعديل بعد الآن.')) {
-            return;
-        }
-        
-        const locks = JSON.parse(localStorage.getItem('soufai_year_locked') || '{}');
-        locks[year] = true;
-        localStorage.setItem('soufai_year_locked', JSON.stringify(locks));
-        setIsYearLocked(true);
-        showSync('🔒 تم قفل سنة ' + year + ' نهائياً', 'success', 4000);
-    }
-}, [isYearLocked, showSync]);
+
             const [user, setUser] = useState(null);
             const [time, setTime] = useState('--:--:--');
             const [date, setDate] = useState('--');
@@ -9878,15 +9911,49 @@ const [loadingVillages, setLoadingVillages] = useState(false);
                 }, duration);
             }, []);
 
+            // 🔒 دالة قفل/فتح السنة (بعد showSync)
+            const toggleYearLock = useCallback(() => {
+                const year = window.CURRENT_YEAR;
+                
+                if (isYearLocked) {
+                    // ===== فتح السنة (يحتاج كلمة سر) =====
+                    const code = prompt('🔓 أدخل كلمة السر لفتح سنة ' + year + ':');
+                    if (code === null) return;
+                    
+                    if (code !== YEAR_LOCK_CODE) {
+                        showSync('❌ كلمة السر غير صحيحة', 'error', 3000);
+                        return;
+                    }
+                    
+                    const locks = JSON.parse(localStorage.getItem('soufai_year_locked') || '{}');
+                    locks[year] = false;
+                    localStorage.setItem('soufai_year_locked', JSON.stringify(locks));
+                    setIsYearLocked(false);
+                    showSync('🔓 تم فتح سنة ' + year, 'success', 3000);
+                    
+                } else {
+                    // ===== قفل السنة =====
+                    if (!confirm('🔒 هل تريد قفل سنة ' + year + ' نهائياً؟\n\nلن يتمكن أي زميل من التعديل بعد الآن.')) {
+                        return;
+                    }
+                    
+                    const locks = JSON.parse(localStorage.getItem('soufai_year_locked') || '{}');
+                    locks[year] = true;
+                    localStorage.setItem('soufai_year_locked', JSON.stringify(locks));
+                    setIsYearLocked(true);
+                    showSync('🔒 تم قفل سنة ' + year + ' نهائياً', 'success', 4000);
+                }
+            }, [isYearLocked, showSync]);
+
             const showMessage = useCallback((text, type = 'info') => {
                 if (!isMountedRef.current) return;
                 setMessage(text);
                 setMsgType(type);
             }, []);
 
-            const loadPendingChanges = useCallback(() => {
+            const loadPendingChanges = useCallback(async () => {
     try {
-        const data = JSON.parse(localStorage.getItem(PENDING_KEY) || '{}');
+        const data = await getFromStorage(PENDING_KEY) || {};
         setPendingChanges(data);
         
         // ===== حساب العدد: استبعاد العمود 12 =====
@@ -9902,43 +9969,44 @@ const [loadingVillages, setLoadingVillages] = useState(false);
         console.log(`📊 تم تحميل التغييرات: ${count} معلقة`);
         return count;
     } catch (e) {
-        console.warn('فشل حفظ الكاش:', e);
+        console.warn('فشل تحميل التغييرات:', e);
         setPendingChanges({});
         setPendingCount(0);
         return 0;
     }
 }, []);
 
-            const markAsSynced = useCallback((village, month, rowIndex, cellIndex) => {
+            const markAsSynced = useCallback(async (village, month, rowIndex, cellIndex) => {
     // ❌ العمود 12 لا يتم تعليمه كمزامن لأنه ليس في القائمة أصلاً
     if (cellIndex === 12) return;
 
     const key = `${window.CURRENT_YEAR}_${village}_${month}`;
-    setPendingChanges(prev => {
-        const newChanges = { ...prev };
-        if (newChanges[key]) {
-            const idx = newChanges[key].findIndex(
-                c => c.rowIndex === rowIndex && c.cellIndex === cellIndex
-            );
-            if (idx > -1) {
-                newChanges[key][idx].synced = true;
-            }
+    const prev = await getFromStorage(PENDING_KEY) || {};
+    const newChanges = { ...prev };
+    
+    if (newChanges[key]) {
+        const idx = newChanges[key].findIndex(
+            c => c.rowIndex === rowIndex && c.cellIndex === cellIndex
+        );
+        if (idx > -1) {
+            newChanges[key][idx].synced = true;
         }
-        localStorage.setItem(PENDING_KEY, JSON.stringify(newChanges));
+    }
+    
+    await saveToStorage(PENDING_KEY, newChanges);
+    setPendingChanges(newChanges);
 
-        // ===== حساب العدد: استبعاد العمود 12 =====
-        let count = 0;
-        for (const k in newChanges) {
-            const changes = newChanges[k] || [];
-            const unsynced = changes.filter(c => !c.synced && c.cellIndex !== 12);
-            count += unsynced.length;
-        }
-        setPendingCount(count);
-        return newChanges;
-    });
+    // ===== حساب العدد: استبعاد العمود 12 =====
+    let count = 0;
+    for (const k in newChanges) {
+        const changes = newChanges[k] || [];
+        const unsynced = changes.filter(c => !c.synced && c.cellIndex !== 12);
+        count += unsynced.length;
+    }
+    setPendingCount(count);
 }, []);
 
-            const markAsPending = useCallback((village, month, rowIndex, cellIndex, value, meterNumber) => {
+            const markAsPending = useCallback(async (village, month, rowIndex, cellIndex, value, meterNumber) => {
     // ❌ لا نحفظ العمود 12 (المتبقي) أبداً، لأنه من السيرفر
     if (cellIndex === 12) {
         console.log('⏭️ تجاهل حفظ المتبقي (يُحسب من السيرفر)');
@@ -9946,51 +10014,47 @@ const [loadingVillages, setLoadingVillages] = useState(false);
     }
 
     const key = `${window.CURRENT_YEAR}_${village}_${month}`;
+    const prev = await getFromStorage(PENDING_KEY) || {};
+    const newChanges = { ...prev };
     
-    setPendingChanges(prev => {
-        const newChanges = { ...prev };
-        if (!newChanges[key]) newChanges[key] = [];
+    if (!newChanges[key]) newChanges[key] = [];
 
-        const existing = newChanges[key].findIndex(
-            c => c.rowIndex === rowIndex && c.cellIndex === cellIndex
-        );
+    const existing = newChanges[key].findIndex(
+        c => c.rowIndex === rowIndex && c.cellIndex === cellIndex
+    );
 
-        if (existing > -1) {
-            newChanges[key][existing] = {
-                ...newChanges[key][existing],
-                value,
-                timestamp: Date.now(),
-                synced: false,
-                retryCount: (newChanges[key][existing].retryCount || 0) + 1
-            };
-        } else {
-            newChanges[key].push({
-                rowIndex,
-                cellIndex,
-                value,
-                meterNumber,
-                timestamp: Date.now(),
-                synced: false,
-                retryCount: 0
-            });
-        }
+    if (existing > -1) {
+        newChanges[key][existing] = {
+            ...newChanges[key][existing],
+            value,
+            timestamp: Date.now(),
+            synced: false,
+            retryCount: (newChanges[key][existing].retryCount || 0) + 1
+        };
+    } else {
+        newChanges[key].push({
+            rowIndex,
+            cellIndex,
+            value,
+            meterNumber,
+            timestamp: Date.now(),
+            synced: false,
+            retryCount: 0
+        });
+    }
 
-        localStorage.setItem(PENDING_KEY, JSON.stringify(newChanges));
+    await saveToStorage(PENDING_KEY, newChanges);
+    setPendingChanges(newChanges);
 
-        // ===== حساب العدد: استبعاد العمود 12 =====
-        let count = 0;
-        for (const k in newChanges) {
-            const changes = newChanges[k] || [];
-            // ❌ لا نحسب العمود 12 (المتبقي من السيرفر)
-            const unsynced = changes.filter(c => !c.synced && c.cellIndex !== 12);
-            count += unsynced.length;
-        }
-        setPendingCount(count);
-        
-        return newChanges;
-    });
+    // ===== حساب العدد: استبعاد العمود 12 =====
+    let count = 0;
+    for (const k in newChanges) {
+        const changes = newChanges[k] || [];
+        const unsynced = changes.filter(c => !c.synced && c.cellIndex !== 12);
+        count += unsynced.length;
+    }
+    setPendingCount(count);
 }, []);
-
             const syncImmediately = useCallback(async (village, month, rowIndex, cellIndex, value, meterNumber, retryCount = 0) => {
             // 🔒 إذا السنة مقفلة → ارفض المزامنة
 if (isYearLocked) {
@@ -10091,7 +10155,7 @@ if (isYearLocked) {
     }
 
     if (!navigator.onLine) {
-        showSync('?? لا يوجد اتصال بالإنترنت، سيتم المزامنة عند عودة النت', 'warning', 2000);
+        showSync('📶 لا يوجد اتصال بالإنترنت، سيتم المزامنة عند عودة النت', 'warning', 2000);
         return;
     }
 
@@ -10100,7 +10164,10 @@ if (isYearLocked) {
     const unsyncedList = [];
     
     for (const [key, changes] of Object.entries(pendingChanges)) {
-        const [village, month] = key.split('_');
+        const parts = key.split('_');
+        const village = parts[1] || '';
+        const month = parts.slice(2).join('_') || '';
+        
         // ❌ استبعاد العمود 12
         const unsynced = changes.filter(c => !c.synced && c.cellIndex !== 12);
         
@@ -10112,7 +10179,7 @@ if (isYearLocked) {
 
     if (totalPending === 0) {
         showSync('✅ جميع التغييرات مزامنة', 'success', 1500);
-        loadPendingChanges();
+        await loadPendingChanges();
         return;
     }
 
@@ -10152,7 +10219,7 @@ if (isYearLocked) {
     // ===== تحديث البيانات من السيرفر (ليظهر المتبقي الجديد) =====
     await loadData(true);
 
-    const remaining = loadPendingChanges();
+    const remaining = await loadPendingChanges();
 
     if (failed === 0) {
         showSync(`✅ تمت مزامنة ${synced} تغيير بنجاح`, 'success', 3000);
@@ -10219,9 +10286,9 @@ if (isYearLocked) {
     //  🔥 الحالة 2: لا يوجد اتصال بالإنترنت (Offline)
     //  → نستخدم الكاش أو النسخة الاحتياطية فقط
     // ============================================================
-    if (!isOnline) {
+     if (!isOnline) {
         // محاولة جلب من الكاش
-        const cached = getFromCache(cacheKey);
+        const cached = await getFromCache(cacheKey);
         if (cached) {
             setIsCached(true);
             showSync('📦 بيانات مخزنة (غير متصل بالإنترنت)', 'info', 3000);
@@ -10229,7 +10296,7 @@ if (isYearLocked) {
         }
 
         // محاولة جلب من النسخة الاحتياطية
-        const backup = getBackup();
+        const backup = await getBackup();
         if (isValidBackup(backup) && backup.village === village && backup.month === month) {
             setIsCached(true);
             showSync('♻️ نسخة احتياطية (غير متصل بالإنترنت)', 'info', 3000);
@@ -10441,13 +10508,7 @@ setHasData(true);
                                 data[idx][fi] = val;
                                 syncImmediately(village, month, idx, fi, val, data[idx][0] || '');
 
-                                if (fi === 11 || fi === 9) {
-                                    const total = parseNumber(data[idx][9]);
-                                    const paid = parseNumber(data[idx][11]);
-                                    data[idx][12] = total - paid;
-                                    syncImmediately(village, month, idx, 12, data[idx][12], data[idx][0] || '');
-                                }
-
+                                
                                 setData([...data]);
                                 const opName = fi === 11 ? 'المسلم' : 'القراءة';
                                 showSync(`✅ تم تسجيل ${val} في ${opName} للمشترك ${result.name}`, 'success', 3000);
@@ -10610,13 +10671,7 @@ setHasData(true);
             if (data[idx]) {
                 data[idx][fi] = val;
                 syncImmediately(village, month, idx, fi, val, data[idx][0] || '');
-
-                if (fi === 11 || fi === 9) {
-                    const total = parseNumber(data[idx][9]);
-                    const paid = parseNumber(data[idx][11]);
-                    data[idx][12] = total - paid;
-                    syncImmediately(village, month, idx, 12, data[idx][12], data[idx][0] || '');
-                }
+                
 
                 setData([...data]);
                 const opName = fi === 11 ? 'المسلم' : 'القراءة';
@@ -10747,47 +10802,47 @@ setHasData(true);
             }, [syncAllPendingChanges]);
 
             const fetchMonthlyReportData = useCallback(async (month, forceRefresh = false) => {
-                if (!forceRefresh) {
-                    const cached = getReportFromCache();
-                    if (cached && cached.month === month) {
-                        setReportCached(true);
-                        return cached.data;
-                    }
-                }
-                
-                setReportCached(false);
-                setReportLoading(true);
-                
-                try {
-                    const url = `${getMonthlyReportURL()}?month=${encodeURIComponent(month)}&t=${Date.now()}`;
-                    const response = await fetch(url);
-                    
-                    if (!response.ok) {
-                        throw new Error('فشل تحميل التقرير الشهري');
-                    }
-                    
-                    const data = await response.json();
-                    
-                    saveReportToCache({ month: month, data: data });
-                    setReportCached(true);
-                    
-                    return data;
-                } catch (error) {
-                    console.error('خطأ في تحميل التقرير الشهري:', error);
-                    
-                    const cached = getReportFromCache();
-                    if (cached && cached.month === month) {
-                        setReportCached(true);
-                        showSync('⚠️ استخدام بيانات التقرير المخزنة مؤقتاً', 'warning', 3000);
-                        return cached.data;
-                    }
-                    
-                    showSync('❌ فشل تحميل التقرير الشهري', 'error', 4000);
-                    return {};
-                } finally {
-                    setReportLoading(false);
-                }
-            }, [showSync]);
+    if (!forceRefresh) {
+        const cached = await getReportFromCache();
+        if (cached && cached.month === month) {
+            setReportCached(true);
+            return cached.data;
+        }
+    }
+    
+    setReportCached(false);
+    setReportLoading(true);
+    
+    try {
+        const url = `${getMonthlyReportURL()}?month=${encodeURIComponent(month)}&t=${Date.now()}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error('فشل تحميل التقرير الشهري');
+        }
+        
+        const data = await response.json();
+        
+        await saveReportToCache({ month: month, data: data });
+        setReportCached(true);
+        
+        return data;
+    } catch (error) {
+        console.error('خطأ في تحميل التقرير الشهري:', error);
+        
+        const cached = await getReportFromCache();
+        if (cached && cached.month === month) {
+            setReportCached(true);
+            showSync('⚠️ استخدام بيانات التقرير المخزنة مؤقتاً', 'warning', 3000);
+            return cached.data;
+        }
+        
+        showSync('❌ فشل تحميل التقرير الشهري', 'error', 4000);
+        return {};
+    } finally {
+        setReportLoading(false);
+    }
+}, [showSync]);
 
             const loadReportData = useCallback(async (month, forceRefresh = false) => {
                 const data = await fetchMonthlyReportData(month, forceRefresh);
@@ -11149,7 +11204,13 @@ html += '</tbody></table>';
                             cell.classList.remove('unsaved-change');
                             return;
                         }
-
+// ⚠️ حماية: لا نحفظ العمود 12 أبداً من الواجهة
+if (cellIndex === 12) {
+    console.log('⏭️ تجاهل تعديل المتبقي (يُحسب في السيرفر)');
+    cell.textContent = oldValue;
+    cell.classList.remove('unsaved-change');
+    return;
+}
                         if (data[rowIndex]) {
                             data[rowIndex][cellIndex] = newValue;
 
@@ -12274,73 +12335,104 @@ useEffect(() => {
         </span>
     </div>
 
-{/* ===== 🗓️ قائمة اختيار السنة ===== */}
+{/* ===== 🗓️ قائمة اختيار السنة المنسدلة الجميلة ===== */}
 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-    <button
-        onClick={() => {
-            const current = window.CURRENT_YEAR || '2026';
-            const input = prompt(
-                '🗓️ اختر السنة:\n\n' +
-                'اكتب:\n' +
-                '  2026\n' +
-                '  2027\n' +
-                '  2028\n\n' +
-                'السنة الحالية: ' + current,
-                current
-            );
-            
-            if (!input) return;
-            const newYear = input.trim();
-            
-            if (!['2026', '2027', '2028'].includes(newYear)) {
-                alert('❌ السنة غير صحيحة. اختر: 2026 أو 2027 أو 2028');
-                return;
-            }
-            
-            if (newYear === current) {
-                alert('ℹ️ أنت بالفعل في سنة ' + current);
-                return;
-            }
-            
-            if (!confirm('🗓️ هل تريد التبديل إلى سنة ' + newYear + '؟\n\n⚠️ سيتم إعادة تحميل الصفحة.')) return;
-            
-            try {
-                localStorage.removeItem('soufai_cache_data');
-                localStorage.removeItem('soufai_report_cache');
-                localStorage.removeItem('soufai_backups');
-            } catch(err) {}
-            
-            localStorage.setItem('soufai_year', newYear);
-            window.CURRENT_YEAR = newYear;
-            window.location.reload();
-        }}
-        style={{
-            width: '80px',
-            height: '34px',
-            borderRadius: '8px',
-            border: '2px solid rgba(255, 215, 0, 0.7)',
-            background: 'linear-gradient(135deg, #6f42c1, #5a32a3)',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '15px',
-            fontWeight: '900',
-            fontFamily: 'Tajawal, sans-serif',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0',
-            direction: 'ltr'
-        }}
-        title="🗓️ اختر السنة"
-    >
-        {window.CURRENT_YEAR || '2026'}
-    </button>
+    <div style={{ position: 'relative' }}>
+        <select
+            value={window.CURRENT_YEAR || '2026'}
+            onChange={(e) => {
+                const newYear = e.target.value;
+                const current = window.CURRENT_YEAR || '2026';
+                
+                if (newYear === current) return;
+                
+                if (!confirm('🗓️ هل تريد التبديل إلى سنة ' + newYear + '؟\n\n⚠️ سيتم إعادة تحميل الصفحة.')) {
+                    e.target.value = current;
+                    return;
+                }
+                
+                try {
+                    localStorage.removeItem('soufai_cache_data');
+                    localStorage.removeItem('soufai_report_cache');
+                    localStorage.removeItem('soufai_backups');
+                } catch(err) {}
+                
+                localStorage.setItem('soufai_year', newYear);
+                window.CURRENT_YEAR = newYear;
+                window.location.reload();
+            }}
+            style={{
+                width: '95px',
+                height: '38px',
+                borderRadius: '10px',
+                border: '3px solid #ffd700',
+                background: 'linear-gradient(135deg, #1a1a2e, #0f0f1e)',
+                color: '#ffd700',
+                cursor: 'pointer',
+                fontSize: '17px',
+                fontWeight: '900',
+                fontFamily: 'Tajawal, sans-serif',
+                textAlign: 'center',
+                textAlignLast: 'center',
+                padding: '0 10px',
+                direction: 'ltr',
+                outline: 'none',
+                boxShadow: '0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.1)',
+                transition: 'all 0.3s ease',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                MozAppearance: 'none',
+                backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\' viewBox=\'0 0 12 8\'%3E%3Cpath d=\'M1 1l5 5 5-5\' stroke=\'%23ffd700\' stroke-width=\'2.5\' fill=\'none\' stroke-linecap=\'round\'/%3E%3C/svg%3E")',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'left 8px center',
+                paddingLeft: '28px',
+                letterSpacing: '1px',
+                textShadow: '0 0 10px rgba(255, 215, 0, 0.5)'
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 35px rgba(255, 215, 0, 0.9), inset 0 0 15px rgba(255, 215, 0, 0.2)';
+                e.currentTarget.style.transform = 'scale(1.08)';
+                e.currentTarget.style.borderColor = '#fff700';
+                e.currentTarget.style.color = '#fff700';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.1)';
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.borderColor = '#ffd700';
+                e.currentTarget.style.color = '#ffd700';
+            }}
+            title="🗓️ اختر السنة"
+        >
+            <option value="2026" style={{ 
+                background: '#1a1a2e', 
+                color: '#ffd700', 
+                padding: '10px',
+                fontWeight: 'bold',
+                fontSize: '16px'
+            }}>2026</option>
+            <option value="2027" style={{ 
+                background: '#1a1a2e', 
+                color: '#ffd700', 
+                padding: '10px',
+                fontWeight: 'bold',
+                fontSize: '16px'
+            }}>2027</option>
+            <option value="2028" style={{ 
+                background: '#1a1a2e', 
+                color: '#ffd700', 
+                padding: '10px',
+                fontWeight: 'bold',
+                fontSize: '16px'
+            }}>2028</option>
+        </select>
+    </div>
     <span style={{ 
         fontSize: '12px', 
         color: '#ffd700', 
         textAlign: 'center', 
         fontWeight: 'bold',
-        whiteSpace: 'nowrap'
+        whiteSpace: 'nowrap',
+        textShadow: '0 0 8px rgba(255, 215, 0, 0.5)'
     }}>
         السنة
     </span>
@@ -13599,9 +13691,6 @@ useEffect(() => {
         root.render(<App />);
     </script>
 <script>
-
-
-<script>
 (function() {
     'use strict';
     
@@ -14752,21 +14841,30 @@ useEffect(() => {
                 
                 try {
                     const keysToRemove = [
-                        'soufai_cache_data',
-                        'soufai_pending_changes',
-                        'soufai_backups',
-                        'soufai_memory_v4',
-                        'soufai_backup_v4',
-                        'soufai_sync_queue_v5',
-                        'soufai_report_cache',
-                        'soufai_last_village',
-                        'waterSystem_dataSaver',
-                        'waterSystem_quickView',
-                        'auditLogs',
-                        'customUsers',
-                        'focusMode',
-                        'soufai_app_installed'
-                    ];
+    'soufai_cache_data',
+    'soufai_pending_changes',
+    'soufai_backups',
+    'soufai_report_cache',
+    'soufai_memory_v4',
+    'soufai_backup_v4',
+    'soufai_sync_queue_v5',
+    'soufai_last_village',
+    'waterSystem_dataSaver',
+    'waterSystem_quickView',
+    'auditLogs',
+    'customUsers',
+    'focusMode',
+    'soufai_app_installed',
+    'lastSearch'
+];
+
+keysToRemove.forEach(key => {
+    localStorage.removeItem(key);
+});
+
+if (window.localforage) {
+    window.localforage.clear();
+}
                     
                     let removedCount = 0;
                     keysToRemove.forEach(key => {
@@ -17368,7 +17466,6 @@ const sendSingleSmsAll = useCallback((subscriber) => {
     }
     
     // ✅ فحص دوري كل 2 ثانية (احتياط)
-    setInterval(colorRemainingColumn, 2000);
     
     // جعل الدالة عامة
     window.colorRemainingColumn = colorRemainingColumn;
@@ -19486,7 +19583,7 @@ if (allRows[rowIndex]) {
     const CONFIG = {
         BATCH_SIZE: 50,        // عدد الأزرار في كل دفعة
         BATCH_DELAY: 50,       // تأخير بين الدفعات (مللي ثانية)
-        WATCH_INTERVAL: 3000,  // مراقبة كل 3 ثواني (بدل 2)
+        WATCH_INTERVAL: 30000,  // مراقبة كل 3 ثواني (بدل 2)
         MAX_ROWS: 500,         // حد الصفوف للسرعة القصوى
         USE_VIRTUAL: true      // استخدام الظاهرية للمعالجة
     };
