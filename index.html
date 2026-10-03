@@ -7177,169 +7177,7 @@ setHasData(true);
             // ✅ تعريف قائمة القرى داخل App مباشرة
 const APP_VILLAGES_LIST = ['السوفعي', 'العليا', 'السفلى', 'الشعابي', 'الجبل', 'حيزان', 'رقش', 'الضرفة'];
 
-            const handleSearchSelect = useCallback((result) => {
-    if (!result) return;
-
-    if (result.isSuggestion) {
-        // ✅ تبديل القرية - بدون الاعتماد على VILLAGES_LIST
-        if (result.type === 'village') {
-            setVillage(result.text);
-            showSync(`🏘️ تم التبديل إلى ${result.text}`, 'success', 2000);
-            setSearchQuery('');
-            setSearchVisible(false);
-            return;
-        } else if (result.type === 'month') {
-            setMonth(result.text);
-            showSync(`📅 تم التبديل إلى ${result.text}`, 'success', 2000);
-        } else if (result.type === 'action') {
-            setSearchQuery(result.text);
-            executeSmartSearch(result.text);
-            return;
-        } else if (result.type === 'recent') {
-            setSearchQuery(result.text);
-            executeSmartSearch(result.text);
-            return;
-        } else if (result.type === 'help') {
-            setSearchQuery('مساعدة');
-            executeSmartSearch('مساعدة');
-            return;
-        } else {
-            setSearchQuery(result.text);
-            executeSmartSearch(result.text);
-            return;
-        }
-        setSearchQuery('');
-        setSearchVisible(false);
-        return;
-    }
-
-    // ============================================================
-    //  🔥 الحالة: تعديل مباشر (مسلم أو قراءة)
-    // ============================================================
-    if (result._action) {
-        const idx = result.originalIndex;
-        const fi = result._action.operation === 'paid' ? 11 : 3;
-        const val = result._action.value.toString();
-
-        if (user && user.permissions && user.permissions.canEdit.includes(fi)) {
-            if (data[idx]) {
-                data[idx][fi] = val;
-                syncImmediately(village, month, idx, fi, val, data[idx][0] || '');
-                
-
-                setData([...data]);
-                const opName = fi === 11 ? 'المسلم' : 'القراءة';
-                showSync(`✅ تم تسجيل ${val} في ${opName} للمشترك ${result.name}`, 'success', 3000);
-                loadPendingChanges();
-
-                // ============================================================
-                //  🔥 التمرير إلى الصف الصحيح باستخدام originalIndex
-                // ============================================================
-                setTimeout(() => {
-                    const rows = document.querySelectorAll('#tableWrapper tbody tr');
-                    
-                    // ✅ نبحث عن الصف الذي يحتوي على الاسم المطلوب
-                    let targetRow = null;
-                    for (let i = 0; i < rows.length; i++) {
-                        const row = rows[i];
-                        // نتجاوز الصفوف الخاصة
-                        if (row.classList.contains('row-0') || 
-                            row.classList.contains('row-1') || 
-                            row.classList.contains('total-row')) {
-                            continue;
-                        }
-                        // نبحث عن الاسم في العمود الثاني
-                        const nameCell = row.querySelector('td:nth-child(2)');
-                        if (nameCell) {
-                            const name = nameCell.textContent.trim();
-                            // مقارنة بالاسم من نتيجة البحث
-                            if (name === result.name || name.includes(result.name)) {
-                                targetRow = row;
-                                break;
-                            }
-                        }
-                    }
-
-                    // ✅ إذا لم نجد بالاسم، نستخدم الرقم التسلسلي
-                    if (!targetRow) {
-                        // البيانات تبدأ من الصف 2 في الجدول
-                        const rowIndexInTable = idx + 2;
-                        if (rows[rowIndexInTable]) {
-                            targetRow = rows[rowIndexInTable];
-                        }
-                    }
-
-                    if (targetRow) {
-                        rows.forEach(r => r.classList.remove('selected-row-highlight'));
-                        targetRow.classList.add('selected-row-highlight');
-                        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        console.log(`✅ تم التمرير إلى: ${result.name}`);
-                    } else {
-                        console.warn(`⚠️ لم يتم العثور على: ${result.name}`);
-                    }
-                }, 300);
-            }
-        } else {
-            showSync('⛔ لا توجد صلاحية للتعديل', 'error');
-        }
-
-        setSearchVisible(false);
-        setSearchQuery('');
-        return;
-    }
-
-    // ============================================================
-    //  🔥 الحالة: بحث عادي (عرض النتيجة فقط)
-    // ============================================================
-    const idx = result.originalIndex;
-    if (idx !== undefined) {
-        setTimeout(() => {
-            const rows = document.querySelectorAll('#tableWrapper tbody tr');
             
-            // ✅ نبحث عن الصف الذي يحتوي على الاسم المطلوب
-            let targetRow = null;
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                if (row.classList.contains('row-0') || 
-                    row.classList.contains('row-1') || 
-                    row.classList.contains('total-row')) {
-                    continue;
-                }
-                const nameCell = row.querySelector('td:nth-child(2)');
-                if (nameCell) {
-                    const name = nameCell.textContent.trim();
-                    if (name === result.name || name.includes(result.name)) {
-                        targetRow = row;
-                        break;
-                    }
-                }
-            }
-
-            // ✅ إذا لم نجد بالاسم، نستخدم الرقم التسلسلي
-            if (!targetRow) {
-                const rowIndexInTable = idx + 2;
-                if (rows[rowIndexInTable]) {
-                    targetRow = rows[rowIndexInTable];
-                }
-            }
-
-            if (targetRow) {
-                rows.forEach(r => r.classList.remove('selected-row-highlight'));
-                targetRow.classList.add('selected-row-highlight');
-                targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                showSync(`🔍 تم التحديد: ${result.name}`, 'success', 1500);
-                console.log(`✅ تم التمرير إلى: ${result.name}`);
-            } else {
-                console.warn(`⚠️ لم يتم العثور على: ${result.name}`);
-                showSync(`⚠️ لم يتم العثور على المشترك`, 'warning', 1500);
-            }
-        }, 300);
-    }
-
-    setSearchVisible(false);
-    setSearchQuery('');
-    setLastSearch(result.name);
-}, [data, user, village, month, syncImmediately, loadPendingChanges, showSync, executeSmartSearch]);
             const handleCloseSearch = useCallback(() => {
                 setSearchVisible(false);
                 setSearchQuery('');
@@ -14697,25 +14535,65 @@ if (hasReadingWord && hasNumber && !cmd.includes('شهر')) {
     }
 
     function updateCell(rowIndex, colIndex, value) {
-        const tbody = document.querySelector('#tableWrapper tbody');
-        if (!tbody) return false;
+    const tbody = document.querySelector('#tableWrapper tbody');
+    if (!tbody) return false;
+    
+    const rows = tbody.querySelectorAll('tr');
+    if (!rows[rowIndex]) return false;
+
+    const cells = rows[rowIndex].querySelectorAll('td');
+    if (!cells[colIndex]) return false;
+
+    cells[colIndex].click();
+    cells[colIndex].textContent = value;
+    cells[colIndex].blur();
+
+    // ============================================================
+    // 🎨 إعادة التمييز عدة مرات (لأن الجدول يُعاد بناؤه)
+    // ============================================================
+    const targetRowIndex = rowIndex;
+    
+    function reHighlight() {
+        const newTbody = document.querySelector('#tableWrapper tbody');
+        if (!newTbody) return;
         
-        const rows = tbody.querySelectorAll('tr');
-        if (!rows[rowIndex]) return false;
-
-        const cells = rows[rowIndex].querySelectorAll('td');
-        if (!cells[colIndex]) return false;
-
-        // مهم: نستخدم نفس مسار التعديل اليدوي حتى يتم تشغيل onBlur
-        // الذي يحتوي على الحفظ المحلي والمزامنة.
-        // click() ضروري لأن مستمع blur يتم ربطه عند الضغط على الخلية.
-        cells[colIndex].click();
-        cells[colIndex].textContent = value;
-        cells[colIndex].blur();
-
-        return true;
+        const newRows = newTbody.querySelectorAll('tr');
+        if (!newRows[targetRowIndex]) return;
+        
+        // إزالة التحديد من الصفوف السابقة
+        document.querySelectorAll('#tableWrapper tbody tr.selected-row').forEach(function(r) {
+            if (r !== newRows[targetRowIndex]) {
+                r.classList.remove('selected-row');
+            }
+        });
+        
+        // تمييز الصف المطلوب
+        newRows[targetRowIndex].classList.add('selected-row');
     }
+    
+    // إعادة التمييز 10 مرات خلال 3 ثواني
+    let count = 0;
+    const interval = setInterval(function() {
+        reHighlight();
+        count++;
+        if (count >= 10) {
+            clearInterval(interval);
+        }
+    }, 300);
+    
+    // تمرير فوري
+    setTimeout(function() {
+        const newTbody = document.querySelector('#tableWrapper tbody');
+        if (newTbody) {
+            const newRows = newTbody.querySelectorAll('tr');
+            if (newRows[targetRowIndex]) {
+                newRows[targetRowIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, 100);
 
+    return true;
+}
     // ============================================================
     //  عرض النتائج
     // ============================================================
@@ -15164,8 +15042,7 @@ if (allRows[rowIndex]) {
     // ============================================================
     //  ربط البحث مع الاقتراحات
     // ============================================================
-
-    function connectSearch() {
+function connectSearch() {
         const input = document.querySelector('.smart-search-box input');
         if (!input) {
             setTimeout(connectSearch, 500);
@@ -15301,7 +15178,6 @@ if (allRows[rowIndex]) {
             box.appendChild(btn);
         }
     }
-
     // ============================================================
     //  ?? البحث الصوتي
     // ============================================================
@@ -15589,31 +15465,107 @@ if (allRows[rowIndex]) {
     // ============================================================
     // 6. قراءة الشهر (3 مستويات آمنة)
     // ============================================================
-    function getMonth() {
-        const sidebar = document.querySelector('.app-sidebar');
-        if (sidebar) {
-            for (const sel of sidebar.querySelectorAll('select')) {
-                const val = sel.value || '';
-                if (val.startsWith('شهر ')) {
-                    return val.slice(5).trim();
-                }
-                const txt = sel.options[sel.selectedIndex]?.text || '';
-                if (txt.startsWith('شهر ')) {
-                    return txt.slice(5).trim();
-                }
+    // ============================================================
+// ✅ getMonth() الذكية — تتحقق من الشهر الحقيقي للجدول
+// ============================================================
+function getMonth() {
+    // ===== 1. ابحث في app-sidebar أولاً (الأدق) =====
+    const sidebar = document.querySelector('.app-sidebar');
+    let selectValue = null;
+    
+    if (sidebar) {
+        for (const sel of sidebar.querySelectorAll('select')) {
+            const val = sel.value || '';
+            if (val.startsWith('شهر ')) {
+                selectValue = val.slice(5).trim();
+                break;
             }
         }
-        
+    }
+    
+    // ===== 2. إذا لم نجد، ابحث في كل الصفحة =====
+    if (!selectValue) {
         for (const sel of document.querySelectorAll('select')) {
             const val = sel.value || '';
             if (val.startsWith('شهر ')) {
-                return val.slice(5).trim();
+                selectValue = val.slice(5).trim();
+                break;
             }
         }
-        
-        return '1';
     }
     
+    // ===== 3. 🔥 التحقق الفعلي من الجدول =====
+    const realMonth = detectRealMonthFromTable();
+    
+    // ===== 4. المقارنة =====
+    if (selectValue && realMonth && selectValue !== realMonth) {
+        warn(`⚠️ تعارض! القائمة: شهر ${selectValue} — الجدول: شهر ${realMonth}`);
+        // ✅ الأولوية للجدول (الأدق)
+        return realMonth;
+    }
+    
+    // ===== 5. إرجاع القيمة المتاحة =====
+    return realMonth || selectValue || '1';
+}
+
+// ============================================================
+// 🔍 كشف الشهر الحقيقي من الجدول
+// ============================================================
+function detectRealMonthFromTable() {
+    const table = getTable();
+    if (!table) return null;
+    
+    // ===== المحاولة 1: البحث في الرؤوس (thead) =====
+    const thead = table.querySelector('thead');
+    if (thead) {
+        const text = thead.textContent || '';
+        // ابحث عن نمط "شهر X" أو "شهر 11"
+        const match = text.match(/شهر\s*(\d{1,2})/);
+        if (match && match[1]) {
+            const num = parseInt(match[1]);
+            if (num >= 1 && num <= 12) {
+                log(`✅ تم كشف الشهر من thead: ${num}`);
+                return num.toString();
+            }
+        }
+    }
+    
+    // ===== المحاولة 2: البحث في أول 3 صفوف =====
+    const rows = table.querySelectorAll('tbody tr');
+    for (let i = 0; i < Math.min(3, rows.length); i++) {
+        const text = rows[i].textContent || '';
+        const match = text.match(/شهر\s*(\d{1,2})/);
+        if (match && match[1]) {
+            const num = parseInt(match[1]);
+            if (num >= 1 && num <= 12) {
+                log(`✅ تم كشف الشهر من الصف ${i}: ${num}`);
+                return num.toString();
+            }
+        }
+    }
+    
+    // ===== المحاولة 3: البحث في عنوان الجدول (caption) =====
+    const caption = table.querySelector('caption');
+    if (caption) {
+        const text = caption.textContent || '';
+        const match = text.match(/شهر\s*(\d{1,2})/);
+        if (match && match[1]) {
+            return parseInt(match[1]).toString();
+        }
+    }
+    
+    // ===== المحاولة 4: من البيانات نفسها (row-0) =====
+    const firstSpecialRow = table.querySelector('tr.row-0');
+    if (firstSpecialRow) {
+        const text = firstSpecialRow.textContent || '';
+        const match = text.match(/شهر\s*(\d{1,2})/);
+        if (match && match[1]) {
+            return parseInt(match[1]).toString();
+        }
+    }
+    
+    return null;
+}
     // ============================================================
     // ⚡ 7. الإرسال الفوري (iframe واحد مُعاد استخدامه)
     // ============================================================
