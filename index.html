@@ -13,8 +13,6 @@
 <link rel="apple-touch-icon" href="https://i.postimg.cc/wTffqvP6/1776187446226.png">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
-    <!-- ===== Chart.js ===== -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     
     <!-- ===== React + ReactDOM ===== -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -4195,6 +4193,109 @@ body.quick-view-mode #exitQuickViewBtn {
         grid-template-columns: 1fr;
     }
 }
+/* ===== 📱 تحسينات الجوال الشاملة (بدون تكبير الأزرار) ===== */
+
+/* منع الـ zoom التلقائي (لكل الأجهزة) */
+input, select, textarea {
+    font-size: 16px;
+}
+
+/* ============================================ */
+/* تابلت (1024px وما دون) */
+/* ============================================ */
+@media (max-width: 1024px) {
+    .app-layout {
+        flex-direction: column;
+    }
+    
+    .app-sidebar {
+        width: 100%;
+        max-width: none;
+        position: static;
+    }
+}
+
+/* ============================================ */
+/* جوال (768px وما دون) */
+/* ============================================ */
+@media (max-width: 768px) {
+    
+    /* منع التمرير الأفقي */
+    body {
+        overflow-x: hidden !important;
+        -webkit-text-size-adjust: 100% !important;
+    }
+    
+    /* تحسين لمس الأزرار (بدون تغيير الحجم) */
+    button, .btn, [role="button"] {
+        -webkit-tap-highlight-color: transparent !important;
+        touch-action: manipulation !important;
+    }
+    
+    /* ✅ الأزرار تبقى بحجمها الأصلي — لا تعديل */
+    
+    /* توسيع صندوق البحث */
+    .smart-search-box {
+        min-height: 50px !important;
+    }
+    
+    .smart-search-box input {
+        font-size: 16px !important;
+        padding: 12px !important;
+    }
+    
+    /* تكبير القوائم */
+    .app-sidebar select {
+        min-height: 48px !important;
+        font-size: 16px !important;
+    }
+    
+    /* تحسين السكرول */
+    .table-container {
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* تحسين الجدول */
+    .table-container td,
+    .table-container th {
+        padding: 8px 4px !important;
+        font-size: 13px !important;
+    }
+    
+    /* تحسين النوافذ */
+    .report-modal {
+        padding: 5px !important;
+    }
+    
+    .report-modal-content {
+        width: 98% !important;
+        max-width: none !important;
+    }
+    
+    /* ✅ زر الإغلاق يبقى بحجمه الأصلي — لا تعديل */
+}
+
+/* ============================================ */
+/* جوال صغير (480px وما دون) */
+/* ============================================ */
+@media (max-width: 480px) {
+    
+    /* الجدول: خط أصغر أكثر */
+    .table-container td,
+    .table-container th {
+        font-size: 12px !important;
+        padding: 6px 3px !important;
+    }
+    
+    /* ✅ الأزرار تبقى بحجمها الأصلي — لا تعديل */
+    
+    /* النوافذ: ملء الشاشة */
+    .report-modal-content {
+        width: 100% !important;
+        border-radius: 0 !important;
+        height: 100vh !important;
+    }
+}
 </style>
 </head>
 <body>
@@ -4287,7 +4388,31 @@ if (window.speechSynthesis) {
         // ================================================================
 
         const { useState, useEffect, useRef, useCallback, useMemo, createRef } = React;
-
+// ===== 🔇 تعطيل console.log في الإنتاج =====
+(function() {
+    const IS_DEV = localStorage.getItem('soufai_debug') === 'true';
+    
+    if (!IS_DEV) {
+        // احتفظ بالدوال الأصلية (للرجوع عند الحاجة)
+        window.__originalConsole = {
+            log: console.log,
+            info: console.info,
+            warn: console.warn,
+            debug: console.debug
+        };
+        
+        // عطّل الدوال غير الضرورية
+        console.log = function() {};
+        console.info = function() {};
+        console.debug = function() {};
+        console.warn = function() {};
+        
+        // console.error يبقى مفعّلاً (لرؤية الأخطاء الحقيقية)
+    } else {
+        // في وضع التطوير — كل شيء يظهر
+        console.log('🔊 وضع التطوير مفعّل (soufai_debug=true)');
+    }
+})();
         // ============================================================
         //  الإعدادات الأساسية
         // ============================================================
@@ -4415,6 +4540,16 @@ async function saveToCache(key, data) {
     try {
         const cache = await getFromStorage(CACHE_KEY) || {};
         cache[key] = { data: data, timestamp: Date.now() };
+        
+        // ✅ حد أقصى 50 عنصر — احذف الأقدم
+        const keys = Object.keys(cache);
+        if (keys.length > 50) {
+            keys.sort((a, b) => (cache[a].timestamp || 0) - (cache[b].timestamp || 0));
+            const toDelete = keys.slice(0, keys.length - 50);
+            toDelete.forEach(k => delete cache[k]);
+            console.log(`🧹 حُذف ${toDelete.length} عنصر قديم من الكاش`);
+        }
+        
         await saveToStorage(CACHE_KEY, cache);
     } catch (e) { 
         console.warn('فشل حفظ الكاش:', e); 
@@ -7352,8 +7487,8 @@ const APP_VILLAGES_LIST = ['السوفعي', 'العليا', 'السفلى', 'ا
             }, [reportData, reportLoading, reportMonth, reportSearchTerm, reportCached]);
 
             const toggleCharts = useCallback(() => {
-                setChartsVisible(prev => !prev);
-            }, []);
+    setChartsVisible(prev => !prev);
+}, []);
 
             const handleChartTypeChange = useCallback((chartId, type) => {
                 setChartTypes(prev => ({
@@ -7449,6 +7584,7 @@ data.forEach((row, index) => {
     
     if (!row || !Array.isArray(row) || row.length === 0) return;
     // ✅ تخطي الصفوف الفارغة تماماً
+if (!Array.isArray(row)) return;
 const isEmptyRow = !row.some(function(cell) {
     return String(cell || '').trim() !== '';
 });
@@ -8834,6 +8970,31 @@ useEffect(() => {
                 <button onClick={() => { document.body.classList.toggle('focus-mode'); const isFocus = document.body.classList.contains('focus-mode'); localStorage.setItem('focusMode', isFocus); const exitBtn = document.getElementById('exitFocusBtn'); if (exitBtn) { exitBtn.style.display = isFocus ? 'flex' : 'none'; } }} style={{ width: '32px', height: '32px', borderRadius: '8px', border: '2px solid rgba(220, 53, 69, 0.3)', background: 'linear-gradient(135deg, #dc3545, #b02a37)', color: 'white', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="وضع التركيز">👁️</button>
                 <span style={{ fontSize: '12px', color: '#0a58ca', textAlign: 'center', fontWeight: 'bold' }}>تركيز</span>
             </div>
+            {/* ===== زر السنة الكاملة (12 شهر) ===== */}
+<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+    <button
+        onClick={() => {
+            const nameCell = document.querySelector('#tableWrapper tbody tr.selected-row td:nth-child(2)');
+            const name = nameCell?.textContent?.trim();
+            if (!name) {
+                alert('⚠️ اختر مشتركاً أولاً (انقر على اسمه)');
+                return;
+            }
+            window.showYearReport(name);
+        }}
+        style={{
+            width: '32px', height: '32px', borderRadius: '8px',
+            border: '2px solid rgba(76,201,240,0.3)',
+            background: 'linear-gradient(135deg, #4cc9f0, #00b4d8)',
+            color: 'white', cursor: 'pointer', fontSize: '14px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}
+        title="عرض بيانات المشترك للسنة كاملة (12 شهر)"
+    >
+        📅
+    </button>
+    <span style={{ fontSize: '12px', color: '#00b4d8', fontWeight: 'bold' }}>سنة كاملة</span>
+</div>
 {/* ===== زر بدون اشتراك ===== */}
 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
     <button 
@@ -9150,18 +9311,33 @@ useEffect(() => {
                                 )}
 
                                 {/* ===== الرسوم البيانية ===== */}
-                                {chartsVisible && (
-                                    <ChartsSection
-                                        village={village}
-                                        month={month}
-                                        data={data}
-                                        monthlyData={monthlyData}
-                                        chartType={chartTypes}
-                                        onChartTypeChange={handleChartTypeChange}
-                                        onFullscreen={handleFullscreen}
-                                    />
-                                )}
+                               {chartsVisible && typeof Chart !== 'undefined' && (
+    <ChartsSection
+        village={village}
+        month={month}
+        data={data}
+        monthlyData={monthlyData}
+        chartType={chartTypes}
+        onChartTypeChange={handleChartTypeChange}
+        onFullscreen={handleFullscreen}
+    />
+)}
 
+{chartsVisible && typeof Chart === 'undefined' && (
+    <div style={{
+        background: 'rgba(255,183,3,0.15)',
+        border: '2px solid #ffb703',
+        borderRadius: '16px',
+        padding: '40px',
+        textAlign: 'center',
+        color: 'white',
+        marginBottom: '16px'
+    }}>
+        <div style={{ fontSize: '48px', marginBottom: '15px' }}>📊</div>
+        <h3 style={{ color: '#ffb703', margin: '0 0 10px' }}>جاري تحميل الرسوم البيانية...</h3>
+        <p style={{ opacity: 0.7, margin: 0 }}>قد تستغرق بضع ثوانٍ</p>
+    </div>
+)}
                                 {/* ===== الشاشة الكاملة للرسم البياني ===== */}
                                 {fullscreenChart && (
                                     <ChartFullscreen
@@ -10198,647 +10374,104 @@ useEffect(() => {
     console.log('✅ زر الخروج من وضع العرض السريع جاهز');
 })();
 // ================================================================
-//  🧠 Soufai Memory Manager v4.0 - زر ثابت في أعلى يسار
-//  📍 موقع ثابت | 🚫 غير متحرك | 🔒 يظهر بعد الدخول
+//  🧠 Soufai Memory Manager v6.0 - النسخة النهائية المُصلحة
+//  ✅ إصلاح جميع المشاكل الـ 11 في v5.0
+//  ✅ await localforage.clear() مع storeName الصحيح
+//  ✅ حماية auditLogs و customUsers و PWA
+//  ✅ جسر showSyncIndicator يعمل مع React
+//  ✅ ضغط فعلي (LZ-String fallback)
+//  ✅ إحصائيات دقيقة (localStorage + localforage)
+//  ✅ حماية من QuotaExceededError
+//  ✅ version check عند التحميل
+//  ✅ إلغاء المؤقتات
+//  ✅ تنظيف آمن
+//  ✅ removedCount صحيح
 // ================================================================
 
 (function() {
     'use strict';
 
     // ============================================================
-    //  الإعدادات المتقدمة
+    //  ⚙️ الإعدادات
     // ============================================================
     const MEMORY_CONFIG = {
-        CACHE_KEY: 'soufai_memory_v4',
-        BACKUP_KEY: 'soufai_backup_v4',
-        MAX_CACHE_ITEMS: 200,
-        MAX_CACHE_AGE: 60 * 60 * 1000,
-        COMPRESSION_ENABLED: true,
-        AUTO_CLEANUP_INTERVAL: 2 * 60 * 1000,
-        MAX_STORAGE_SIZE: 10 * 1024 * 1024,
-        DEBOUNCE_DELAY: 300,
-        VALIDATION_ENABLED: true
-    };
-
-    // ============================================================
-    //  أدوات مساعدة
-    // ============================================================
-    const Utils = {
-        generateId: () => Date.now().toString(36) + Math.random().toString(36).substring(2, 7),
-        
-        formatSize: (bytes) => {
-            if (bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        },
-        
-        getTotalStorageSize: () => {
-            let total = 0;
-            try {
-                for (let key in localStorage) {
-                    if (localStorage.hasOwnProperty(key)) {
-                        total += localStorage[key].length * 2;
-                    }
-                }
-            } catch(e) {}
-            return total;
-        },
-        
-        getStorageLimit: () => {
-            try {
-                const test = 'a'.repeat(1024 * 1024 * 10);
-                localStorage.setItem('_test_', test);
-                localStorage.removeItem('_test_');
-                return 10 * 1024 * 1024;
-            } catch(e) {
-                return 5 * 1024 * 1024;
-            }
-        },
-        
-        validateData: (data) => {
-            if (data === null || data === undefined) return false;
-            if (typeof data === 'string' && data.trim() === '') return false;
-            if (Array.isArray(data) && data.length === 0) return false;
-            if (typeof data === 'object' && Object.keys(data).length === 0) return false;
-            return true;
-        },
-        
-        deepClone: (obj) => {
-            if (obj === null || typeof obj !== 'object') return obj;
-            if (obj instanceof Date) return new Date(obj);
-            if (obj instanceof RegExp) return new RegExp(obj);
-            if (Array.isArray(obj)) return obj.map(item => Utils.deepClone(item));
-            const cloned = {};
-            for (const key in obj) {
-                if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                    cloned[key] = Utils.deepClone(obj[key]);
-                }
-            }
-            return cloned;
-        },
-        
-        getSize: (data) => {
-            try {
-                const str = typeof data === 'string' ? data : JSON.stringify(data);
-                return new Blob([str]).size;
-            } catch {
-                return 0;
-            }
-        }
-    };
-
-    // ============================================================
-    //  ضاغط محسن
-    // ============================================================
-    class AdvancedCompressor {
-        static compress(data) {
-            if (!MEMORY_CONFIG.COMPRESSION_ENABLED) return data;
-            try {
-                const json = typeof data === 'string' ? data : JSON.stringify(data);
-                return json.replace(/\s+/g, ' ').replace(/\n/g, '');
-            } catch {
-                return data;
-            }
-        }
-
-        static decompress(data) {
-            try {
-                if (typeof data === 'string') {
-                    return JSON.parse(data);
-                }
-                return data;
-            } catch {
-                return data;
-            }
-        }
-    }
-
-    // ============================================================
-    //  نظام التخزين المؤقت المتقدم
-    // ============================================================
-    class SmartCache {
-        constructor() {
-            this.data = new Map();
-            this.metadata = {
-                created: Date.now(),
-                hits: 0,
-                misses: 0,
-                evictions: 0,
-                totalSize: 0,
-                lastCleanup: Date.now()
-            };
-            this.pendingWrites = new Map();
-            this.isWriting = false;
-            this.loadFromStorage();
-            this.startAutoCleanup();
-            this.setupBeforeUnload();
-        }
-
-        setupBeforeUnload() {
-            window.addEventListener('beforeunload', () => {
-                if (this.pendingWrites.size > 0) this.saveToStorage();
-            });
-        }
-
-        set(key, value, ttl = MEMORY_CONFIG.MAX_CACHE_AGE) {
-            if (!key || typeof key !== 'string') return false;
-            if (MEMORY_CONFIG.VALIDATION_ENABLED && !Utils.validateData(value)) return false;
-
-            if (this.data.size >= MEMORY_CONFIG.MAX_CACHE_ITEMS) {
-                this.evictLRU();
-                this.metadata.evictions++;
-            }
-
-            const deepCopy = Utils.deepClone(value);
-            const compressed = AdvancedCompressor.compress(deepCopy);
-
-            const item = {
-                value: compressed,
-                timestamp: Date.now(),
-                expires: Date.now() + ttl,
-                size: Utils.getSize(compressed),
-                accessCount: 0,
-                lastAccessed: Date.now(),
-                id: Utils.generateId()
-            };
-
-            this.data.set(key, item);
-            this.updateMetadata();
-            this.scheduleWrite(key);
-            return true;
-        }
-
-        get(key) {
-            if (!key || typeof key !== 'string') {
-                this.metadata.misses++;
-                return null;
-            }
-
-            const item = this.data.get(key);
-            if (!item) {
-                this.metadata.misses++;
-                return null;
-            }
-
-            if (Date.now() > item.expires) {
-                this.data.delete(key);
-                this.metadata.misses++;
-                this.scheduleWrite();
-                return null;
-            }
-
-            item.accessCount = (item.accessCount || 0) + 1;
-            item.lastAccessed = Date.now();
-            this.metadata.hits++;
-            this.updateMetadata();
-
-            try {
-                return AdvancedCompressor.decompress(item.value);
-            } catch {
-                return null;
-            }
-        }
-
-        delete(key) {
-            if (!key || typeof key !== 'string') return false;
-            const deleted = this.data.delete(key);
-            if (deleted) {
-                this.updateMetadata();
-                this.scheduleWrite();
-            }
-            return deleted;
-        }
-
-        clear() {
-            this.data.clear();
-            this.metadata.hits = 0;
-            this.metadata.misses = 0;
-            this.metadata.evictions = 0;
-            this.updateMetadata();
-            this.saveToStorage();
-            this.showStatus('🧹 تم تنظيف الذاكرة بالكامل', 'success');
-        }
-
-        evictLRU() {
-            let oldest = null;
-            let oldestTime = Infinity;
-            for (const [key, item] of this.data) {
-                if (item.lastAccessed < oldestTime) {
-                    oldestTime = item.lastAccessed;
-                    oldest = key;
-                }
-            }
-            if (oldest) {
-                this.data.delete(oldest);
-                this.metadata.evictions++;
-                return true;
-            }
-            return false;
-        }
-
-        cleanup() {
-            const now = Date.now();
-            let count = 0;
-            let sizeFreed = 0;
-
-            for (const [key, item] of this.data) {
-                if (now > item.expires) {
-                    sizeFreed += item.size || 0;
-                    this.data.delete(key);
-                    count++;
-                }
-            }
-
-            if (count > 0) {
-                this.updateMetadata();
-                this.scheduleWrite();
-                this.showStatus(`🧹 تم تنظيف ${count} عناصر منتهية الصلاحية`, 'info');
-            }
-
-            this.metadata.lastCleanup = now;
-            return { count, sizeFreed };
-        }
-
-        startAutoCleanup() {
-            setInterval(() => this.cleanup(), MEMORY_CONFIG.AUTO_CLEANUP_INTERVAL);
-        }
-
-        scheduleWrite(key = null) {
-            if (key) this.pendingWrites.set(key, Date.now());
-            clearTimeout(this._writeTimeout);
-            this._writeTimeout = setTimeout(() => this.saveToStorage(), MEMORY_CONFIG.DEBOUNCE_DELAY);
-        }
-
-        saveToStorage() {
-            if (this.isWriting) return;
-            this.isWriting = true;
-
-            try {
-                const data = {
-                    entries: Array.from(this.data.entries()),
-                    metadata: this.metadata,
-                    version: '4.0',
-                    timestamp: Date.now()
-                };
-                localStorage.setItem(MEMORY_CONFIG.CACHE_KEY, JSON.stringify(data));
-                this.pendingWrites.clear();
-            } catch (error) {
-                if (error.name === 'QuotaExceededError') this.handleQuotaExceeded();
-                console.warn('⚠️ فشل حفظ الكاش:', error.message);
-            }
-            this.isWriting = false;
-        }
-
-        handleQuotaExceeded() {
-            this.showStatus('⚠️ مساحة التخزين ممتلئة، جاري التنظيف...', 'error');
-            const items = Array.from(this.data.entries()).sort((a, b) => (b[1].size || 0) - (a[1].size || 0));
-            const toDelete = Math.ceil(items.length * 0.4);
-            for (let i = 0; i < toDelete && i < items.length; i++) {
-                this.data.delete(items[i][0]);
-            }
-            this.updateMetadata();
-            this.saveToStorage();
-        }
-
-        loadFromStorage() {
-            try {
-                const saved = localStorage.getItem(MEMORY_CONFIG.CACHE_KEY);
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    if (data.entries) {
-                        this.data = new Map(data.entries);
-                        this.metadata = data.metadata || this.metadata;
-                    }
-                }
-            } catch (error) {
-                console.warn('⚠️ فشل تحميل الكاش:', error.message);
-            }
-        }
-
-        updateMetadata() {
-            let totalSize = 0;
-            for (const [, item] of this.data) {
-                totalSize += item.size || 0;
-            }
-            this.metadata.totalSize = totalSize;
-            this.metadata.itemCount = this.data.size;
-            this.metadata.avgSize = this.data.size > 0 ? totalSize / this.data.size : 0;
-        }
-
-        showStatus(message, type = 'info') {
-            if (window.showSyncIndicator) {
-                window.showSyncIndicator(message, type);
-            } else {
-                console.log(`[SmartCache] ${type}: ${message}`);
-            }
-        }
-
-        getStats() {
-            const total = this.metadata.hits + this.metadata.misses;
-            const hitRate = total > 0 ? Math.round((this.metadata.hits / total) * 100) : 0;
-            const totalStorage = Utils.getTotalStorageSize();
-            const storageLimit = Utils.getStorageLimit();
-
-            return {
-                items: this.data.size,
-                maxItems: MEMORY_CONFIG.MAX_CACHE_ITEMS,
-                hits: this.metadata.hits,
-                misses: this.metadata.misses,
-                evictions: this.metadata.evictions,
-                hitRate: hitRate,
-                totalSize: this.metadata.totalSize,
-                sizeFormatted: Utils.formatSize(this.metadata.totalSize),
-                avgSize: Utils.formatSize(this.metadata.avgSize || 0),
-                lastCleanup: new Date(this.metadata.lastCleanup).toLocaleString('ar-SA'),
-                created: new Date(this.metadata.created).toLocaleString('ar-SA'),
-                pendingWrites: this.pendingWrites.size,
-                isWriting: this.isWriting,
-                utilization: Math.round((this.data.size / MEMORY_CONFIG.MAX_CACHE_ITEMS) * 100),
-                totalStorage: totalStorage,
-                totalStorageFormatted: Utils.formatSize(totalStorage),
-                storageLimit: storageLimit,
-                storageLimitFormatted: Utils.formatSize(storageLimit),
-                storageRemaining: storageLimit - totalStorage,
-                storageRemainingFormatted: Utils.formatSize(Math.max(0, storageLimit - totalStorage)),
-                storageUsagePercent: storageLimit > 0 ? Math.round((totalStorage / storageLimit) * 100) : 0
-            };
-        }
-    }
-
-    // ============================================================
-    //  نظام النسخ الاحتياطي
-    // ============================================================
-    class AdvancedBackup {
-        constructor() {
-            this.key = MEMORY_CONFIG.BACKUP_KEY;
-            this.backup = null;
-            this.load();
-        }
-
-        create(data, options = {}) {
-            const { label = 'النسخة الاحتياطية', type = 'manual', metadata = {} } = options;
-            if (!data) {
-                this.showStatus('❌ لا توجد بيانات للنسخ الاحتياطي', 'error');
-                return null;
-            }
-
-            const cleanData = Utils.deepClone(data);
-            const compressed = AdvancedCompressor.compress(cleanData);
-            const size = Utils.getSize(compressed);
-
-            const backup = {
-                id: Utils.generateId(),
-                version: '4.0',
-                timestamp: Date.now(),
-                date: new Date().toLocaleString('ar-SA'),
-                label: label,
-                type: type,
-                size: size,
-                sizeFormatted: Utils.formatSize(size),
-                data: compressed,
-                metadata: {
-                    ...metadata,
-                    itemCount: Array.isArray(data) ? data.length : (data ? Object.keys(data).length : 0),
-                    compressed: MEMORY_CONFIG.COMPRESSION_ENABLED,
-                    checksum: this.generateChecksum(compressed)
-                }
-            };
-
-            this.backup = backup;
-            this.save();
-            this.showStatus(`💾 تم حفظ نسخة احتياطية جديدة (استبدلت القديمة)`, 'success');
-            return backup;
-        }
-
-        restore() {
-            if (!this.backup) {
-                this.showStatus('❌ لا توجد نسخة احتياطية', 'error');
-                return null;
-            }
-            try {
-                const data = AdvancedCompressor.decompress(this.backup.data);
-                this.showStatus(`♻️ تم استعادة: ${this.backup.label} (${this.backup.date})`, 'info');
-                return data;
-            } catch (error) {
-                this.showStatus('❌ فشل استعادة البيانات: ' + error.message, 'error');
-                return null;
-            }
-        }
-
-        get() {
-            return this.backup ? { ...this.backup, data: undefined } : null;
-        }
-
-        getFull() {
-            return this.backup ? { ...this.backup } : null;
-        }
-
-        save() {
-            try {
-                if (this.backup) {
-                    localStorage.setItem(this.key, JSON.stringify(this.backup));
-                }
-            } catch (error) {
-                if (error.name === 'QuotaExceededError') {
-                    this.showStatus('⚠️ مساحة التخزين ممتلئة، جاري حذف القديمة...', 'error');
-                    localStorage.removeItem(this.key);
-                    localStorage.setItem(this.key, JSON.stringify(this.backup));
-                }
-            }
-        }
-
-        load() {
-            try {
-                const saved = localStorage.getItem(this.key);
-                if (saved) {
-                    this.backup = JSON.parse(saved);
-                    if (this.backup.version !== '4.0') {
-                        this.backup.version = '4.0';
-                        this.save();
-                    }
-                }
-            } catch (error) {
-                this.backup = null;
-            }
-        }
-
-        delete() {
-            this.backup = null;
-            localStorage.removeItem(this.key);
-            this.showStatus('🗑️ تم حذف النسخة الاحتياطية', 'info');
-        }
-
-        exists() {
-            return this.backup !== null;
-        }
-
-        generateChecksum(data) {
-            try {
-                const str = typeof data === 'string' ? data : JSON.stringify(data);
-                let hash = 0;
-                for (let i = 0; i < str.length; i++) {
-                    const char = str.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash;
-                }
-                return hash.toString(16);
-            } catch {
-                return '0';
-            }
-        }
-
-        showStatus(message, type = 'info') {
-            if (window.showSyncIndicator) {
-                window.showSyncIndicator(message, type);
-            } else {
-                console.log(`[AdvancedBackup] ${type}: ${message}`);
-            }
-        }
-    }
-
-    // ============================================================
-    //  المدير الرئيسي المتقدم v4.0
-    // ============================================================
-    class MemoryManagerPro {
-        constructor() {
-            this.cache = new SmartCache();
-            this.backup = new AdvancedBackup();
-            this.isOptimizing = false;
-            this.listeners = [];
-            this.version = '4.0';
-            this.initialized = Date.now();
-            this.events = [];
-            this.isLoggedIn = false;
-
-            this.registerInWindow();
-            this.startLoginMonitor();
-            
-            // 🔥 إضافة الزر في أعلى يسار بعد تحميل الصفحة
-            setTimeout(() => this.addButtonTopLeft(), 1500);
-
-            console.log('✅ نظام تحسين الذاكرة المتقدم v4.0 جاهز');
-            console.log('📍 الزر في أعلى يسار - ثابت غير متحرك');
-            console.log('📊 الإحصائيات الأولية:', this.getStats());
-        }
-
-        // ============================================================
-        //  مراقبة حالة تسجيل الدخول
-        // ============================================================
-        startLoginMonitor() {
-            setInterval(() => {
-                const loggedIn = this.checkLoginStatus();
-                if (loggedIn !== this.isLoggedIn) {
-                    this.isLoggedIn = loggedIn;
-                    this.updateButtonVisibility();
-                }
-            }, 1000);
-
-            const observer = new MutationObserver(() => {
-                const loggedIn = this.checkLoginStatus();
-                if (loggedIn !== this.isLoggedIn) {
-                    this.isLoggedIn = loggedIn;
-                    this.updateButtonVisibility();
-                }
-            });
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-                attributeFilter: ['class', 'style']
-            });
-        }
-
-        checkLoginStatus() {
-            const loginWrapper = document.querySelector('.login-wrapper');
-            if (loginWrapper && loginWrapper.style.display !== 'none' && !loginWrapper.classList.contains('hidden')) {
-                return false;
-            }
-            const appContainer = document.querySelector('.app-container.visible');
-            if (appContainer) return true;
-            const tableWrapper = document.getElementById('tableWrapper');
-            if (tableWrapper) return true;
-            const controlBar = document.querySelector('.control-bar');
-            if (controlBar) return true;
-            return false;
-        }
-
-        updateButtonVisibility() {
-            const mainBtn = document.getElementById('memoryManagerBtn');
-            if (this.isLoggedIn) {
-                if (mainBtn) {
-                    mainBtn.style.display = 'flex';
-                    mainBtn.style.opacity = '1';
-                }
-            } else {
-                if (mainBtn) {
-                    mainBtn.style.display = 'none';
-                    mainBtn.style.opacity = '0';
-                }
-            }
-        }
-
-// ================================================================
-//  🧠 Soufai Memory Manager v5.0 - الكود الكامل
-//  ✅ النسخ التلقائي مسموح
-//  ❌ النسخ اليدوي ممنوع
-//  ✅ الزر يظهر في شريط الأزرار
-//  ✅ ممنوع العمل من النسخة المحلية أثناء وجود النت
-// ================================================================
-
-(function() {
-    'use strict';
-
-    // ============================================================
-    //  الإعدادات
-    // ============================================================
-    const MEMORY_CONFIG = {
-        CACHE_KEY: 'soufai_memory_v4',
+        CACHE_KEY: 'soufai_memory_v6',
+        VERSION: '6.0',
         MAX_CACHE_ITEMS: 100,
         MAX_CACHE_AGE: 30 * 60 * 1000,
+        MAX_ITEM_SIZE: 500 * 1024,
         COMPRESSION_ENABLED: true,
         AUTO_CLEANUP_INTERVAL: 5 * 60 * 1000,
-        VALIDATION_ENABLED: true
+        STORAGE_LIMIT_CACHE_MS: 60 * 1000,
+        // ✅ إعدادات localforage الموحّدة مع React
+        LOCALFORAGE_NAME: 'SoufaiWaterSystem',
+        LOCALFORAGE_STORE: 'soufai_store'
     };
 
     // ============================================================
-    //  أدوات مساعدة
+    //  🔒 المفاتيح المحمية (لا تُمسح أبداً)
+    // ============================================================
+    const PROTECTED_KEYS = [
+        // 🔴 حرجة — بيانات قانونية
+        'auditLogs',              // سجل التعديلات
+        'customUsers',            // المستخدمين المخصصين
+        'soufai_year',            // السنة النشطة
+        'soufai_year_locked',     // حالة القفل
+
+        // 🟡 تفضيلات المستخدم
+        'theme',                  // الثيم المختار
+        'focusMode',              // وضع التركيز
+        'waterSystem_dataSaver',  // وضع توفير البيانات
+        'waterSystem_quickView',  // وضع العرض السريع
+
+        // 🟢 حالة PWA
+        'soufai_app_installed'    // حالة تثبيت التطبيق
+    ];
+
+    // ============================================================
+    //  🗑️ مفاتيح الكاش القابلة للمسح
+    // ============================================================
+    const CACHE_KEYS = [
+        'soufai_cache_data',
+        'soufai_pending_changes',
+        'soufai_backups',
+        'soufai_report_cache',
+        'soufai_memory_v4',
+        'soufai_memory_v5',
+        'soufai_memory_v6',
+        'soufai_backup_v4',
+        'soufai_sync_queue_v5',
+        'soufai_last_village',
+        'lastSearch'
+        // ❌ waterSystem_dataSaver  → محمي الآن
+        // ❌ waterSystem_quickView  → محمي الآن
+        // ❌ focusMode              → محمي الآن
+        // ❌ soufai_app_installed   → محمي الآن
+    ];
+
+    // ============================================================
+    //  🛠️ أدوات مساعدة
     // ============================================================
     const Utils = {
         generateId: () => Date.now().toString(36) + Math.random().toString(36).substring(2, 7),
-        
+
         formatSize: (bytes) => {
-            if (bytes === 0) return '0 B';
+            if (!bytes || bytes === 0) return '0 B';
             const k = 1024;
             const sizes = ['B', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         },
-        
-        getTotalStorageSize: () => {
-            let total = 0;
+
+        getSize: (data) => {
             try {
-                for (let key in localStorage) {
-                    if (localStorage.hasOwnProperty(key)) {
-                        total += localStorage[key].length * 2;
-                    }
-                }
-            } catch(e) {}
-            return total;
-        },
-        
-        getStorageLimit: () => {
-            try {
-                const test = 'a'.repeat(1024 * 1024 * 10);
-                localStorage.setItem('_test_', test);
-                localStorage.removeItem('_test_');
-                return 10 * 1024 * 1024;
-            } catch(e) {
-                return 5 * 1024 * 1024;
+                const str = typeof data === 'string' ? data : JSON.stringify(data);
+                return new Blob([str]).size;
+            } catch {
+                return 0;
             }
         },
-        
+
         deepClone: (obj) => {
             if (obj === null || typeof obj !== 'object') return obj;
             if (obj instanceof Date) return new Date(obj);
@@ -10851,33 +10484,103 @@ useEffect(() => {
             }
             return cloned;
         },
-        
-        getSize: (data) => {
+
+        getLocalStorageSize: () => {
+            let total = 0;
             try {
-                const str = typeof data === 'string' ? data : JSON.stringify(data);
-                return new Blob([str]).size;
-            } catch {
-                return 0;
-            }
-        }
+                for (let key in localStorage) {
+                    if (localStorage.hasOwnProperty(key)) {
+                        total += (localStorage[key] || '').length * 2;
+                    }
+                }
+            } catch (e) {}
+            return total;
+        },
+
+        getStorageLimit: (() => {
+            let cachedLimit = null;
+            let cachedTime = 0;
+
+            return () => {
+                const now = Date.now();
+                if (cachedLimit && (now - cachedTime) < MEMORY_CONFIG.STORAGE_LIMIT_CACHE_MS) {
+                    return cachedLimit;
+                }
+
+                const testKey = '_soufai_test_' + now;
+                let limit = 0;
+
+                try {
+                    const sizes = [1024 * 1024, 2 * 1024 * 1024, 5 * 1024 * 1024, 10 * 1024 * 1024];
+                    for (const size of sizes) {
+                        try {
+                            localStorage.setItem(testKey, 'a'.repeat(size));
+                            localStorage.removeItem(testKey);
+                            limit = size;
+                        } catch {
+                            break;
+                        }
+                    }
+                    if (limit === 0) limit = 5 * 1024 * 1024;
+                } catch {
+                    limit = 5 * 1024 * 1024;
+                } finally {
+                    try { localStorage.removeItem(testKey); } catch {}
+                }
+
+                cachedLimit = limit;
+                cachedTime = now;
+                return limit;
+            };
+        })()
     };
 
     // ============================================================
-    //  ضاغط
+    //  🗜️ ضاغط فعلي (LZ-String fallback)
     // ============================================================
-    class AdvancedCompressor {
-        static compress(data) {
+    const Compressor = {
+        _lz: null,
+
+        _init() {
+            if (this._lz) return;
+            try {
+                if (typeof LZString !== 'undefined') {
+                    this._lz = LZString;
+                }
+            } catch {}
+        },
+
+        compress(data) {
             if (!MEMORY_CONFIG.COMPRESSION_ENABLED) return data;
+
+            this._init();
             try {
                 const json = typeof data === 'string' ? data : JSON.stringify(data);
+                const originalSize = json.length;
+
+                if (this._lz) {
+                    const compressed = this._lz.compressToUTF16(json);
+                    if (compressed && compressed.length < originalSize * 0.95) {
+                        return { __lz: true, data: compressed };
+                    }
+                }
+
                 return json.replace(/\s+/g, ' ').replace(/\n/g, '');
-            } catch {
+            } catch (e) {
+                console.warn('⚠️ فشل الضغط:', e.message);
                 return data;
             }
-        }
+        },
 
-        static decompress(data) {
+        decompress(data) {
             try {
+                if (data && typeof data === 'object' && data.__lz) {
+                    this._init();
+                    if (this._lz) {
+                        return JSON.parse(this._lz.decompressFromUTF16(data.data));
+                    }
+                    return null;
+                }
                 if (typeof data === 'string') {
                     return JSON.parse(data);
                 }
@@ -10886,10 +10589,31 @@ useEffect(() => {
                 return data;
             }
         }
-    }
+    };
 
     // ============================================================
-    //  نظام التخزين المؤقت
+    //  🎯 جسر showSyncIndicator (يعمل مع React)
+    // ============================================================
+    const Notifier = {
+        dispatch(message, type = 'info') {
+            try {
+                document.dispatchEvent(new CustomEvent('soufai:showSync', {
+                    detail: { message, type, timestamp: Date.now() }
+                }));
+            } catch (e) {
+                console.log(`[Notify] ${type}: ${message}`);
+            }
+
+            if (typeof window.showSync === 'function') {
+                try { window.showSync(message, type); } catch {}
+            }
+        }
+    };
+
+    window.showSyncIndicator = (message, type) => Notifier.dispatch(message, type);
+
+    // ============================================================
+    //  💾 نظام التخزين المؤقت
     // ============================================================
     class SmartCache {
         constructor() {
@@ -10900,15 +10624,26 @@ useEffect(() => {
                 misses: 0,
                 evictions: 0,
                 totalSize: 0,
-                lastCleanup: Date.now()
+                lastCleanup: Date.now(),
+                quotaErrors: 0
             };
             this.isWriting = false;
+            this._cleanupInterval = null;
+            this._destroyed = false;
+
             this.loadFromStorage();
             this.startAutoCleanup();
         }
 
         set(key, value, ttl = MEMORY_CONFIG.MAX_CACHE_AGE) {
             if (!key || typeof key !== 'string') return false;
+            if (this._destroyed) return false;
+
+            const itemSize = Utils.getSize(value);
+            if (itemSize > MEMORY_CONFIG.MAX_ITEM_SIZE) {
+                console.warn(`⚠️ عنصر كبير جداً (${Utils.formatSize(itemSize)}) - ${key}`);
+                return false;
+            }
 
             if (this.data.size >= MEMORY_CONFIG.MAX_CACHE_ITEMS) {
                 this.evictLRU();
@@ -10916,7 +10651,7 @@ useEffect(() => {
             }
 
             const deepCopy = Utils.deepClone(value);
-            const compressed = AdvancedCompressor.compress(deepCopy);
+            const compressed = Compressor.compress(deepCopy);
 
             const item = {
                 value: compressed,
@@ -10940,7 +10675,6 @@ useEffect(() => {
                 return null;
             }
 
-            // 🔥🔥🔥 ممنوع استخدام الكاش أثناء وجود النت 🔥🔥🔥
             if (navigator.onLine) {
                 this.metadata.misses++;
                 return null;
@@ -10964,11 +10698,7 @@ useEffect(() => {
             this.metadata.hits++;
             this.updateMetadata();
 
-            try {
-                return AdvancedCompressor.decompress(item.value);
-            } catch {
-                return null;
-            }
+            return Compressor.decompress(item.value);
         }
 
         delete(key) {
@@ -10986,9 +10716,10 @@ useEffect(() => {
             this.metadata.hits = 0;
             this.metadata.misses = 0;
             this.metadata.evictions = 0;
+            this.metadata.quotaErrors = 0;
             this.updateMetadata();
             this.saveToStorage();
-            this.showStatus('🧹 تم تنظيف الكاش بالكامل', 'success');
+            Notifier.dispatch('🧹 تم تنظيف الكاش بالكامل', 'success');
         }
 
         evictLRU() {
@@ -11009,62 +10740,124 @@ useEffect(() => {
         }
 
         cleanup() {
+            if (this._destroyed) return { count: 0, sizeFreed: 0 };
+
             const now = Date.now();
-            let count = 0;
+            const toDelete = [];
             let sizeFreed = 0;
 
             for (const [key, item] of this.data) {
                 if (now > item.expires) {
+                    toDelete.push(key);
                     sizeFreed += item.size || 0;
-                    this.data.delete(key);
-                    count++;
                 }
             }
 
-            if (count > 0) {
+            toDelete.forEach(key => this.data.delete(key));
+
+            if (toDelete.length > 0) {
                 this.updateMetadata();
                 this.saveToStorage();
-                this.showStatus(`🧹 تم تنظيف ${count} عناصر منتهية الصلاحية`, 'info');
+                Notifier.dispatch(`🧹 تم تنظيف ${toDelete.length} عناصر منتهية الصلاحية`, 'info');
             }
 
             this.metadata.lastCleanup = now;
-            return { count, sizeFreed };
+            return { count: toDelete.length, sizeFreed };
         }
 
         startAutoCleanup() {
-            setInterval(() => this.cleanup(), MEMORY_CONFIG.AUTO_CLEANUP_INTERVAL);
+            if (this._cleanupInterval) return;
+            this._cleanupInterval = setInterval(
+                () => this.cleanup(),
+                MEMORY_CONFIG.AUTO_CLEANUP_INTERVAL
+            );
+        }
+
+        stopAutoCleanup() {
+            if (this._cleanupInterval) {
+                clearInterval(this._cleanupInterval);
+                this._cleanupInterval = null;
+            }
+        }
+
+        destroy() {
+            this._destroyed = true;
+            this.stopAutoCleanup();
+            this.data.clear();
         }
 
         saveToStorage() {
-            if (this.isWriting) return;
+            if (this.isWriting || this._destroyed) return;
             this.isWriting = true;
 
             try {
-                const data = {
+                const payload = {
                     entries: Array.from(this.data.entries()),
                     metadata: this.metadata,
-                    version: '5.0',
+                    version: MEMORY_CONFIG.VERSION,
                     timestamp: Date.now()
                 };
-                localStorage.setItem(MEMORY_CONFIG.CACHE_KEY, JSON.stringify(data));
+                const json = JSON.stringify(payload);
+
+                try {
+                    localStorage.setItem(MEMORY_CONFIG.CACHE_KEY, json);
+                } catch (quotaErr) {
+                    if (quotaErr.name === 'QuotaExceededError' ||
+                        quotaErr.code === 22 ||
+                        quotaErr.code === 1014) {
+
+                        this.metadata.quotaErrors++;
+                        console.warn('⚠️ تجاوز حد التخزين، جاري تقليص الكاش...');
+
+                        const entries = Array.from(this.data.entries())
+                            .sort((a, b) => (a[1].lastAccessed || 0) - (b[1].lastAccessed || 0));
+                        const toRemove = Math.ceil(entries.length / 2);
+                        for (let i = 0; i < toRemove; i++) {
+                            this.data.delete(entries[i][0]);
+                        }
+
+                        try {
+                            localStorage.setItem(MEMORY_CONFIG.CACHE_KEY, JSON.stringify({
+                                entries: Array.from(this.data.entries()),
+                                metadata: this.metadata,
+                                version: MEMORY_CONFIG.VERSION,
+                                timestamp: Date.now()
+                            }));
+                            Notifier.dispatch(`⚠️ تم حذف ${toRemove} عنصر بسبب امتلاء التخزين`, 'warning');
+                        } catch {
+                            throw quotaErr;
+                        }
+                    } else {
+                        throw quotaErr;
+                    }
+                }
             } catch (error) {
                 console.warn('⚠️ فشل حفظ الكاش:', error.message);
+            } finally {
+                this.isWriting = false;
             }
-            this.isWriting = false;
         }
 
         loadFromStorage() {
             try {
                 const saved = localStorage.getItem(MEMORY_CONFIG.CACHE_KEY);
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    if (data.entries) {
-                        this.data = new Map(data.entries);
-                        this.metadata = data.metadata || this.metadata;
-                    }
+                if (!saved) return;
+
+                const data = JSON.parse(saved);
+
+                if (data.version !== MEMORY_CONFIG.VERSION) {
+                    console.log(`🔄 ترقية الكاش من ${data.version} إلى ${MEMORY_CONFIG.VERSION}`);
+                    localStorage.removeItem(MEMORY_CONFIG.CACHE_KEY);
+                    return;
+                }
+
+                if (data.entries && Array.isArray(data.entries)) {
+                    this.data = new Map(data.entries);
+                    this.metadata = { ...this.metadata, ...(data.metadata || {}) };
                 }
             } catch (error) {
-                console.warn('⚠️ فشل تحميل الكاش:', error.message);
+                console.warn('⚠️ بيانات الكاش تالفة، سيتم حذفها');
+                try { localStorage.removeItem(MEMORY_CONFIG.CACHE_KEY); } catch {}
             }
         }
 
@@ -11078,18 +10871,10 @@ useEffect(() => {
             this.metadata.avgSize = this.data.size > 0 ? totalSize / this.data.size : 0;
         }
 
-        showStatus(message, type = 'info') {
-            if (window.showSyncIndicator) {
-                window.showSyncIndicator(message, type);
-            } else {
-                console.log(`[Cache] ${type}: ${message}`);
-            }
-        }
-
         getStats() {
             const total = this.metadata.hits + this.metadata.misses;
             const hitRate = total > 0 ? Math.round((this.metadata.hits / total) * 100) : 0;
-            const totalStorage = Utils.getTotalStorageSize();
+            const totalStorage = Utils.getLocalStorageSize();
             const storageLimit = Utils.getStorageLimit();
 
             return {
@@ -11098,6 +10883,7 @@ useEffect(() => {
                 hits: this.metadata.hits,
                 misses: this.metadata.misses,
                 evictions: this.metadata.evictions,
+                quotaErrors: this.metadata.quotaErrors,
                 hitRate: hitRate,
                 totalSize: this.metadata.totalSize,
                 sizeFormatted: Utils.formatSize(this.metadata.totalSize),
@@ -11109,7 +10895,7 @@ useEffect(() => {
                 totalStorageFormatted: Utils.formatSize(totalStorage),
                 storageLimit: storageLimit,
                 storageLimitFormatted: Utils.formatSize(storageLimit),
-                storageRemaining: storageLimit - totalStorage,
+                storageRemaining: Math.max(0, storageLimit - totalStorage),
                 storageRemainingFormatted: Utils.formatSize(Math.max(0, storageLimit - totalStorage)),
                 storageUsagePercent: storageLimit > 0 ? Math.round((totalStorage / storageLimit) * 100) : 0
             };
@@ -11117,23 +10903,37 @@ useEffect(() => {
     }
 
     // ============================================================
-    //  المدير الرئيسي v5.0
+    //  👔 المدير الرئيسي v6.0
     // ============================================================
     class MemoryManagerPro {
         constructor() {
             this.cache = new SmartCache();
             this.isOptimizing = false;
             this.listeners = [];
-            this.version = '5.0';
+            this.version = MEMORY_CONFIG.VERSION;
             this.initialized = Date.now();
             this.events = [];
-            this.isLoggedIn = false;
 
             this.registerInWindow();
-            
-            console.log('✅ نظام تحسين الذاكرة v5.0 جاهز');
-            console.log('📍 ممنوع العمل من النسخة المحلية أثناء وجود النت');
-            console.log('📍 زر مسح الكاش يمسح كل التخزين المحلي');
+
+            console.log('✅ نظام تحسين الذاكرة v6.0 جاهز');
+            console.log('📍 إصلاحات v6.0: localforage(storeName) + Quota + Version + Notifier');
+        }
+
+        // ============================================================
+        //  🔧 الحصول على instance localforage الموحّد (مع storeName)
+        // ============================================================
+        _getLocalforageInstance() {
+            if (!window.localforage) return null;
+            try {
+                return window.localforage.createInstance({
+                    name: MEMORY_CONFIG.LOCALFORAGE_NAME,
+                    storeName: MEMORY_CONFIG.LOCALFORAGE_STORE
+                });
+            } catch (e) {
+                console.warn('⚠️ فشل إنشاء localforage instance:', e.message);
+                return null;
+            }
         }
 
         // ============================================================
@@ -11148,7 +10948,6 @@ useEffect(() => {
 
         get(key) {
             if (navigator.onLine) {
-                console.log('📡 يوجد اتصال بالإنترنت، يتم جلب البيانات من السيرفر');
                 return null;
             }
             const value = this.cache.get(key);
@@ -11163,66 +10962,70 @@ useEffect(() => {
         }
 
         // ============================================================
-        //  مسح كل التخزين المحلي
+        //  🗑️ مسح كل التخزين المحلي (مُصلح — مع storeName)
         // ============================================================
-        clearAllStorage() {
-            if (confirm('⚠️ تحذير: سيتم مسح جميع البيانات المخزنة محلياً!\n' +
-                       '• سيتم مسح الكاش\n' +
-                       '• سيتم مسح التغييرات المعلقة\n' +
-                       '• سيتم مسح إعدادات التطبيق\n\n' +
-                       'هل أنت متأكد؟')) {
-                
-                try {
-                    const keysToRemove = [
-    'soufai_cache_data',
-    'soufai_pending_changes',
-    'soufai_backups',
-    'soufai_report_cache',
-    'soufai_memory_v4',
-    'soufai_backup_v4',
-    'soufai_sync_queue_v5',
-    'soufai_last_village',
-    'waterSystem_dataSaver',
-    'waterSystem_quickView',
-    'auditLogs',
-    'customUsers',
-    'focusMode',
-    'soufai_app_installed',
-    'lastSearch'
-];
+        async clearAllStorage() {
+            const confirmed = confirm(
+                '⚠️ تحذير: سيتم مسح البيانات المخزنة محلياً!\n' +
+                '• ✅ سيتم مسح: الكاش، التغييرات المعلقة، النسخ الاحتياطي\n' +
+                '• 🔒 لن يُمسح: المستخدمون، سجل التعديلات، الثيم، السنة، تفضيلات العرض\n\n' +
+                'هل أنت متأكد؟'
+            );
+            if (!confirmed) return;
 
-keysToRemove.forEach(key => {
-    localStorage.removeItem(key);
-});
+            try {
+                let removedCount = 0;
+                let protectedCount = 0;
 
-if (window.localforage) {
-    window.localforage.clear();
-}
-                    
-                    let removedCount = 0;
-                    keysToRemove.forEach(key => {
-                        if (localStorage.getItem(key) !== null) {
-                            localStorage.removeItem(key);
-                            removedCount++;
-                        }
-                    });
-                    
-                    this.cache.clear();
-                    
-                    this.showStatus(`🗑️ تم مسح ${removedCount} عنصر من التخزين المحلي`, 'success');
-                    alert(`✅ تم مسح جميع البيانات المخزنة محلياً بنجاح!\nتم مسح ${removedCount} عنصر.\n\nسيتم إعادة تحميل الصفحة الآن.`);
-                    
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                    
-                } catch (error) {
-                    this.showStatus('❌ فشل مسح التخزين: ' + error.message, 'error');
-                    alert('❌ فشل مسح التخزين: ' + error.message);
+                // ✅ (1) حذف المفاتيح مع حماية المحمية
+                for (const key of CACHE_KEYS) {
+                    if (PROTECTED_KEYS.includes(key)) {
+                        protectedCount++;
+                        continue;
+                    }
+                    if (localStorage.getItem(key) !== null) {
+                        localStorage.removeItem(key);
+                        removedCount++;
+                    }
                 }
+
+                // ✅ (2) مسح localforage بشكل صحيح — مع storeName
+                const instance = this._getLocalforageInstance();
+                if (instance && typeof instance.clear === 'function') {
+                    try {
+                        await instance.clear();
+                        console.log('✅ تم مسح localforage (soufai_store)');
+                    } catch (lfError) {
+                        console.warn('⚠️ فشل مسح localforage:', lfError.message);
+                    }
+                }
+
+                // ✅ (3) مسح الكاش الداخلي
+                this.cache.clear();
+
+                this.showStatus(
+                    `🗑️ تم مسح ${removedCount} عنصر (${protectedCount} محمي)`,
+                    'success'
+                );
+
+                alert(
+                    `✅ تم مسح البيانات بنجاح!\n\n` +
+                    `📊 تم مسح: ${removedCount} عنصر\n` +
+                    `🔒 محمي: ${PROTECTED_KEYS.length} عنصر\n\n` +
+                    `سيتم إعادة تحميل الصفحة...`
+                );
+
+                setTimeout(() => window.location.reload(), 1500);
+
+            } catch (error) {
+                this.showStatus('❌ فشل مسح التخزين: ' + error.message, 'error');
+                alert('❌ فشل مسح التخزين:\n' + error.message);
             }
         }
 
+        // ============================================================
+        //  🧹 تحسين الذاكرة
+        // ============================================================
         async optimize() {
             if (this.isOptimizing) {
                 this.showStatus('⏳ جاري التحسين بالفعل...', 'info');
@@ -11235,28 +11038,78 @@ if (window.localforage) {
             try {
                 const { count, sizeFreed } = this.cache.cleanup();
                 let compressedCount = 0;
+                let totalSaved = 0;
+
                 for (const [key, item] of this.cache.data) {
                     if (item.size > 1024 * 20) {
-                        const compressed = AdvancedCompressor.compress(item.value);
+                        const oldSize = item.size;
+                        const compressed = Compressor.compress(item.value);
                         const newSize = Utils.getSize(compressed);
-                        if (newSize < item.size) {
+                        if (newSize < oldSize) {
                             item.value = compressed;
                             item.size = newSize;
                             compressedCount++;
+                            totalSaved += (oldSize - newSize);
                         }
                     }
                 }
+
                 this.cache.saveToStorage();
                 this.showStatus(
-                    `✅ تم تحسين الذاكرة: تنظيف ${count} عناصر، ضغط ${compressedCount} عنصر، توفير ${Utils.formatSize(sizeFreed)}`,
+                    `✅ تم التحسين: تنظيف ${count}، ضغط ${compressedCount}، توفير ${Utils.formatSize(sizeFreed + totalSaved)}`,
                     'success'
                 );
             } catch (error) {
-                this.showStatus('❌ فشل تحسين الذاكرة: ' + error.message, 'error');
+                this.showStatus('❌ فشل التحسين: ' + error.message, 'error');
             }
 
             this.isOptimizing = false;
             this.notifyListeners();
+        }
+
+        // ============================================================
+        //  📊 الإحصائيات (تشمل localforage مع storeName)
+        // ============================================================
+        async getStatsAsync() {
+            const cacheStats = this.cache.getStats();
+            let localforageSize = 0;
+            let localforageItems = 0;
+
+            try {
+                const instance = this._getLocalforageInstance();
+                if (instance && typeof instance.keys === 'function') {
+                    const keys = await instance.keys();
+                    localforageItems = keys.length;
+
+                    // ✅ جلب كل العناصر دفعة واحدة (أسرع)
+                    const values = await Promise.all(
+                        keys.map(k => instance.getItem(k).catch(() => null))
+                    );
+                    localforageSize = values.reduce((sum, v) => sum + Utils.getSize(v), 0);
+                }
+            } catch (e) {
+                console.warn('⚠️ فشل حساب localforage:', e.message);
+            }
+
+            const totalStorage = cacheStats.totalStorage + localforageSize;
+            const storageLimit = cacheStats.storageLimit;
+
+            return {
+                ...cacheStats,
+                version: this.version,
+                initialized: new Date(this.initialized).toLocaleString('ar-SA'),
+                uptime: this.formatUptime(),
+                isOptimizing: this.isOptimizing,
+                totalEvents: this.events.length,
+                isOnline: navigator.onLine,
+                localforageSize: localforageSize,
+                localforageSizeFormatted: Utils.formatSize(localforageSize),
+                localforageItems: localforageItems,
+                memoryUsed: Utils.formatSize(totalStorage),
+                memoryRemaining: Utils.formatSize(Math.max(0, storageLimit - totalStorage)),
+                memoryUsagePercent: storageLimit > 0 ? Math.round((totalStorage / storageLimit) * 100) : 0,
+                totalStorageFormatted: Utils.formatSize(totalStorage)
+            };
         }
 
         getStats() {
@@ -11275,6 +11128,9 @@ if (window.localforage) {
             };
         }
 
+        // ============================================================
+        //  أدوات مساعدة
+        // ============================================================
         formatUptime() {
             const diff = Date.now() - this.initialized;
             const minutes = Math.floor(diff / 60000);
@@ -11309,15 +11165,11 @@ if (window.localforage) {
 
         showStatus(message, type = 'info') {
             this.events.push({ message, type, time: Date.now() });
-            if (window.showSyncIndicator) {
-                window.showSyncIndicator(message, type);
-            } else {
-                console.log(`[MemoryManager] ${type}: ${message}`);
-            }
+            Notifier.dispatch(message, type);
         }
 
         // ============================================================
-        //  التسجيل في النافذة العامة
+        //  التسجيل في النافذة
         // ============================================================
         registerInWindow() {
             window.__memoryManagerPro = this;
@@ -11328,6 +11180,7 @@ if (window.localforage) {
                 clearAll: () => this.clearAllStorage(),
                 optimize: () => this.optimize(),
                 stats: () => this.getStats(),
+                statsAsync: () => this.getStatsAsync(),
                 panel: () => this.showPanel(),
                 refresh: () => this.refreshStatus(),
                 enableDataSaver: () => this.enableDataSaver(),
@@ -11336,7 +11189,7 @@ if (window.localforage) {
         }
 
         // ============================================================
-        //  دالة تحديث الحالة
+        //  🔄 تحديث الحالة
         // ============================================================
         refreshStatus() {
             this.showStatus('🔄 جاري تحديث الحالة...', 'info');
@@ -11347,39 +11200,65 @@ if (window.localforage) {
         }
 
         // ============================================================
-        //  دالة تفعيل توفير البيانات
+        //  🔋 توفير البيانات
         // ============================================================
         enableDataSaver() {
-            MEMORY_CONFIG.COMPRESSION_ENABLED = true;
             MEMORY_CONFIG.MAX_CACHE_ITEMS = 80;
             MEMORY_CONFIG.MAX_CACHE_AGE = 20 * 60 * 1000;
             this.showStatus('✅ تم تفعيل وضع توفير البيانات', 'success');
             this.optimize();
         }
 
-        // ============================================================
-        //  دالة إلغاء توفير البيانات
-        // ============================================================
         disableDataSaver() {
-            MEMORY_CONFIG.COMPRESSION_ENABLED = true;
-            MEMORY_CONFIG.MAX_CACHE_ITEMS = 200;
-            MEMORY_CONFIG.MAX_CACHE_AGE = 60 * 60 * 1000;
+            MEMORY_CONFIG.MAX_CACHE_ITEMS = 100;
+            MEMORY_CONFIG.MAX_CACHE_AGE = 30 * 60 * 1000;
             this.showStatus('ℹ️ تم إلغاء وضع توفير البيانات', 'info');
         }
 
         // ============================================================
-        //  🔥 نافذة إدارة الذاكرة المتطورة
+        //  🖼️ نافذة إدارة الذاكرة
         // ============================================================
-        showPanel() {
-            const stats = this.getStats();
-            
+        async showPanel() {
+            // مؤشر تحميل
+            const loadingModal = document.createElement('div');
+            loadingModal.id = 'memoryPanelLoading';
+            loadingModal.style.cssText = `
+                position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+                z-index: 99998; display: flex; align-items: center;
+                justify-content: center; backdrop-filter: blur(15px);
+                font-family: 'Tajawal', sans-serif;
+            `;
+            loadingModal.innerHTML = `
+                <div style="text-align:center;color:#e0e0ff;">
+                    <div style="font-size:48px;margin-bottom:15px;animation:spin 1s linear infinite;">⏳</div>
+                    <div>جاري تحميل الإحصائيات...</div>
+                </div>
+                <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+            `;
+            document.body.appendChild(loadingModal);
+
+            const stats = await this.getStatsAsync();
+
+            loadingModal.remove();
+
+            // قراءة العمليات المعلقة من localforage (مع storeName)
             let pendingCount = 0;
             let syncedCount = 0;
             let totalChanges = 0;
             let pendingItems = [];
-            
+
             try {
-                const pendingData = JSON.parse(localStorage.getItem('soufai_pending_changes') || '{}');
+                let pendingData = {};
+                const instance = this._getLocalforageInstance();
+                if (instance) {
+                    try {
+                        pendingData = (await instance.getItem('soufai_pending_changes')) || {};
+                    } catch {}
+                }
+                if (!pendingData || Object.keys(pendingData).length === 0) {
+                    pendingData = JSON.parse(localStorage.getItem('soufai_pending_changes') || '{}');
+                }
+
                 for (const key in pendingData) {
                     const changes = pendingData[key] || [];
                     totalChanges += changes.length;
@@ -11387,11 +11266,12 @@ if (window.localforage) {
                     const synced = changes.filter(c => c.synced);
                     pendingCount += unsynced.length;
                     syncedCount += synced.length;
-                    
+
                     unsynced.forEach(c => {
+                        const parts = key.split('_');
                         pendingItems.push({
-                            village: key.split('_')[0] || 'غير معروف',
-                            month: key.split('_')[1] || 'غير معروف',
+                            village: parts[1] || 'غير معروف',
+                            month: parts.slice(2).join('_') || 'غير معروف',
                             row: c.rowIndex,
                             col: c.cellIndex,
                             value: c.value,
@@ -11399,20 +11279,17 @@ if (window.localforage) {
                         });
                     });
                 }
-            } catch(e) {}
+            } catch (e) {
+                console.warn('⚠️ فشل قراءة التغييرات المعلقة:', e.message);
+            }
 
             const modal = document.createElement('div');
             modal.id = 'memoryPanel';
             modal.style.cssText = `
-                position: fixed;
-                top: 0; left: 0; right: 0; bottom: 0;
-                background: rgba(0,0,0,0.92);
-                z-index: 99999;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                backdrop-filter: blur(15px);
-                animation: fadeIn 0.3s ease;
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.92); z-index: 99999;
+                display: flex; align-items: center; justify-content: center;
+                backdrop-filter: blur(15px); animation: fadeIn 0.3s ease;
                 font-family: 'Tajawal', sans-serif;
             `;
 
@@ -11429,22 +11306,17 @@ if (window.localforage) {
                 </style>
                 <div style="
                     background: linear-gradient(145deg, #0a0e27, #1a1a3e);
-                    border-radius: 24px;
-                    padding: 35px;
-                    max-width: 800px;
-                    width: 94%;
-                    max-height: 90vh;
-                    overflow-y: auto;
-                    color: #e0e0ff;
-                    box-shadow: 0 25px 80px rgba(0,0,0,0.8);
-                    border: 1px solid rgba(100, 100, 255, 0.2);
-                    position: relative;
+                    border-radius: 24px; padding: 35px; max-width: 820px;
+                    width: 94%; max-height: 90vh; overflow-y: auto;
+                    color: #e0e0ff; box-shadow: 0 25px 80px rgba(0,0,0,0.8);
+                    border: 1px solid rgba(100, 100, 255, 0.2); position: relative;
                 ">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
                         <div>
                             <h2 style="margin: 0; display: flex; align-items: center; gap: 12px; color: #a78bfa;">
-                                🧠 إدارة الذاكرة v5.0
+                                🧠 إدارة الذاكرة v6.0
                                 <span style="font-size: 12px; background: rgba(167,139,250,0.2); padding: 2px 12px; border-radius: 12px;">مُحسّن</span>
+                                <span style="font-size: 11px; background: rgba(0,176,155,0.2); padding: 2px 10px; border-radius: 12px; color:#00b09b;">✅ إصلاحات كاملة</span>
                             </h2>
                             <div style="font-size: 12px; opacity: 0.5; margin-top: 4px;">
                                 ${stats.uptime} | ${stats.created}
@@ -11452,19 +11324,13 @@ if (window.localforage) {
                             </div>
                         </div>
                         <button onclick="document.getElementById('memoryPanel').remove()" style="
-                            background: rgba(255,255,255,0.1);
-                            border: none;
-                            color: #e0e0ff;
-                            width: 38px;
-                            height: 38px;
-                            border-radius: 50%;
-                            cursor: pointer;
-                            font-size: 22px;
-                            transition: all 0.3s ease;
+                            background: rgba(255,255,255,0.1); border: none; color: #e0e0ff;
+                            width: 38px; height: 38px; border-radius: 50%;
+                            cursor: pointer; font-size: 22px; transition: all 0.3s ease;
                         " onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✕</button>
                     </div>
 
-                    <!-- ===== قسم العمليات المعلقة والمتمة ===== -->
+                    <!-- حالة المزامنة -->
                     <div style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 18px; margin-bottom: 18px; border: 1px solid rgba(76,201,240,0.1);">
                         <h4 style="margin: 0 0 12px; color: #4cc9f0; display: flex; align-items: center; gap: 10px;">
                             📊 حالة المزامنة
@@ -11484,8 +11350,6 @@ if (window.localforage) {
                                 <div style="font-size: 12px; opacity: 0.7;">${pendingCount > 0 ? '⏳ معلقة' : '✅ لا توجد'}</div>
                             </div>
                         </div>
-                        
-                        <!-- قائمة العمليات المعلقة -->
                         ${pendingItems.length > 0 ? `
                         <div style="margin-top: 12px; max-height: 150px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
                             <div style="font-size: 12px; opacity: 0.5; margin-bottom: 8px;">📋 العمليات المعلقة:</div>
@@ -11500,126 +11364,102 @@ if (window.localforage) {
                             ${pendingItems.length > 10 ? `<div style="text-align: center; font-size: 11px; opacity: 0.4; padding: 4px;">+ ${pendingItems.length - 10} أخرى</div>` : ''}
                         </div>
                         ` : `
-                        <div style="text-align: center; padding: 15px; opacity: 0.4; font-size: 13px;">
-                            ✅ جميع العمليات مزامنة
-                        </div>
+                        <div style="text-align: center; padding: 15px; opacity: 0.4; font-size: 13px;">✅ جميع العمليات مزامنة</div>
                         `}
                     </div>
 
                     <!-- الإحصائيات -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
                         <div class="stat-card" style="background: rgba(167,139,250,0.15); padding: 15px; border-radius: 14px; text-align: center; border: 1px solid rgba(167,139,250,0.15);">
-                            <div style="font-size: 28px; font-weight: bold; color: #a78bfa;">${stats.items}</div>
-                            <div style="font-size: 12px; opacity: 0.7;">عناصر مخزنة</div>
+                            <div style="font-size: 26px; font-weight: bold; color: #a78bfa;">${stats.items}</div>
+                            <div style="font-size: 12px; opacity: 0.7;">عناصر الكاش</div>
                             <div style="font-size: 10px; opacity: 0.4;">حد ${stats.maxItems}</div>
                         </div>
                         <div class="stat-card" style="background: rgba(251,191,36,0.15); padding: 15px; border-radius: 14px; text-align: center; border: 1px solid rgba(251,191,36,0.15);">
-                            <div style="font-size: 28px; font-weight: bold; color: #fbbf24;">${stats.hitRate}%</div>
+                            <div style="font-size: 26px; font-weight: bold; color: #fbbf24;">${stats.hitRate}%</div>
                             <div style="font-size: 12px; opacity: 0.7;">نسبة النجاح</div>
-                            <div style="font-size: 10px; opacity: 0.4;">${stats.hits} نجاح</div>
+                            <div style="font-size: 10px; opacity: 0.4;">${stats.hits} / ${stats.hits + stats.misses}</div>
                         </div>
                         <div class="stat-card" style="background: rgba(52,211,153,0.15); padding: 15px; border-radius: 14px; text-align: center; border: 1px solid rgba(52,211,153,0.15);">
-                            <div style="font-size: 28px; font-weight: bold; color: #34d399;">${stats.sizeFormatted}</div>
-                            <div style="font-size: 12px; opacity: 0.7;">حجم الكاش</div>
-                            <div style="font-size: 10px; opacity: 0.4;">${stats.utilization}% مستخدم</div>
+                            <div style="font-size: 26px; font-weight: bold; color: #34d399;">${stats.memoryUsed}</div>
+                            <div style="font-size: 12px; opacity: 0.7;">إجمالي التخزين</div>
+                            <div style="font-size: 10px; opacity: 0.4;">${stats.memoryUsagePercent}%</div>
                         </div>
                         <div class="stat-card" style="background: rgba(76,201,240,0.15); padding: 15px; border-radius: 14px; text-align: center; border: 1px solid rgba(76,201,240,0.15);">
-                            <div style="font-size: 28px; font-weight: bold; color: #4cc9f0;">${stats.isOnline ? '📶' : '📴'}</div>
+                            <div style="font-size: 26px; font-weight: bold; color: #4cc9f0;">${stats.isOnline ? '📶' : '📴'}</div>
                             <div style="font-size: 12px; opacity: 0.7;">${stats.isOnline ? 'متصل' : 'غير متصل'}</div>
                             <div style="font-size: 10px; opacity: 0.4;">${stats.isOnline ? '✅ سيرفر' : '📦 محلي'}</div>
                         </div>
                     </div>
 
-                    <!-- مساحة الذاكرة -->
+                    <!-- تفصيل التخزين -->
                     <div style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 18px; margin-bottom: 18px; border: 1px solid rgba(255,255,255,0.05);">
-                        <h4 style="margin: 0 0 10px; color: #4cc9f0; display: flex; align-items: center; gap: 8px;">
-                            💾 مساحة التخزين
+                        <h4 style="margin: 0 0 10px; color: #4cc9f0; display: flex; align-items: center; justify-content: space-between;">
+                            <span>💾 تفصيل التخزين</span>
                             <span style="font-size: 11px; opacity: 0.5;">${stats.memoryUsed} / ${stats.storageLimitFormatted}</span>
                         </h4>
                         <div class="memory-bar">
-                            <div class="memory-bar-fill" style="width: ${stats.storageUsagePercent}%; background: ${stats.storageUsagePercent > 80 ? 'linear-gradient(90deg, #ff4757, #ff3838)' : stats.storageUsagePercent > 60 ? 'linear-gradient(90deg, #ffb703, #fb8500)' : 'linear-gradient(90deg, #4cc9f0, #00b4d8)'};"></div>
+                            <div class="memory-bar-fill" style="width: ${stats.memoryUsagePercent}%; background: ${stats.memoryUsagePercent > 80 ? 'linear-gradient(90deg, #ff4757, #ff3838)' : stats.memoryUsagePercent > 60 ? 'linear-gradient(90deg, #ffb703, #fb8500)' : 'linear-gradient(90deg, #4cc9f0, #00b4d8)'};"></div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 12px; opacity: 0.6; margin-top: 6px;">
-                            <span>المستخدم: ${stats.memoryUsed}</span>
-                            <span>المتبقي: ${stats.memoryRemaining}</span>
-                            <span>${stats.storageUsagePercent}%</span>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; font-size: 12px;">
+                            <div style="background: rgba(167,139,250,0.1); padding: 8px; border-radius: 8px; text-align: center;">
+                                <div style="font-weight: bold; color: #a78bfa;">${stats.sizeFormatted}</div>
+                                <div style="opacity: 0.5; font-size: 10px;">الكاش الداخلي</div>
+                            </div>
+                            <div style="background: rgba(251,191,36,0.1); padding: 8px; border-radius: 8px; text-align: center;">
+                                <div style="font-weight: bold; color: #fbbf24;">${stats.localforageSizeFormatted}</div>
+                                <div style="opacity: 0.5; font-size: 10px;">localforage (${stats.localforageItems})</div>
+                            </div>
+                            <div style="background: rgba(76,201,240,0.1); padding: 8px; border-radius: 8px; text-align: center;">
+                                <div style="font-weight: bold; color: #4cc9f0;">${stats.memoryRemaining}</div>
+                                <div style="opacity: 0.5; font-size: 10px;">المتبقي</div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- ===== الأزرار - بدون زر نسخ احتياطي يدوي ===== -->
+                    <!-- الأزرار -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                         <button onclick="window.__memoryManagerPro?.optimize()" style="
                             background: linear-gradient(135deg, rgba(167,139,250,0.3), rgba(139,92,246,0.3));
-                            border: 1px solid rgba(167,139,250,0.2);
-                            padding: 12px;
-                            border-radius: 12px;
-                            color: #c4b5fd;
-                            font-weight: bold;
-                            cursor: pointer;
-                            font-family: 'Tajawal';
+                            border: 1px solid rgba(167,139,250,0.2); padding: 12px; border-radius: 12px;
+                            color: #c4b5fd; font-weight: bold; cursor: pointer; font-family: 'Tajawal';
                             transition: all 0.3s ease;
                         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                             🧹 تحسين الذاكرة
                         </button>
-                        
-                        <!-- ===== زر مسح الكاش ===== -->
                         <button onclick="window.__memoryManagerPro?.clearAllStorage()" style="
                             background: linear-gradient(135deg, rgba(239,68,68,0.3), rgba(220,38,38,0.3));
-                            border: 1px solid rgba(239,68,68,0.2);
-                            padding: 12px;
-                            border-radius: 12px;
-                            color: #fca5a5;
-                            font-weight: bold;
-                            cursor: pointer;
-                            font-family: 'Tajawal';
+                            border: 1px solid rgba(239,68,68,0.2); padding: 12px; border-radius: 12px;
+                            color: #fca5a5; font-weight: bold; cursor: pointer; font-family: 'Tajawal';
                             transition: all 0.3s ease;
                         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                             🗑️ مسح الكاش
                         </button>
-                        
-                        <!-- ===== زر تحديث الحالة ===== -->
                         <button onclick="window.__memoryManagerPro?.refreshStatus(); document.getElementById('memoryPanel')?.remove();" style="
                             background: linear-gradient(135deg, rgba(76,201,240,0.3), rgba(0,180,216,0.3));
-                            border: 1px solid rgba(76,201,240,0.2);
-                            padding: 12px;
-                            border-radius: 12px;
-                            color: #4cc9f0;
-                            font-weight: bold;
-                            cursor: pointer;
-                            font-family: 'Tajawal';
+                            border: 1px solid rgba(76,201,240,0.2); padding: 12px; border-radius: 12px;
+                            color: #4cc9f0; font-weight: bold; cursor: pointer; font-family: 'Tajawal';
                             transition: all 0.3s ease;
                         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                             🔄 تحديث الحالة
                         </button>
                     </div>
 
-                    <!-- ===== زر توفير البيانات - بدون زر نسخ يدوي ===== -->
+                    <!-- أزرار الوضع -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <button onclick="window.__memoryManagerPro?.enableDataSaver(); document.getElementById('memoryPanel')?.remove();" style="
                             background: linear-gradient(135deg, rgba(251,191,36,0.2), rgba(245,158,11,0.2));
-                            border: 1px solid rgba(251,191,36,0.15);
-                            padding: 10px;
-                            border-radius: 10px;
-                            color: #fbbf24;
-                            font-weight: bold;
-                            cursor: pointer;
-                            font-family: 'Tajawal';
-                            transition: all 0.3s ease;
-                            font-size: 13px;
+                            border: 1px solid rgba(251,191,36,0.15); padding: 10px; border-radius: 10px;
+                            color: #fbbf24; font-weight: bold; cursor: pointer; font-family: 'Tajawal';
+                            transition: all 0.3s ease; font-size: 13px;
                         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                             🔋 توفير البيانات
                         </button>
                         <button onclick="window.__memoryManagerPro?.disableDataSaver(); document.getElementById('memoryPanel')?.remove();" style="
                             background: rgba(255,255,255,0.05);
-                            border: 1px solid rgba(255,255,255,0.1);
-                            padding: 10px;
-                            border-radius: 10px;
-                            color: #9ca3af;
-                            font-weight: bold;
-                            cursor: pointer;
-                            font-family: 'Tajawal';
-                            transition: all 0.3s ease;
-                            font-size: 13px;
+                            border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px;
+                            color: #9ca3af; font-weight: bold; cursor: pointer; font-family: 'Tajawal';
+                            transition: all 0.3s ease; font-size: 13px;
                         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                             ⚡ وضع الأداء
                         </button>
@@ -11628,7 +11468,7 @@ if (window.localforage) {
                     <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; font-size: 11px; opacity: 0.4;">
                         <span>آخر تنظيف: ${stats.lastCleanup}</span>
                         <span>${stats.isOptimizing ? '🔄 جاري التحسين...' : '✅ جاهز'}</span>
-                        <span>${stats.totalEvents} حدث</span>
+                        <span>${stats.totalEvents} حدث${stats.quotaErrors > 0 ? ` | ⚠️ ${stats.quotaErrors} خطأ تخزين` : ''}</span>
                     </div>
                 </div>
             `;
@@ -11638,9 +11478,8 @@ if (window.localforage) {
     }
 
     // ============================================================
-    //  تشغيل النظام
+    //  🚀 تشغيل النظام
     // ============================================================
-
     const memoryManager = new MemoryManagerPro();
     window.__memoryManagerPro = memoryManager;
 
@@ -11651,16 +11490,22 @@ if (window.localforage) {
         clearAll: () => memoryManager.clearAllStorage(),
         optimize: () => memoryManager.optimize(),
         stats: () => memoryManager.getStats(),
+        statsAsync: () => memoryManager.getStatsAsync(),
         panel: () => memoryManager.showPanel(),
         refresh: () => memoryManager.refreshStatus(),
         enableDataSaver: () => memoryManager.enableDataSaver(),
         disableDataSaver: () => memoryManager.disableDataSaver()
     };
 
-    console.log('✅ نظام تحسين الذاكرة v5.0 جاهز للعمل');
-    console.log('📍 النسخ التلقائي ✅ مسموح');
-    console.log('📍 النسخ اليدوي ❌ ممنوع (تم إزالة الزر)');
-    console.log('📍 ممنوع العمل من النسخة المحلية أثناء وجود النت');
+    console.log('✅ نظام تحسين الذاكرة v6.0 جاهز للعمل');
+    console.log('🔧 الإصلاحات:');
+    console.log('   ✅ localforage.clear() مع await + storeName');
+    console.log('   ✅ حماية auditLogs و customUsers و PWA');
+    console.log('   ✅ جسر showSyncIndicator');
+    console.log('   ✅ حماية QuotaExceededError');
+    console.log('   ✅ version check');
+    console.log('   ✅ إلغاء المؤقتات');
+    console.log('   ✅ removedCount صحيح');
 
 })();
 
@@ -12447,14 +12292,47 @@ if (window.localforage) {
     `;
     document.head.appendChild(style);
     
-    // ===== بدء التحميل =====
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(loadChartJS, 1000);
-        });
-    } else {
-        setTimeout(loadChartJS, 1000);
+ // ===== بدء التحميل (بذكاء — عند الحاجة فقط) =====
+let _chartLoaded = false;
+
+function ensureChartJS(callback) {
+    if (_chartLoaded && window.Chart) {
+        if (callback) callback();
+        return;
     }
+    
+    if (window.Chart) {
+        _chartLoaded = true;
+        if (callback) callback();
+        return;
+    }
+    
+    loadChartJS();
+    
+    // انتظر حتى يتم التحميل
+    let waited = 0;
+    const check = setInterval(() => {
+        waited += 200;
+        if (window.Chart) {
+            _chartLoaded = true;
+            clearInterval(check);
+            if (callback) callback();
+        }
+        if (waited > 5000) {
+            clearInterval(check);
+            console.warn('⚠️ Chart.js لم تُحمّل بعد 5 ثوان');
+        }
+    }, 200);
+}
+
+// لا نُحمّل Chart.js تلقائياً — فقط عند الضغط على زر الرسوم
+document.addEventListener('click', function(e) {
+    const target = e.target.closest('[title*="الرسوم"]') || 
+                   e.target.closest('[title="عرض الرسوم"]');
+    if (target && !_chartLoaded) {
+        ensureChartJS();
+    }
+});
     
     // ===== مراقبة زر الرسوم (تم حذف التنبيه) =====
     document.addEventListener('click', function(e) {
@@ -12471,268 +12349,7 @@ if (window.localforage) {
     console.log('✅ تم تفعيل تحميل Chart.js من روابط بديلة');
 })();
 </script>
-<script>
 
-// ============================================================
-//  🔥 دوال مساعدة لفتح نافذة الذاكرة
-// ============================================================
-
-// دالة عرض نافذة الذاكرة البديلة
-function showMemoryPanel() {
-    // جلب الإحصائيات
-    let pendingCount = 0;
-    let syncedCount = 0;
-    let totalChanges = 0;
-    let pendingItems = [];
-    
-    try {
-        const pendingData = JSON.parse(localStorage.getItem('soufai_pending_changes') || '{}');
-        for (const key in pendingData) {
-            const changes = pendingData[key] || [];
-            totalChanges += changes.length;
-            const unsynced = changes.filter(c => !c.synced);
-            const synced = changes.filter(c => c.synced);
-            pendingCount += unsynced.length;
-            syncedCount += synced.length;
-            
-            unsynced.forEach(c => {
-                pendingItems.push({
-                    village: key.split('_')[0] || 'غير معروف',
-                    month: key.split('_')[1] || 'غير معروف',
-                    row: c.rowIndex,
-                    col: c.cellIndex,
-                    value: c.value,
-                    time: new Date(c.timestamp).toLocaleString('ar-SA')
-                });
-            });
-        }
-    } catch(e) {}
-
-    // إنشاء النافذة
-    const modal = document.createElement('div');
-    modal.id = 'memoryPanel';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.92);
-        z-index: 99999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(15px);
-        animation: fadeIn 0.3s ease;
-        font-family: 'Tajawal', sans-serif;
-    `;
-
-    modal.innerHTML = `
-        <style>
-            @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-            @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-            .stat-card { animation: slideUp 0.4s ease; transition: all 0.3s ease; }
-            .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
-            .memory-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 6px; }
-            .memory-bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
-            .pending-item { transition: all 0.3s ease; }
-            .pending-item:hover { background: rgba(76,201,240,0.05); }
-        </style>
-        <div style="
-            background: linear-gradient(145deg, #0a0e27, #1a1a3e);
-            border-radius: 24px;
-            padding: 35px;
-            max-width: 800px;
-            width: 94%;
-            max-height: 90vh;
-            overflow-y: auto;
-            color: #e0e0ff;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.8);
-            border: 1px solid rgba(100, 100, 255, 0.2);
-            position: relative;
-        ">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <div>
-                    <h2 style="margin: 0; display: flex; align-items: center; gap: 12px; color: #a78bfa;">
-                        🧠 إدارة الذاكرة v5.0
-                        <span style="font-size: 12px; background: rgba(167,139,250,0.2); padding: 2px 12px; border-radius: 12px;">مُحسّن</span>
-                    </h2>
-                    <div style="font-size: 12px; opacity: 0.5; margin-top: 4px;">
-                        ${navigator.onLine ? '📶 متصل' : '📶 غير متصل'}
-                    </div>
-                </div>
-                <button onclick="document.getElementById('memoryPanel').remove()" style="
-                    background: rgba(255,255,255,0.1);
-                    border: none;
-                    color: #e0e0ff;
-                    width: 38px;
-                    height: 38px;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    font-size: 22px;
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✕</button>
-            </div>
-
-            <!-- ===== قسم العمليات المعلقة والمتمة ===== -->
-            <div style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 18px; margin-bottom: 18px; border: 1px solid rgba(76,201,240,0.1);">
-                <h4 style="margin: 0 0 12px; color: #4cc9f0; display: flex; align-items: center; gap: 10px;">
-                    📊 حالة المزامنة
-                    <span style="font-size: 11px; background: rgba(76,201,240,0.15); padding: 2px 10px; border-radius: 12px;">${totalChanges} عملية</span>
-                </h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                    <div style="background: rgba(255,183,3,0.1); padding: 12px; border-radius: 10px; text-align: center; border: 1px solid rgba(255,183,3,0.15);">
-                        <div style="font-size: 28px; font-weight: bold; color: #ffb703;">${totalChanges}</div>
-                        <div style="font-size: 12px; opacity: 0.7;">إجمالي العمليات</div>
-                    </div>
-                    <div style="background: rgba(0,176,155,0.1); padding: 12px; border-radius: 10px; text-align: center; border: 1px solid rgba(0,176,155,0.15);">
-                        <div style="font-size: 28px; font-weight: bold; color: #00b09b;">${syncedCount}</div>
-                        <div style="font-size: 12px; opacity: 0.7;">✅ تمت المزامنة</div>
-                    </div>
-                    <div style="background: rgba(255,71,87,0.1); padding: 12px; border-radius: 10px; text-align: center; border: 1px solid rgba(255,71,87,0.15);">
-                        <div style="font-size: 28px; font-weight: bold; color: ${pendingCount > 0 ? '#ff4757' : '#4cc9f0'};">${pendingCount}</div>
-                        <div style="font-size: 12px; opacity: 0.7;">${pendingCount > 0 ? '⏳ معلقة' : '✅ لا توجد'}</div>
-                    </div>
-                </div>
-                
-                <!-- قائمة العمليات المعلقة -->
-                ${pendingItems.length > 0 ? `
-                <div style="margin-top: 12px; max-height: 150px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
-                    <div style="font-size: 12px; opacity: 0.5; margin-bottom: 8px;">📋 العمليات المعلقة:</div>
-                    ${pendingItems.slice(0, 10).map(item => `
-                        <div class="pending-item" style="display: flex; justify-content: space-between; padding: 4px 8px; border-radius: 6px; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.03);">
-                            <span>??️ ${item.village}</span>
-                            <span>📅 ${item.month}</span>
-                            <span>💰 ${item.value}</span>
-                            <span style="opacity: 0.4; font-size: 10px;">${item.time}</span>
-                        </div>
-                    `).join('')}
-                    ${pendingItems.length > 10 ? `<div style="text-align: center; font-size: 11px; opacity: 0.4; padding: 4px;">+ ${pendingItems.length - 10} أخرى</div>` : ''}
-                </div>
-                ` : `
-                <div style="text-align: center; padding: 15px; opacity: 0.4; font-size: 13px;">
-                    ✅ جميع العمليات مزامنة
-                </div>
-                `}
-            </div>
-
-            <!-- الأزرار -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                <button onclick="clearAllStorageLocal()" style="
-                    background: linear-gradient(135deg, rgba(239,68,68,0.3), rgba(220,38,38,0.3));
-                    border: 1px solid rgba(239,68,68,0.2);
-                    padding: 12px;
-                    border-radius: 12px;
-                    color: #fca5a5;
-                    font-weight: bold;
-                    cursor: pointer;
-                    font-family: 'Tajawal';
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                    🗑️ مسح الكاش
-                </button>
-                <button onclick="refreshStatusLocal()" style="
-                    background: linear-gradient(135deg, rgba(76,201,240,0.3), rgba(0,180,216,0.3));
-                    border: 1px solid rgba(76,201,240,0.2);
-                    padding: 12px;
-                    border-radius: 12px;
-                    color: #4cc9f0;
-                    font-weight: bold;
-                    cursor: pointer;
-                    font-family: 'Tajawal';
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                    🔄 تحديث الحالة
-                </button>
-                <button onclick="document.getElementById('memoryPanel').remove()" style="
-                    background: linear-gradient(135deg, rgba(255,71,87,0.3), rgba(220,38,38,0.3));
-                    border: 1px solid rgba(255,71,87,0.2);
-                    padding: 12px;
-                    border-radius: 12px;
-                    color: #fca5a5;
-                    font-weight: bold;
-                    cursor: pointer;
-                    font-family: 'Tajawal';
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                    ✕ إغلاق
-                </button>
-            </div>
-
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; font-size: 11px; opacity: 0.4;">
-                <span>${navigator.onLine ? '📶 متصل' : '📶 غير متصل'}</span>
-                <span>✅ جاهز</span>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-}
-
-// ============================================================
-//  دوال مساعدة
-// ============================================================
-
-function clearAllStorageLocal() {
-    if (confirm('⚠️ تحذير: سيتم مسح جميع البيانات المخزنة محلياً!\n' +
-               '• سيتم مسح الكاش\n' +
-               '• سيتم مسح التغييرات المعلقة\n' +
-               '• سيتم مسح إعدادات التطبيق\n\n' +
-               'هل أنت متأكد؟')) {
-        
-        try {
-            const keysToRemove = [
-                'soufai_cache_data',
-                'soufai_pending_changes',
-                'soufai_backups',
-                'soufai_memory_v4',
-                'soufai_backup_v4',
-                'soufai_sync_queue_v5',
-                'soufai_report_cache',
-                'soufai_last_village',
-                'waterSystem_dataSaver',
-                'waterSystem_quickView',
-                'auditLogs',
-                'customUsers',
-                'focusMode',
-                'soufai_app_installed'
-            ];
-            
-            let removedCount = 0;
-            keysToRemove.forEach(key => {
-                if (localStorage.getItem(key) !== null) {
-                    localStorage.removeItem(key);
-                    removedCount++;
-                }
-            });
-            
-            alert(`✅ تم مسح ${removedCount} عنصر من التخزين المحلي بنجاح!\nسيتم إعادة تحميل الصفحة الآن.`);
-            
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-            
-        } catch (error) {
-            alert('❌ فشل مسح التخزين: ' + error.message);
-        }
-    }
-}
-
-function refreshStatusLocal() {
-    alert('🔄 تم تحديث الحالة');
-    // إعادة فتح النافذة
-    document.getElementById('memoryPanel')?.remove();
-    setTimeout(showMemoryPanel, 300);
-}
-
-function showFallbackPanel() {
-    showMemoryPanel();
-}
-
-// جعل الدوال عامة
-window.showMemoryPanel = showMemoryPanel;
-window.clearAllStorageLocal = clearAllStorageLocal;
-window.refreshStatusLocal = refreshStatusLocal;
-
-console.log('✅ تم تفعيل دوال نافذة الذاكرة البديلة');
-</script>
 <script>
 (function() {
     'use strict';
@@ -15782,17 +15399,34 @@ function detectRealMonthFromTable() {
         _busyCount++;
         
         try {
-            // قراءة البيانات
-            const c = row.cells;
-            const phone = c[0].textContent.trim();
-            const prev = parseFloat(c[2].textContent) || 0;
-            const curr = parseFloat(c[3].textContent) || 0;
-            const total = parseFloat(c[9].textContent) || 0;
-            const paid = parseFloat(c[11].textContent) || 0;
-            const remain = parseFloat(c[12].textContent) || 0;
-            const diff = curr - prev;
-            
-            const msg = `فاتورة شهر ${getMonth()}: سابقة: ${prev}, حالية: ${curr}, الفارق: ${diff}, المجموع: ${total}, المسلم: ${paid}, المتبقي: ${remain}${remain >= 5000 ? ' ⚠️ إنذار بالفصل' : ''}`;
+    // قراءة البيانات
+    const c = row.cells;
+    const phone    = c[0].textContent.trim();
+    const previous = parseFloat(c[2].textContent)  || 0;
+    const current  = parseFloat(c[3].textContent)  || 0;
+    const diff     = parseFloat(c[4].textContent)  || 0;
+    const diffDecimal = c[5].textContent.trim() || '';
+    const value    = parseFloat(c[6].textContent)  || 0;
+    const sub      = parseFloat(c[7].textContent)  || 0;
+    const arrears  = parseFloat(c[8].textContent)  || 0;
+    const total    = parseFloat(c[9].textContent)  || 0;
+    const paid     = parseFloat(c[11].textContent) || 0;
+    const remain   = parseFloat(c[12].textContent) || 0;
+    
+    const msg = `فاتورةشهر${getMonth()}
+القراءةالسابقة
+${previous}
+القراءةالحالية
+${current}
+الفارق${diff}${diffDecimal ? '.' + diffDecimal : ''}
+القيمة${value}
+الاشتراك${sub}
+المتأخرات
+${arrears}
+المجموع
+${total}
+المسلم${paid}
+المتبقي${remain}${remain >= 5000 ? '\n⚠️إنذار بالفصل' : ''}`;
             
             // ✅ تأثير بصري — الزر يصبح أحمر
             btn.style.setProperty('background', '#FF4444', 'important');
@@ -16372,6 +16006,413 @@ function detectRealMonthFromTable() {
     console.log('🗓️ نظام السنوات جاهز - السنة النشطة: ' + window.CURRENT_YEAR);
     console.log('📋 السنوات المتاحة: 2026 / 2027 / 2028');
     
+})();
+</script>
+<script>
+// ✅ كشف نوع الجهاز تلقائياً
+(function() {
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isTablet = /iPad|Android(?!.*Mobile)/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        document.body.classList.add('is-mobile');
+        console.log('📱 تم كشف: جهاز جوال');
+    }
+    if (isTablet) {
+        document.body.classList.add('is-tablet');
+        console.log('📱 تم كشف: تابلت');
+    }
+})();
+</script>
+<!-- ============================================================ -->
+<!-- 📅 نظام تقرير السنة الكاملة (12 شهر) - النسخة النهائية v2     -->
+<!-- ✅ المطلوب = الشهر الحالي (نفس ما يظهر في الجدول الرئيسي)      -->
+<!-- ✅ المتبقي = الشهر الحالي (نفس ما يظهر في الجدول الرئيسي)      -->
+<!-- ✅ المسلم = مجموع 1→12                                       -->
+<!-- ✅ الاستهلاك = مجموع 1→12                                    -->
+<!-- ============================================================ -->
+<script>
+(function() {
+    'use strict';
+
+    const MONTHS = Array.from({ length: 12 }, (_, i) => 'شهر ' + (i + 1));
+    const VILLAGE_LIST = ['السوفعي', 'العليا', 'السفلى', 'الشعابي', 'الجبل', 'حيزان', 'رقش', 'الضرفة'];
+
+    // ============================================================
+    // 🧹 تطبيع النص
+    // ============================================================
+    function norm(s) {
+        return (s || '').toString().trim().replace(/\s+/g, ' ')
+            .replace(/[أإآ]/g, 'ا').replace(/[ة]/g, 'ه').replace(/[ى]/g, 'ي')
+            .replace(/[ًٌٍَُِّْ]/g, '').toLowerCase();
+    }
+
+    // ============================================================
+    // 🔢 تحويل الأرقام + تنسيق
+    // ============================================================
+    function parseNum(v) {
+        if (v === null || v === undefined || v === '') return 0;
+        const s = v.toString()
+            .replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0) - 1584))
+            .replace(/,/g, '').replace(/[٬]/g, '').trim();
+        const n = parseFloat(s);
+        return isNaN(n) ? 0 : n;
+    }
+
+    function fmt(n) {
+        return new Intl.NumberFormat('ar-SA').format(Math.round(n || 0));
+    }
+
+    // ============================================================
+    // 📅 تحديد الشهر الحالي من الشريط الجانبي
+    // ============================================================
+    function getCurrentMonth() {
+        const sidebar = document.querySelector('.app-sidebar');
+        if (sidebar) {
+            for (const sel of sidebar.querySelectorAll('select')) {
+                const val = sel.value || '';
+                if (val.startsWith('شهر ')) return val;
+            }
+        }
+        return 'شهر ' + (new Date().getMonth() + 1);
+    }
+
+    // ============================================================
+    // 🏘️ تحديد القرية الحالية
+    // ============================================================
+    function detectCurrentVillage() {
+        const sidebar = document.querySelector('.app-sidebar');
+        if (!sidebar) return 'السوفعي';
+        for (const sel of sidebar.querySelectorAll('select')) {
+            for (const opt of sel.options) {
+                if (VILLAGE_LIST.includes((opt.value || '').trim())) {
+                    const cur = (sel.value || '').trim();
+                    return VILLAGE_LIST.includes(cur) ? cur : opt.value.trim();
+                }
+            }
+        }
+        const txt = sidebar.textContent || '';
+        for (const v of VILLAGE_LIST) if (txt.includes(v)) return v;
+        return 'السوفعي';
+    }
+
+    // ============================================================
+    // 🔍 جلب بيانات شهر لمشترك
+    // ============================================================
+    async function fetchMonthForSubscriber(village, monthName, subName, subMeter) {
+        const apiUrl = window.YEAR_LINKS?.[window.CURRENT_YEAR]?.[village];
+        if (!apiUrl) return null;
+
+        try {
+            const url = `${apiUrl}?sheet=${encodeURIComponent(monthName)}&t=${Date.now()}`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (!Array.isArray(data) || data.length === 0) return null;
+
+            const targetName = norm(subName);
+            const targetMeter = (subMeter || '').toString().trim();
+
+            for (let i = 2; i < data.length - 1; i++) {
+                const row = data[i];
+                if (!row || !row[1]) continue;
+
+                const rowName = norm(row[1]);
+                const rowMeter = (row[0] || '').toString().trim();
+
+                if (rowName === targetName || (targetMeter && rowMeter === targetMeter)) {
+                    const prev = parseNum(row[2]);
+                    const cur = parseNum(row[3]);
+                    const total = parseNum(row[9]);
+                    const paid = parseNum(row[11]);
+                    const remaining = parseNum(row[12]);
+
+                    const hasCurrent = cur > 0;
+                    const consumption = hasCurrent ? Math.max(0, cur - prev) : null;
+                    const isTrulyEmpty = !hasCurrent && total === 0 && paid === 0 && remaining === 0;
+
+                    return {
+                        meterNumber: row[0] || '-',
+                        name: row[1],
+                        previous: prev,
+                        current: hasCurrent ? cur : null,
+                        consumption: consumption,
+                        total: total,
+                        paid: paid,
+                        remaining: remaining,
+                        isEmpty: isTrulyEmpty,
+                        hasCurrent: hasCurrent,
+                        month: monthName
+                    };
+                }
+            }
+            return null;
+        } catch (e) {
+            console.warn(`⚠️ ${village} - ${monthName}:`, e.message);
+            return null;
+        }
+    }
+
+    // ============================================================
+    // 🎯 الدالة الرئيسية
+    // ============================================================
+    window.showYearReport = async function(subscriberName, subscriberMeter) {
+        const village = detectCurrentVillage();
+        const currentMonth = getCurrentMonth();
+        console.log(`🏘️ القرية: ${village} | 👤 ${subscriberName} | 🆔 ${subscriberMeter || '-'} | 📅 ${window.CURRENT_YEAR} | 🗓️ ${currentMonth}`);
+
+        const modal = document.createElement('div');
+        modal.className = 'year-report-modal';
+        modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:99999;
+            display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);
+            font-family:Tajawal,sans-serif;`;
+        modal.innerHTML = `
+            <div style="background:linear-gradient(145deg,#0a0e27,#1a1a3e);border-radius:24px;
+                        padding:40px;max-width:900px;width:95%;color:#e0e0ff;
+                        border:2px solid rgba(76,201,240,0.3);text-align:center;">
+                <div style="font-size:60px;animation:spin 1s linear infinite;">⏳</div>
+                <h2 style="color:#4cc9f0;margin:15px 0;">جاري جلب بيانات ${subscriberName}...</h2>
+                <p style="opacity:0.6;">🏘️ ${village} - السنة ${window.CURRENT_YEAR}</p>
+                <p style="opacity:0.4;font-size:13px;">يتم تحميل 12 شهراً من Google Sheets</p>
+            </div>
+            <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+        `;
+        document.body.appendChild(modal);
+
+        const results = await Promise.all(
+            MONTHS.map(m => fetchMonthForSubscriber(village, m, subscriberName, subscriberMeter))
+        );
+
+        const valid = results.filter(r => r && !r.isEmpty);
+        console.log(`✅ ${valid.length}/12 شهر بيانات فعلية`);
+
+        if (valid.length === 0) {
+            modal.innerHTML = `
+                <div style="background:linear-gradient(145deg,#0a0e27,#1a1a3e);border-radius:24px;
+                            padding:35px;max-width:700px;width:95%;color:#e0e0ff;
+                            border:2px solid rgba(255,71,87,0.3);text-align:center;">
+                    <div style="font-size:70px;">❌</div>
+                    <h2 style="color:#ff4757;margin:15px 0;">لم يتم العثور على بيانات</h2>
+                    <p style="opacity:0.7;">${subscriberName} - ${village} - ${window.CURRENT_YEAR}</p>
+                    <button onclick="this.closest('.year-report-modal').remove()"
+                            style="background:#4cc9f0;color:#0a0e27;border:none;padding:12px 35px;
+                                   border-radius:12px;font-weight:bold;cursor:pointer;margin-top:20px;">
+                        إغلاق
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // ============================================================
+        // ✅ الإجماليات الجديدة:
+        //    - المطلوب / المتبقي = الشهر الحالي (نفس الجدول الرئيسي)
+        //    - المسلم / الاستهلاك = مجموع (1→12)
+        // ============================================================
+        const totals = { total: 0, paid: 0, remaining: 0, consumption: 0 };
+        let totalMonthsWithData = 0;
+        let lastMonthWithData = null;
+
+        valid.forEach(r => {
+            // ✅ المجاميع (شهري منفصل)
+            totals.paid += r.paid;
+            if (r.consumption !== null) totals.consumption += r.consumption;
+
+            totalMonthsWithData++;
+            lastMonthWithData = r;
+        });
+
+        // ✅ التراكميات: الشهر الحالي (وليس آخر شهر)
+        const currentMonthData = valid.find(r => r.month === currentMonth);
+
+        if (currentMonthData) {
+            // ✅ الشهر الحالي موجود → نستخدم قيمه (مطابقة للجدول الرئيسي)
+            totals.total = currentMonthData.total;
+            totals.remaining = currentMonthData.remaining;
+            console.log(`📌 الشهر الحالي (${currentMonth}) | المطلوب: ${totals.total} | المتبقي: ${totals.remaining}`);
+        } else if (lastMonthWithData) {
+            // ⚠️ الشهر الحالي فارغ → نستخدم آخر شهر متاح
+            totals.total = lastMonthWithData.total;
+            totals.remaining = lastMonthWithData.remaining;
+            console.log(`⚠️ الشهر الحالي (${currentMonth}) فارغ، استخدام آخر شهر (${lastMonthWithData.month})`);
+        }
+
+        console.log(`💰 المطلوب=${totals.total} | المسلم=${totals.paid} | المتبقي=${totals.remaining} | الاستهلاك=${totals.consumption}`);
+
+        // ============================================================
+        // ✅ بناء صفوف الجدول
+        // ============================================================
+        const rows = MONTHS.map((m, i) => {
+            const r = results[i];
+
+            if (!r || r.isEmpty) {
+                return `<tr style="opacity:0.35;background:rgba(255,255,255,0.01);">
+                    <td style="padding:11px;text-align:center;color:#4cc9f0;font-weight:bold;">${m}</td>
+                    <td colspan="6" style="text-align:center;color:#888;font-size:13px;">لا توجد بيانات</td>
+                </tr>`;
+            }
+
+            const remColor = r.remaining >= 5000 ? '#ff4757'
+                          : r.remaining > 0 ? '#ffb703' : '#00b09b';
+            const rowBg = i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent';
+
+            const currentDisplay = r.hasCurrent
+                ? r.current
+                : `<span style="color:#ff6b6b;font-size:11px;" title="لم تُسجل قراءة">⚠️</span>`;
+
+            const consumptionDisplay = r.consumption !== null
+                ? r.consumption
+                : `<span style="color:#888;">-</span>`;
+
+            // ✅ تمييز الشهر الحالي (مصدر المطلوب والمتبقي)
+            const isCurrent = r.month === currentMonth;
+            const borderStyle = isCurrent ? 'border:2px solid #4cc9f0;' : '';
+
+            return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);background:${rowBg};${borderStyle}">
+                <td style="padding:11px;text-align:center;color:#4cc9f0;font-weight:bold;">
+                    ${m}${isCurrent ? ' <span style="font-size:10px;color:#00b09b;" title="مصدر المطلوب والمتبقي">●</span>' : ''}
+                </td>
+                <td style="padding:11px;text-align:center;">${r.previous}</td>
+                <td style="padding:11px;text-align:center;">${currentDisplay}</td>
+                <td style="padding:11px;text-align:center;color:#00b09b;font-weight:bold;">${consumptionDisplay}</td>
+                <td style="padding:11px;text-align:center;">${fmt(r.total)}</td>
+                <td style="padding:11px;text-align:center;">${fmt(r.paid)}</td>
+                <td style="padding:11px;text-align:center;font-weight:bold;color:${remColor};font-size:15px;">
+                    ${fmt(r.remaining)}
+                </td>
+            </tr>`;
+        }).join('');
+
+        const meterDisplay = valid[0]?.meterNumber || subscriberMeter || '-';
+
+        // ============================================================
+        // ✅ عرض النافذة النهائية
+        // ============================================================
+        modal.innerHTML = `
+            <div style="background:linear-gradient(145deg,#0a0e27,#1a1a3e);border-radius:24px;
+                        padding:25px;max-width:1100px;width:96%;max-height:92vh;overflow-y:auto;
+                        color:#e0e0ff;border:2px solid rgba(76,201,240,0.3);
+                        box-shadow:0 25px 80px rgba(0,0,0,0.8);">
+
+                <!-- الرأس -->
+                <div style="display:flex;justify-content:space-between;align-items:center;
+                            margin-bottom:20px;flex-wrap:wrap;gap:10px;
+                            border-bottom:2px solid rgba(76,201,240,0.15);padding-bottom:15px;">
+                    <div>
+                        <h2 style="margin:0;color:#4cc9f0;font-size:20px;">📅 ${subscriberName}</h2>
+                        <div style="font-size:13px;opacity:0.65;margin-top:6px;display:flex;gap:15px;flex-wrap:wrap;">
+                            <span>🏘️ ${village}</span>
+                            <span>🆔 ${meterDisplay}</span>
+                            <span>📅 ${window.CURRENT_YEAR}</span>
+                            <span style="color:#00b09b;">📊 ${totalMonthsWithData}/12 شهر</span>
+                        </div>
+                    </div>
+                    <button onclick="this.closest('.year-report-modal').remove()"
+                            style="background:rgba(255,71,87,0.2);border:2px solid #ff4757;
+                                   color:#ff4757;width:42px;height:42px;border-radius:50%;
+                                   cursor:pointer;font-size:20px;font-weight:bold;
+                                   transition:all 0.3s;"
+                            onmouseenter="this.style.transform='rotate(90deg) scale(1.1)'"
+                            onmouseleave="this.style.transform='rotate(0) scale(1)'">
+                        ✕
+                    </button>
+                </div>
+
+                <!-- البطاقات -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+                            gap:12px;margin-bottom:20px;">
+                    <div style="background:rgba(76,201,240,0.1);padding:14px;border-radius:14px;
+                                text-align:center;border:1px solid rgba(76,201,240,0.2);">
+                        <div style="font-size:20px;font-weight:bold;color:#4cc9f0;">${fmt(totals.total)}</div>
+                        <div style="font-size:11px;opacity:0.6;margin-top:4px;">المطلوب (${currentMonth})</div>
+                    </div>
+                    <div style="background:rgba(0,176,155,0.1);padding:14px;border-radius:14px;
+                                text-align:center;border:1px solid rgba(0,176,155,0.2);">
+                        <div style="font-size:20px;font-weight:bold;color:#00b09b;">${fmt(totals.paid)}</div>
+                        <div style="font-size:11px;opacity:0.6;margin-top:4px;">المسلم (مجموع 1→12)</div>
+                    </div>
+                    <div style="background:rgba(255,71,87,0.1);padding:14px;border-radius:14px;
+                                text-align:center;border:1px solid rgba(255,71,87,0.2);">
+                        <div style="font-size:20px;font-weight:bold;color:#ff4757;">${fmt(totals.remaining)}</div>
+                        <div style="font-size:11px;opacity:0.6;margin-top:4px;">المتبقي (${currentMonth})</div>
+                    </div>
+                    <div style="background:rgba(255,183,3,0.1);padding:14px;border-radius:14px;
+                                text-align:center;border:1px solid rgba(255,183,3,0.2);">
+                        <div style="font-size:20px;font-weight:bold;color:#ffb703;">${fmt(totals.consumption)} م³</div>
+                        <div style="font-size:11px;opacity:0.6;margin-top:4px;">الاستهلاك (مجموع 1→12)</div>
+                    </div>
+                </div>
+
+                <!-- الجدول -->
+                <div style="background:rgba(0,0,0,0.2);border-radius:14px;overflow:auto;
+                            border:1px solid rgba(255,255,255,0.05);">
+                    <table style="width:100%;border-collapse:collapse;min-width:750px;">
+                        <thead>
+                            <tr style="background:linear-gradient(135deg,rgba(76,201,240,0.2),rgba(76,201,240,0.08));
+                                       position:sticky;top:0;z-index:5;">
+                                <th style="padding:13px;color:#4cc9f0;font-size:13px;">الشهر</th>
+                                <th style="padding:13px;color:#4cc9f0;font-size:13px;">سابقة</th>
+                                <th style="padding:13px;color:#4cc9f0;font-size:13px;">حالية</th>
+                                <th style="padding:13px;color:#4cc9f0;font-size:13px;">الاستهلاك</th>
+                                <th style="padding:13px;color:#4cc9f0;font-size:13px;">المطلوب</th>
+                                <th style="padding:13px;color:#4cc9f0;font-size:13px;">المسلم</th>
+                                <th style="padding:13px;color:#4cc9f0;font-size:13px;">المتبقي</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+
+                <!-- شريط توضيحي -->
+                <div style="margin-top:12px;padding:10px 14px;background:rgba(76,201,240,0.08);
+                            border-radius:10px;border:1px solid rgba(76,201,240,0.15);
+                            font-size:12px;opacity:0.85;display:flex;flex-direction:column;gap:4px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="color:#4cc9f0;font-weight:bold;">●</span>
+                        <span>المطلوب والمتبقي = قيم الشهر الحالي (${currentMonth}) — مطابقة للجدول الرئيسي</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="color:#ffb703;font-weight:bold;">Σ</span>
+                        <span>المسلم والاستهلاك = مجموع الأشهر (1→12)</span>
+                    </div>
+                </div>
+
+                <!-- تذييل -->
+                <div style="margin-top:15px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.05);
+                            display:flex;justify-content:space-between;font-size:11px;
+                            opacity:0.5;flex-wrap:wrap;gap:8px;">
+                    <span>🏘️ ${village} - ${window.CURRENT_YEAR}</span>
+                    <span>🕐 ${new Date().toLocaleString('ar-EG')}</span>
+                    <span>💧 مشروع مياه السوفعي</span>
+                </div>
+            </div>
+        `;
+
+        console.log(`🎉 تم العرض: المطلوب=${totals.total} | المسلم=${totals.paid} | المتبقي=${totals.remaining} | الاستهلاك=${totals.consumption}`);
+    };
+
+    // ============================================================
+    // 🖱️ تشغيل من الصف المحدد
+    // ============================================================
+    window.openYearReportForSelected = function() {
+        const row = document.querySelector('#tableWrapper tbody tr.selected-row');
+        if (!row) {
+            alert('⚠️ اختر مشتركاً أولاً\n(انقر على اسمه في الجدول)');
+            return;
+        }
+        const cells = row.querySelectorAll('td');
+        const meter = cells[0]?.textContent?.trim() || '';
+        const name = cells[1]?.textContent?.trim() || '';
+        if (!name) {
+            alert('⚠️ الصف المحدد لا يحتوي على اسم مشترك');
+            return;
+        }
+        window.showYearReport(name, meter);
+    };
+
+    console.log('✅ نظام تقرير السنة (12 شهر) جاهز - v2');
+    console.log('💡 المطلوب/المتبقي = الشهر الحالي | المسلم/الاستهلاك = مجموع');
+
 })();
 </script>
 
