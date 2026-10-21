@@ -9014,6 +9014,78 @@ useEffect(() => {
     </button>
     <span style={{ fontSize: '12px', color: '#00b4d8', fontWeight: 'bold' }}>سنة كاملة</span>
 </div>
+{/* ===== زر واتساب لتقرير السنة ===== */}
+<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+    <button
+        onClick={async () => {
+            const selectedRow = document.querySelector('#tableWrapper tbody tr.selected-row');
+            if (!selectedRow) {
+                alert('⚠️ اختر مشتركاً أولاً (انقر على اسمه)');
+                return;
+            }
+            const cells = selectedRow.querySelectorAll('td');
+            const name = cells[1]?.textContent?.trim() || 'المشترك';
+            const meter = cells[0]?.textContent?.trim() || '';
+            
+            // ✅ جلب تقرير السنة
+            const report = await window.__getYearReportData(name, meter);
+            if (!report || !report.valid.length) {
+                alert('⚠️ لا توجد بيانات لهذا المشترك');
+                return;
+            }
+            
+            // ✅ بناء النص
+            let message = `📊 تقرير السنة - ${name}\n`;
+            message += `🆔 العداد: ${report.meterDisplay}\n`;
+            message += `🏘️ القرية: ${report.village}\n`;
+            message += `📅 السنة: ${window.CURRENT_YEAR}\n\n`;
+            
+            message += `━━━━━━━━━━━━━━━━━━━━\n`;
+            message += `📌 ملخص:\n`;
+            message += `💰 المطلوب: ${report.totals.total}\n`;
+            message += `✅ المسلم: ${report.totals.paid}\n`;
+            message += `🔴 المتبقي: ${report.totals.remaining}\n`;
+            message += `💧 الاستهلاك: ${report.totals.consumption} م³\n`;
+            message += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+            
+            message += `📋 التفاصيل:\n`;
+            report.valid.forEach(r => {
+                message += `${r.month}: مطلوب ${r.total} | مسلم ${r.paid} | متبقي ${r.remaining}\n`;
+            });
+            
+            // ✅ إرسال واتساب
+            let cleanPhone = meter
+                .toString()
+                .replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0) - 1584))
+                .replace(/[^\d]/g, '')
+                .trim();
+            
+            if (cleanPhone.startsWith('00967')) cleanPhone = cleanPhone.substring(5);
+            else if (cleanPhone.startsWith('967')) cleanPhone = cleanPhone.substring(3);
+            else if (cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
+            
+            if (!/^7\d{8}$/.test(cleanPhone)) {
+                alert('⚠️ رقم الجوال غير صحيح: ' + meter);
+                return;
+            }
+            
+            const waPhone = '967' + cleanPhone;
+            const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`;
+            window.open(waUrl, '_blank');
+        }}
+        style={{
+            width: '32px', height: '32px', borderRadius: '8px',
+            border: '2px solid rgba(37,211,102,0.3)',
+            background: 'linear-gradient(135deg, #25D366, #128C7E)',
+            color: 'white', cursor: 'pointer', fontSize: '14px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}
+        title="إرسال تقرير السنة عبر واتساب"
+    >
+        💚
+    </button>
+    <span style={{ fontSize: '12px', color: '#25D366', fontWeight: 'bold' }}>واتساب</span>
+</div>
 {/* ===== زر بدون اشتراك ===== */}
 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
     <button 
@@ -16188,6 +16260,42 @@ ${total}
     // ============================================================
     // 🎯 الدالة الرئيسية
     // ============================================================
+    // ✅ دالة جلب بيانات التقرير (بدون عرض)
+window.__getYearReportData = async function(subscriberName, subscriberMeter) {
+    const village = detectCurrentVillage();
+    const currentMonth = getCurrentMonth();
+    
+    const results = await Promise.all(
+        MONTHS.map(m => fetchMonthForSubscriber(village, m, subscriberName, subscriberMeter))
+    );
+    
+    const valid = results.filter(r => r && !r.isEmpty);
+    
+    if (valid.length === 0) return null;
+    
+    const totals = { total: 0, paid: 0, remaining: 0, consumption: 0 };
+    valid.forEach(r => {
+        totals.paid += r.paid;
+        if (r.consumption !== null) totals.consumption += r.consumption;
+    });
+    
+    const currentMonthData = valid.find(r => r.month === currentMonth);
+    if (currentMonthData) {
+        totals.total = currentMonthData.total;
+        totals.remaining = currentMonthData.remaining;
+    } else if (valid.length > 0) {
+        totals.total = valid[valid.length - 1].total;
+        totals.remaining = valid[valid.length - 1].remaining;
+    }
+    
+    return {
+        valid: valid,
+        totals: totals,
+        village: village,
+        currentMonth: currentMonth,
+        meterDisplay: valid[0]?.meterNumber || subscriberMeter || '-'
+    };
+};
     window.showYearReport = async function(subscriberName, subscriberMeter) {
         const village = detectCurrentVillage();
         const currentMonth = getCurrentMonth();
