@@ -7804,15 +7804,24 @@ if (cellIndex === 12) {
                                         const message = `عزيزي ${name} لقد قمت بدفع مبلغ ${paidAmount} بتاريخ ${finalDate} والمتبقي عليك ${remainingForMessage}\nأمين الصندوق\nسليمان الفرزعي`;
                                         
                                         if (phone && (phone.startsWith('+967') || phone.length >= 9)) {
-                                            window.location.href = `sms:${phone}?body=${encodeURIComponent(message)}`;
-                                            showSync(`✓ تم إرسال رسالة للمشترك ${name}`, 'success', 4000);
-                                        } else if (phone && phone.length > 0) {
-                                            await navigator.clipboard.writeText(message);
-                                            showSync(`⚠ رقم الجوال غير صحيح، تم نسخ الرسالة للحافظة`, 'warning', 4000);
-                                        } else {
-                                            await navigator.clipboard.writeText(message);
-                                            showSync(`⚠ لا يوجد رقم جوال للمشترك ${name}، تم نسخ الرسالة للحافظة`, 'warning', 4000);
-                                        }
+    try {
+        const smsFrame = document.createElement('iframe');
+        smsFrame.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden;pointer-events:none;opacity:0;';
+        document.body.appendChild(smsFrame);
+        smsFrame.contentWindow.location.replace(`sms:${phone}?body=${encodeURIComponent(message)}`);
+        setTimeout(() => { try { smsFrame.remove(); } catch(e) {} }, 5000);
+        showSync(`✓ تم إرسال رسالة للمشترك ${name}`, 'success', 4000);
+    } catch(e) {
+        window.location.href = `sms:${phone}?body=${encodeURIComponent(message)}`;
+        showSync(`✓ تم إرسال رسالة للمشترك ${name}`, 'success', 4000);
+    }
+} else if (phone && phone.length > 0) {
+    await navigator.clipboard.writeText(message);
+    showSync(`⚠ رقم الجوال غير صحيح، تم نسخ الرسالة للحافظة`, 'warning', 4000);
+} else {
+    await navigator.clipboard.writeText(message);
+    showSync(`⚠ لا يوجد رقم جوال للمشترك ${name}، تم نسخ الرسالة للحافظة`, 'warning', 4000);
+}
                                         
                                     } catch (err) {
                                         console.error('خطأ في إرسال الرسالة:', err);
@@ -7829,8 +7838,18 @@ if (cellIndex === 12) {
                                 
                                 setTimeout(() => {
                                     window._paidSaving = false;
-                                }, 3000);
-                                
+                                }, 8000);
+                          // ✅ إعادة تمييز الصف بعد الإرسال
+setTimeout(() => {
+    try {
+        const rows = document.querySelectorAll('#tableWrapper tbody tr');
+        if (rows[rowIndex]) {
+            rows.forEach(r => r.classList.remove('selected-row'));
+            rows[rowIndex].classList.add('selected-row');
+            rows[rowIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    } catch(e) {}
+}, 2000);      
                                 return;
                             }
                             // ===== نهاية معالجة عمود المسلم =====
@@ -11589,10 +11608,23 @@ useEffect(() => {
     }
 
     // مراقبة التغييرات
-    var observer = new MutationObserver(function() {
-        var table = document.getElementById('tableWrapper');
-        if (table) {
-            init();
+var observer = new MutationObserver(function() {
+    var table = document.getElementById('tableWrapper');
+    if (table) {
+        init();
+        
+        // ✅ إعادة تمييز الصف المحفوظ بعد كل إعادة بناء
+        if (window._selectedRowIndex !== undefined && window._selectedRowIndex !== null) {
+            setTimeout(function() {
+                var rows = document.querySelectorAll('#tableWrapper tbody tr');
+                if (rows[window._selectedRowIndex]) {
+                    rows.forEach(function(r) { r.classList.remove('selected-row'); });
+                    rows[window._selectedRowIndex].classList.add('selected-row');
+                }
+            }, 100);
+        }
+    }
+});
         }
     });
     observer.observe(document.body, { childList: true, subtree: true });
