@@ -4332,8 +4332,8 @@ function playVoiceWelcome(userName, userRole) {
         case 'أمين الصندوق':
             roleMessage = `أمين صندوق المشروع`;
             break;
-        case 'المحاسب':
-            roleMessage = `محاسب المشروع`;
+        case 'المسؤول المالي للمشروع':
+            roleMessage = `المسؤول المالي للمشروع`;
             break;
         case 'مشرف المشروع':
             roleMessage = `مشرف المشروع`;
@@ -4344,7 +4344,7 @@ function playVoiceWelcome(userName, userRole) {
     }
 
     // ===== بناء رسالة الترحيب الكاملة =====
-    const message = `مرحباً بك يا أستاذ ${userName}، ${roleMessage}، أهلاً وسهلاً بك في مشروع مياه السوفعي`;
+    const message = `مرحباً بكا يا أستاذ ${userName}، ${roleMessage}، أهلاً وسهلاً بك في مشروع مياه السوفعي`;
 
     const utterance = new SpeechSynthesisUtterance(message);
     utterance.lang = 'ar-SA';
@@ -4442,7 +4442,7 @@ const getMonthlyReportURL = () => {
             "5674": { name: "نصر العامري", role: "مدير المشروع", permissions: { canEdit: [3, 10, 11, 12] } },
             "6785": { name: "سليمان الفرزعي", role: "أمين الصندوق", permissions: { canEdit: [10, 11] } },
             "4562": { name: "أكرم القحطاني", role: "مشرف المشروع", permissions: { canEdit: [3] } },
-            "7892": { name: "يوسف الحجاجي", role: "المحاسب", permissions: { canEdit: [] } }
+            "7892": { name: "يوسف الحجاجي", role: "المسؤول المالي للمشروع", permissions: { canEdit: [] } }
         };
         const ATTENDANCE_CODE = "5566";
         const VILLAGES_LIST = ['السوفعي', 'العليا', 'السفلى', 'الشعابي', 'الجبل', 'حيزان', 'رقش', 'الضرفة'];
@@ -5117,119 +5117,6 @@ function isValidBackup(backup) {
                 <div className={className}>
                     <span>{icon}</span>
                     <span>{message}</span>
-                </div>
-            );
-        };
-
-        // ---- نتائج البحث السينمائية ----
-        const SearchResults = ({ results, suggestions, onSelect, onClose, showSuggestions }) => {
-            if (!results || results.length === 0) {
-                if (showSuggestions && suggestions && suggestions.length > 0) {
-                    return (
-                        <div className="smart-search-results show">
-                            <div className="search-result-header">
-                                <h4>💡 اقتراحات البحث</h4>
-                                <span className="search-result-count">{suggestions.length} اقتراح</span>
-                                <button className="search-result-close" onClick={onClose}>✕</button>
-                            </div>
-                            <div>
-                                {suggestions.map((s, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="search-result-item"
-                                        onClick={() => { onSelect(s);
-                                            onClose(); }}
-                                        style={{ cursor: 'pointer' }}
-                                    >
-                                        <div className="info">
-                                            <div className="name">
-                                                {s.icon || '💡'} {s.text}
-                                                <span className="match-badge">{s.type}</span>
-                                            </div>
-                                            <div className="details">
-                                                <span>{s.desc}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    );
-                }
-                return (
-                    <div className="smart-search-results show">
-                        <div className="search-result-header">
-                            <h4>🔍 لا توجد نتائج</h4>
-                            <button className="search-result-close" onClick={onClose}>✕</button>
-                        </div>
-                        <div className="no-search-results">
-                            <span className="icon">🔍</span>
-                            <p>لم يتم العثور على نتائج تطابق بحثك</p>
-                            <div className="suggestions">
-                                <span className="chip">جرب البحث بالاسم الثلاثي</span>
-                                <span className="chip">جرب رقم العداد</span>
-                                <span className="chip">مسلم 5000</span>
-                                <span className="chip">قراءة 250</span>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
-
-            const handleSelect = (result) => {
-                onSelect(result);
-                onClose();
-            };
-
-            return (
-                <div className="smart-search-results show">
-                    <div className="search-result-header">
-                        <h4>
-                            🔍 نتائج البحث
-                            <span className="badge-ai">🤖 AI</span>
-                        </h4>
-                        <span className="search-result-count">{results.length} نتيجة</span>
-                        <button className="search-result-close" onClick={onClose}>✕</button>
-                    </div>
-                    <div>
-                        {results.map((result, index) => {
-                            const debtClass = result.remaining >= 5000 ? 'high' :
-                                result.remaining >= 1000 ? 'medium' :
-                                result.remaining > 0 ? 'low' : 'zero';
-                            const debtText = result.remaining >= 5000 ? '🔴 عالية جداً' :
-                                result.remaining >= 1000 ? '🟠 متوسطة' :
-                                result.remaining > 0 ? '🟢 قليلة' : '⚪ صفر';
-
-                            return (
-                                <div
-                                    key={index}
-                                    className={`search-result-item ${debtClass}`}
-                                    onClick={() => handleSelect(result)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <div className="rank">#{index + 1}</div>
-                                    <div className="info">
-                                        <div className="name">
-                                            {result.name}
-                                            <span className="match-badge">{result.matchType || 'بحث'}</span>
-                                            {result.score && <span className="match-badge" style={{ color: '#ffb703' }}>
-                                                {result.score}%
-                                            </span>}
-                                        </div>
-                                        <div className="details">
-                                            <span>🆔 عداد: {result.meterNumber}</span>
-                                            <span>💰 المطلوب: {formatNumber(result.total)}</span>
-                                            <span>💵 المسلم: {formatNumber(result.paid)}</span>
-                                            <span>📊 المتبقي: {formatNumber(result.remaining)}</span>
-                                        </div>
-                                    </div>
-                                    <div className={`debt ${debtClass}`}>
-                                        {debtText}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
                 </div>
             );
         };
@@ -6505,12 +6392,6 @@ const [isYearLocked, setIsYearLocked] = useState(() => {
             const [syncMessage, setSyncMessage] = useState('');
             const [syncType, setSyncType] = useState('info');
             const [syncVisible, setSyncVisible] = useState(false);
-            const [searchQuery, setSearchQuery] = useState('');
-            const [searchResults, setSearchResults] = useState([]);
-            const [searchSuggestions, setSearchSuggestions] = useState([]);
-            const [searchVisible, setSearchVisible] = useState(false);
-            const [showSuggestions, setShowSuggestions] = useState(false);
-            const [isRecording, setIsRecording] = useState(false);
             const [reportVisible, setReportVisible] = useState(false);
             const [reportData, setReportData] = useState({});
             const [reportMonth, setReportMonth] = useState(getCurrentMonth());
@@ -6542,9 +6423,10 @@ const [isYearLocked, setIsYearLocked] = useState(() => {
             });
 
             const searchInputRef = useRef(null);
-            const voiceRecognitionRef = useRef(null);
-            const syncTimeoutRef = useRef(null);
-            const isMountedRef = useRef(true);
+const voiceRecognitionRef = useRef(null);
+const syncTimeoutRef = useRef(null);
+const isMountedRef = useRef(true);
+const loadRequestIdRef = useRef(0);  // ✅ جديد
 // ===== متغيرات الوضعين الجديدين =====
 const [dataSaverMode, setDataSaverMode] = useState(
     localStorage.getItem('waterSystem_dataSaver') === 'true'
@@ -6831,8 +6713,37 @@ if (isYearLocked) {
     }
 }, [showSync, markAsPending, markAsSynced, villageAPIs, setSyncingCells]);
 
-            const syncAllPendingChanges = useCallback(async () => {
-    if (syncInProgress || !isMountedRef.current) {
+            // ===== Refs ثابتة =====
+const selfRef = useRef();
+const syncRetriesRef = useRef(0);
+const pendingRef = useRef(pendingChanges);
+const pendingChangesRef = useRef(pendingChanges);
+
+// ✅ Refs المزامنة الجديدة
+const syncInProgressRef = useRef(false);
+const syncRef = useRef(null);
+const retryTimerRef = useRef(null);
+const retryCountRef = useRef(0);
+
+// ✅ 🆕 أضف هنا:
+const applyLocalOverrides = useCallback((freshData, localChanges) => {
+    if (!Array.isArray(freshData) || !localChanges || localChanges.length === 0) {
+        return freshData;
+    }
+    const merged = freshData.map(row => Array.isArray(row) ? [...row] : row);
+    for (const change of localChanges) {
+        if (merged[change.rowIndex]) {
+            merged[change.rowIndex][change.cellIndex] = change.value;
+        }
+    }
+    return merged;
+}, []);
+
+const syncAllPendingChanges = useCallback(async () => {
+    // ═══════════════════════════════════════════════════════════════
+    // 0. فحص القفل + حالة التركيب + الاتصال
+    // ═══════════════════════════════════════════════════════════════
+    if (syncInProgressRef.current || !isMountedRef.current) {
         console.log('⏳ المزامنة قيد التنفيذ بالفعل');
         return;
     }
@@ -6842,83 +6753,344 @@ if (isYearLocked) {
         return;
     }
 
-    // ===== حساب التغييرات (استبعاد العمود 12) =====
-    let totalPending = 0;
-    const unsyncedList = [];
-    
-    for (const [key, changes] of Object.entries(pendingChanges)) {
-        const parts = key.split('_');
-        const village = parts[1] || '';
-        const month = parts.slice(2).join('_') || '';
-        
-        // ❌ استبعاد العمود 12
-        const unsynced = changes.filter(c => !c.synced && c.cellIndex !== 12);
-        
-        if (unsynced.length > 0) {
-            totalPending += unsynced.length;
-            unsyncedList.push({ village, month, changes: unsynced });
-        }
-    }
+    // ✅ قفل فوري عبر ref قبل أي عملية غير متزامنة
+    syncInProgressRef.current = true;
+    if (isMountedRef.current) setSyncInProgress(true);
 
-    if (totalPending === 0) {
-        showSync('✅ جميع التغييرات مزامنة', 'success', 1500);
-        await loadPendingChanges();
-        return;
-    }
-
-    setSyncInProgress(true);
-    showSync(`🔄 جاري مزامنة ${totalPending} تغيير...`, 'info', 5000);
-
+    // ✅ [إصلاح #1] تعريف العدّادات خارج try حتى تكون متاحة في finally
     let synced = 0;
     let failed = 0;
 
-    for (const { village, month, changes } of unsyncedList) {
-        for (const change of changes) {
-            // ✅ نتجاوز window._paidSaving
+    try {
+        // ═══════════════════════════════════════════════════════════
+        // 0.1. إلغاء أي مؤقت إعادة محاولة قديم
+        // ═══════════════════════════════════════════════════════════
+        if (retryTimerRef.current) {
+            clearTimeout(retryTimerRef.current);
+            retryTimerRef.current = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 1. قراءة أحدث نسخة من pendingChanges + جمع التغييرات
+        // ═══════════════════════════════════════════════════════════
+        const snapshot = pendingChangesRef.current || {};
+        let totalPending = 0;
+        const unsyncedList = [];
+
+        for (const [key, changes] of Object.entries(snapshot)) {
+            const parts = key.split('_');
+            const vKey = parts[1] || '';
+            const mKey = parts.slice(2).join('_') || '';
+
+            const unsynced = (changes || []).filter(
+                c => !c.synced && c.cellIndex !== 12
+            );
+            if (unsynced.length > 0) {
+                totalPending += unsynced.length;
+                unsyncedList.push({ village: vKey, month: mKey, changes: unsynced });
+            }
+        }
+
+        if (totalPending === 0) {
+            if (isMountedRef.current) {
+                showSync('✅ جميع التغييرات مزامنة', 'success', 1500);
+            }
+            try {
+                await loadPendingChanges();
+            } catch (e) {
+                console.warn('⚠️ فشل loadPendingChanges:', e);
+            }
+            return;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 2. إزالة التكرار: أحدث تعديل لكل خلية فقط
+        // ═══════════════════════════════════════════════════════════
+        const latestByCell = new Map();
+        for (const scope of unsyncedList) {
+            for (const change of scope.changes) {
+                const cellKey = `${scope.village}::${scope.month}::${change.rowIndex}::${change.cellIndex}`;
+                const existing = latestByCell.get(cellKey);
+                if (
+                    !existing ||
+                    (change.timestamp || 0) >= (existing.change.timestamp || 0)
+                ) {
+                    latestByCell.set(cellKey, { scope, change });
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 3. الترتيب الزمني (من الأقدم إلى الأحدث)
+        // ═══════════════════════════════════════════════════════════
+        const orderedChanges = Array.from(latestByCell.values()).sort(
+            (a, b) => (a.change.timestamp || 0) - (b.change.timestamp || 0)
+        );
+
+        const finalCount = orderedChanges.length;
+        if (isMountedRef.current) {
+            showSync(`🔄 جاري مزامنة ${finalCount} تغيير...`, 'info', 5000);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 4. تتبع التغييرات الناجحة بـ id فريد (حل race condition)
+        // ═══════════════════════════════════════════════════════════
+        const syncedIds = new Set();
+
+        // ═══════════════════════════════════════════════════════════
+        // 5. تنفيذ المزامنة تسلسلياً
+        // ═══════════════════════════════════════════════════════════
+        for (const item of orderedChanges) {
+            if (!isMountedRef.current) return;
+
+            const scope = item.scope;
+            const change = item.change;
+
             const originalPaidSaving = window._paidSaving;
             window._paidSaving = false;
 
-            const success = await syncImmediately(
-                village,
-                month,
-                change.rowIndex,
-                change.cellIndex,
-                change.value,
-                change.meterNumber
-            );
-
-            window._paidSaving = originalPaidSaving;
+            let success = false;
+            try {
+                success = await syncImmediately(
+                    scope.village,
+                    scope.month,
+                    change.rowIndex,
+                    change.cellIndex,
+                    change.value,
+                    change.meterNumber
+                );
+            } catch (err) {
+                console.error('❌ فشل مزامنة تغيير:', err);
+                success = false;
+            } finally {
+                window._paidSaving = originalPaidSaving;
+            }
 
             if (success) {
                 synced++;
+                const changeId =
+                    change.id ||
+                    `${change.timestamp}_${change.rowIndex}_${change.cellIndex}`;
+                syncedIds.add(changeId);
             } else {
                 failed++;
             }
 
-            await new Promise(resolve => setTimeout(resolve, 300));
+            await new Promise(r => setTimeout(r, 300));
+        }
+
+        if (!isMountedRef.current) return;
+
+        // ═══════════════════════════════════════════════════════════
+        // 6. جمع النطاقات (scopes) المزامنة
+        // ═══════════════════════════════════════════════════════════
+        const scopes = new Map();
+        for (const scope of unsyncedList) {
+            const key = `${scope.village}::${scope.month}`;
+            if (!scopes.has(key)) {
+                scopes.set(key, { village: scope.village, month: scope.month });
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 7. جلب البيانات الطازجة من السيرفر (بالتوازي)
+        // ═══════════════════════════════════════════════════════════
+        const freshByScope = new Map();
+        await Promise.all(
+            [...scopes.entries()].map(async ([key, s]) => {
+                try {
+                    const data = await fetchData(s.village, s.month, true);
+                    if (Array.isArray(data)) {
+                        freshByScope.set(key, data);
+                    }
+                } catch (err) {
+                    console.error(`❌ فشل جلب ${key}:`, err);
+                }
+            })
+        );
+
+        if (!isMountedRef.current) return;
+
+        // ═══════════════════════════════════════════════════════════
+        // 8. تنظيف pendingChanges بـ id فريد (قبل الدمج مع الجدول)
+        //    ⚠️ ننظّف أولاً حتى يتم الدمج بالبيانات المتبقية الصحيحة
+        // ═══════════════════════════════════════════════════════════
+        const currentPending = pendingChangesRef.current || {};
+        const cleaned = {};
+        for (const k in currentPending) {
+            const u = (currentPending[k] || []).filter(c => {
+                const cId =
+                    c.id || `${c.timestamp}_${c.rowIndex}_${c.cellIndex}`;
+                return !syncedIds.has(cId);
+            });
+            if (u.length > 0) cleaned[k] = u;
+        }
+
+        let storageOk = true;
+        try {
+            saveToStorage(PENDING_KEY, cleaned);
+        } catch (e) {
+            console.warn('⚠️ فشل حفظ pendingChanges:', e);
+            storageOk = false;
+        }
+
+        setPendingChanges(cleaned);
+        console.log('🧹 تم تنظيف التغييرات المُزامنة');
+
+        // ═══════════════════════════════════════════════════════════
+        // 9. تحديث الجدول المعروض مع دمج التعديلات المحلية المتبقية
+        //    ✅ [إصلاح #3] لا نستبدل البيانات كلياً حتى لا تُخفى
+        //       تعديلات لم تُزامن بعد (مثلاً خلايا فشلت مزامنتها)
+        // ═══════════════════════════════════════════════════════════
+        const currentKey = `${village}::${month}`;
+        const freshCurrentData = freshByScope.get(currentKey);
+
+        if (freshCurrentData && Array.isArray(freshCurrentData)) {
+            // دمج التعديلات المتبقية (غير المُزامنة) فوق البيانات الطازجة
+            const remainingLocal = (cleaned[currentKey] || []).filter(
+                c => !c.synced && c.cellIndex !== 12
+            );
+
+            const mergedData = applyLocalOverrides(
+                freshCurrentData,
+                remainingLocal
+            );
+
+            setData(mergedData);
+            setHasData(true);
+            console.log(
+                `✅ تم تحديث الجدول من السيرفر (${remainingLocal.length} تعديل محلي متبقٍ)`
+            );
+        } else {
+            console.warn('⚠️ لا توجد بيانات طازجة للنطاق المعروض');
+            // ✅ [إصلاح #4] تحذير المستخدم بفشل تحديث العرض
+            if (isMountedRef.current) {
+                showSync(
+                    '⚠️ تمت المزامنة لكن تعذّر تحديث الجدول من السيرفر',
+                    'warning',
+                    4000
+                );
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 10. تحديث العدد المتبقي
+        // ═══════════════════════════════════════════════════════════
+        if (typeof loadPendingChanges === 'function') {
+            try {
+                await loadPendingChanges();
+            } catch (e) {
+                console.warn('⚠️ فشل loadPendingChanges:', e);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 11. رسالة النتيجة للمستخدم
+        // ═══════════════════════════════════════════════════════════
+        if (isMountedRef.current) {
+            if (failed === 0) {
+                showSync(
+                    storageOk
+                        ? `✅ تمت مزامنة ${synced} تغيير، وحُدّث الجدول من السيرفر`
+                        : `✅ مزامنة ${synced}، لكن فشل الحفظ المحلي`,
+                    storageOk ? 'success' : 'warning',
+                    3500
+                );
+            } else {
+                showSync(
+                    `⚠️ مزامنة ${synced}، فشل ${failed}`,
+                    'warning',
+                    4500
+                );
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 12. حساب المتبقي القابل للمزامنة
+        // ═══════════════════════════════════════════════════════════
+        const remainingSyncable = Object.values(cleaned).reduce(
+            (sum, changes) =>
+                sum +
+                changes.filter(c => !c.synced && c.cellIndex !== 12).length,
+            0
+        );
+
+        // ═══════════════════════════════════════════════════════════
+        // 13. إعادة محاولة ذكية (مع حد أقصى للمحاولات)
+        //     - ملاحظة: cleaned حُذفت منه العناصر المُزامنة، لذا
+        //       المحاولة التالية تُعيد الفاشلة + أي تغييرات جديدة فقط
+        // ═══════════════════════════════════════════════════════════
+        if (
+            remainingSyncable > 0 &&
+            navigator.onLine &&
+            !retryTimerRef.current
+        ) {
+            const MAX_RETRIES = 3;
+            const attempts = retryCountRef.current || 0;
+
+            if (failed === 0) {
+                // إعادة محاولة عادية (تغييرات جديدة وصلت أثناء المزامنة)
+                console.log(
+                    `⏳ ${remainingSyncable} تغيير متبقي، إعادة المحاولة بعد 30 ثانية`
+                );
+                retryCountRef.current = 0;
+                retryTimerRef.current = setTimeout(() => {
+                    retryTimerRef.current = null;
+                    if (syncInProgressRef.current) return;
+                    syncRef.current?.();
+                }, 30000);
+            } else if (attempts < MAX_RETRIES) {
+                // إعادة محاولة للفاشلة
+                retryCountRef.current = attempts + 1;
+                console.log(
+                    `🔁 محاولة ${attempts + 1}/${MAX_RETRIES} لإعادة مزامنة ${remainingSyncable} تغيير فاشل بعد 10 ثوانٍ`
+                );
+                retryTimerRef.current = setTimeout(() => {
+                    retryTimerRef.current = null;
+                    if (syncInProgressRef.current) return;
+                    syncRef.current?.();
+                }, 10000);
+            } else {
+                // تجاوز الحد الأقصى
+                console.warn(
+                    `⚠️ تجاوز الحد الأقصى (${MAX_RETRIES}) لمزامنة ${remainingSyncable} تغيير`
+                );
+                retryCountRef.current = 0;
+                if (isMountedRef.current) {
+                    showSync(
+                        `⚠️ ${remainingSyncable} تغيير فشل مزامنته. تحقق من الاتصال وأعد المحاولة يدوياً`,
+                        'warning',
+                        6000
+                    );
+                }
+            }
+        }
+
+    } catch (fatalErr) {
+        console.error('❌ خطأ فادح في المزامنة:', fatalErr);
+        if (isMountedRef.current) {
+            showSync('❌ حدث خطأ غير متوقع أثناء المزامنة', 'error', 4000);
+        }
+    } finally {
+        syncInProgressRef.current = false;
+        if (isMountedRef.current) setSyncInProgress(false);
+
+        // ✅ [إصلاح #1] العدّادات الآن معرّفة دائماً — لا ReferenceError
+        if (failed === 0 && synced > 0) {
+            retryCountRef.current = 0;
         }
     }
-
-    // ===== تحديث البيانات من السيرفر (ليظهر المتبقي الجديد) =====
-    await loadData(true);
-
-    const remaining = await loadPendingChanges();
-
-    if (failed === 0) {
-        showSync(`✅ تمت مزامنة ${synced} تغيير بنجاح`, 'success', 3000);
-    } else {
-        showSync(`⚠️ تمت مزامنة ${synced} تغيير، فشل ${failed}`, 'warning', 4000);
-    }
-
-    setSyncInProgress(false);
-    
-    if (remaining > 0 && navigator.onLine) {
-        console.log(`⏳ ${remaining} تغيير متبقي، إعادة المحاولة بعد 30 ثانية`);
-        setTimeout(() => {
-            syncAllPendingChanges();
-        }, 30000);
-    }
-}, [pendingChanges, syncImmediately, loadData, loadPendingChanges, showSync, syncInProgress]);
+}, [
+    syncImmediately,
+    loadPendingChanges,
+    showSync,
+    village,
+    month,
+    setData,
+    setHasData,
+    setPendingChanges,
+    fetchData,
+]);
 
             const fetchData = useCallback(async (village, month, forceRefresh = false) => {
     const cacheKey = `${village}_${month}`;
@@ -6997,10 +7169,19 @@ if (isYearLocked) {
 const loadData = useCallback(async (forceRefresh = false) => {
     if (!isLoggedIn || !user) return;
 
+    // ✅ رقم فريد لكل طلب — يمنع الطلبات القديمة من الكتابة فوق الأحدث
+    const currentRequestId = ++loadRequestIdRef.current;
+
     setLoading(true);
     showSync('📡 جاري تحميل البيانات...', 'info', 3000);
 
     const result = await fetchData(village, month, forceRefresh);
+
+    // ✅ إذا جاء طلب أحدث أثناء الانتظار → تجاهل هذه النتيجة
+    if (currentRequestId !== loadRequestIdRef.current) {
+        console.log(`🚫 تجاهل نتيجة قديمة (طلب #${currentRequestId}، الحالي #${loadRequestIdRef.current})`);
+        return;
+    }
 
     if (result) {
         const key = `${window.CURRENT_YEAR}_${village}_${month}`;
@@ -7013,7 +7194,8 @@ const loadData = useCallback(async (forceRefresh = false) => {
         });
 
         setData(result);
-setHasData(true);
+        setHasData(true);
+
         // 🔥 تحديث الرسالة حسب المصدر
         if (!navigator.onLine && isCached) {
             showSync(`📦 بيانات من الذاكرة المؤقتة (غير متصل)`, 'info', 3000);
@@ -7111,219 +7293,11 @@ setHasData(true);
                     return null;
                 }
             }, [village, isLoggedIn, user]);
-
-            const executeSmartSearch = useCallback((query) => {
-                if (!query || query.trim() === '') {
-                    setSearchResults([]);
-                    setSearchSuggestions([]);
-                    setSearchVisible(false);
-                    setShowSuggestions(false);
-                    return;
-                }
-
-                if (!data || data.length === 0) {
-                    setSearchResults([]);
-                    setSearchSuggestions([]);
-                    setSearchVisible(true);
-                    setShowSuggestions(true);
-                    return;
-                }
-
-                const analysis = analyzeSearchQuery(query);
-
-                if (analysis.isHelp) {
-                    setSearchResults([]);
-                    setSearchSuggestions([
-                        { text: '📖 أوامر البحث المتاحة:', desc: '', type: 'help', icon: '📖', isSuggestion: true },
-                        { text: '🔍 اكتب اسم المشترك', desc: 'مثال: نصر العامري', type: 'help', icon: '🔍', isSuggestion: true },
-                        { text: '💰 مسلم 5000', desc: 'تسديد مبلغ للمشترك', type: 'help', icon: '💰', isSuggestion: true },
-                        { text: '📊 قراءة 250', desc: 'تسجيل قراءة جديدة', type: 'help', icon: '📊', isSuggestion: true },
-                        { text: '🏘️ السوفعي', desc: 'التبديل إلى قرية', type: 'help', icon: '🏘️', isSuggestion: true },
-                        { text: '📅 شهر 3', desc: 'التبديل إلى شهر', type: 'help', icon: '📅', isSuggestion: true },
-                        { text: '📈 تقرير', desc: 'عرض تقرير القرى', type: 'help', icon: '📈', isSuggestion: true },
-                    ]);
-                    setSearchVisible(true);
-                    setShowSuggestions(true);
-                    return;
-                }
-
-                if (analysis.isReport) {
-                    setReportVisible(true);
-                    setSearchQuery('');
-                    setSearchVisible(false);
-                    return;
-                }
-
-                if (analysis.hasAttendance) {
-                    showSync('📋 تم فتح سجل الحضور', 'info', 3000);
-                    setSearchQuery('');
-                    setSearchVisible(false);
-                    return;
-                }
-
-                if (analysis.hasVillageChange && VILLAGES_LIST.includes(analysis.village)) {
-                    setVillage(analysis.village);
-                    showSync(`🏘️ تم التبديل إلى ${analysis.village}`, 'success', 2000);
-                    setSearchQuery('');
-                    setSearchVisible(false);
-                    return;
-                }
-
-                if (analysis.hasMonthChange) {
-                    setMonth(analysis.month);
-                    showSync(`📅 تم التبديل إلى ${analysis.month}`, 'success', 2000);
-                    setSearchQuery('');
-                    setSearchVisible(false);
-                    return;
-                }
-
-                if (analysis.hasOperation && analysis.name) {
-                    const results = smartSearch(analysis.name, data);
-
-                    if (results.length === 1) {
-                        const result = results[0];
-                        const idx = result.originalIndex;
-                        const fi = analysis.operation === 'paid' ? 11 : 3;
-                        const val = analysis.value.toString();
-
-                        if (user && user.permissions && user.permissions.canEdit.includes(fi)) {
-                            if (data[idx]) {
-                                data[idx][fi] = val;
-                                syncImmediately(village, month, idx, fi, val, data[idx][0] || '');
-
-                                
-                                setData([...data]);
-                                const opName = fi === 11 ? 'المسلم' : 'القراءة';
-                                showSync(`✅ تم تسجيل ${val} في ${opName} للمشترك ${result.name}`, 'success', 3000);
-                                loadPendingChanges();
-
-                                setTimeout(() => {
-                                    const rows = document.querySelectorAll('#tableWrapper tbody tr');
-                                    if (rows[idx - 2]) {
-                                        rows.forEach(r => r.classList.remove('selected-row-highlight'));
-                                        rows[idx - 2].classList.add('selected-row-highlight');
-                                        rows[idx - 2].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    }
-                                }, 100);
-                            }
-                        } else {
-                            showSync('⛔ لا توجد صلاحية للتعديل', 'error');
-                        }
-
-                        setSearchQuery('');
-                        setSearchVisible(false);
-                        setLastSearch(analysis.name);
-                        return;
-                    } else if (results.length > 1) {
-                        setSearchResults(results.map(r => ({ ...r, _action: analysis })));
-                        setSearchVisible(true);
-                        setShowSuggestions(false);
-                        return;
-                    } else {
-                        showSync('❌ لم يتم العثور على مشترك بهذا الاسم', 'error', 3000);
-                        setSearchVisible(false);
-                        return;
-                    }
-                }
-
-                if (analysis.name) {
-                    const tripletResults = searchByNameTriplet(analysis.name, data);
-                    if (tripletResults.length > 0) {
-                        setSearchResults(tripletResults);
-                        setSearchVisible(true);
-                        setShowSuggestions(false);
-                        setLastSearch(analysis.name);
-                        return;
-                    }
-
-                    const results = smartSearch(analysis.name, data);
-                    if (results.length > 0) {
-                        setSearchResults(results);
-                        setSearchVisible(true);
-                        setShowSuggestions(false);
-                        setLastSearch(analysis.name);
-                    } else {
-                        const suggestions = getSearchSuggestions(analysis.name, { lastSearch });
-                        if (suggestions.length > 0) {
-                            setSearchSuggestions(suggestions);
-                            setSearchResults([]);
-                            setSearchVisible(true);
-                            setShowSuggestions(true);
-                        } else {
-                            setSearchResults([]);
-                            setSearchVisible(false);
-                            showSync('🔍 لا توجد نتائج', 'info', 2000);
-                        }
-                    }
-                } else {
-                    const suggestions = getSearchSuggestions(query, { lastSearch });
-                    if (suggestions.length > 0) {
-                        setSearchSuggestions(suggestions);
-                        setSearchResults([]);
-                        setSearchVisible(true);
-                        setShowSuggestions(true);
-                    } else {
-                        setSearchVisible(false);
-                    }
-                }
-            }, [data, user, village, month, syncImmediately, loadPendingChanges, showSync, lastSearch]);
-
-            const startVoiceRecognition = useCallback(() => {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SpeechRecognition) {
-                    showSync('❌ متصفحك لا يدعم البحث الصوتي', 'error', 3000);
-                    return;
-                }
-                const recognition = new SpeechRecognition();
-                recognition.lang = 'ar-SA';
-                recognition.continuous = false;
-                recognition.interimResults = true;
-                recognition.maxAlternatives = 3;
-                setIsRecording(true);
-                let silenceTimer;
-                recognition.onresult = (event) => {
-                    clearTimeout(silenceTimer);
-                    silenceTimer = setTimeout(() => recognition.stop(), 2000);
-                    const last = event.results.length - 1;
-                    const transcript = event.results[last][0].transcript;
-                    setSearchQuery(transcript);
-                    if (event.results[last].isFinal) {
-                        executeSmartSearch(transcript);
-                        setIsRecording(false);
-                    }
-                };
-                recognition.onerror = () => {
-                    setIsRecording(false);
-                    showSync('❌ فشل التعرف الصوتي', 'error', 3000);
-                };
-                recognition.onend = () => {
-                    setIsRecording(false);
-                };
-                try {
-                    recognition.start();
-                    silenceTimer = setTimeout(() => recognition.stop(), 5000);
-                    showSync('🎤 استمع... تحدث الآن', 'info', 5000);
-                } catch (e) {
-                    setIsRecording(false);
-                    showSync('❌ فشل بدء التسجيل الصوتي', 'error', 3000);
-                }
-                voiceRecognitionRef.current = recognition;
-            }, [executeSmartSearch, showSync]);
+            
             // ✅ تعريف قائمة القرى داخل App مباشرة
 const APP_VILLAGES_LIST = ['السوفعي', 'العليا', 'السفلى', 'الشعابي', 'الجبل', 'حيزان', 'رقش', 'الضرفة'];
 
             
-            const handleCloseSearch = useCallback(() => {
-                setSearchVisible(false);
-                setSearchQuery('');
-                setSearchResults([]);
-                setSearchSuggestions([]);
-                setShowSuggestions(false);
-                if (searchInputRef.current) {
-                    searchInputRef.current.blur();
-                }
-            }, []);
-
             const syncAllChanges = useCallback(() => {
                 syncAllPendingChanges();
             }, [syncAllPendingChanges]);
@@ -8342,40 +8316,6 @@ const openUserForm = useCallback((password = null, userData = null) => {
     setShowUserForm(true);
 }, []);
 
-// ===== تصدير التقرير إلى Excel =====
-const exportDirectorReportToExcel = useCallback(() => {
-    if (filteredDirectorReport.length === 0) {
-        alert('لا توجد بيانات للتصدير');
-        return;
-    }
-    
-    const headers = ['رقم العداد', 'الاسم', '1-8 م³', '9+ م³', 'المطلوب', 'المسلم', 'المتبقي', 'نسبة التحصيل', 'القرية', 'الشهر', 'التاريخ'];
-    const data = filteredDirectorReport.map(item => [
-        item.meterNumber,
-        item.name,
-        item.consumptionLow || 0,
-        item.consumptionHigh || 0,
-        item.total,
-        item.paid,
-        item.remaining,
-        item.paymentRate + '%',
-        item.village || village,
-        item.month || month,
-        item.date || '-'
-    ]);
-    
-    try {
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'تقرير المدير');
-        XLSX.writeFile(wb, `تقرير_المدير_${new Date().toLocaleDateString('ar-EG')}.xlsx`);
-        addAuditLog('export', 'تم تصدير تقرير المدير إلى Excel');
-        showSync('تم تصدير التقرير بنجاح', 'success');
-    } catch (error) {
-        showSync('فشل تصدير التقرير: ' + error.message, 'error');
-    }
-}, [filteredDirectorReport, village, month, addAuditLog, showSync]);
-
 // ===== طباعة التقرير =====
 const printDirectorReport = useCallback(() => {
     if (filteredDirectorReport.length === 0) {
@@ -8563,8 +8503,6 @@ useEffect(() => {
     setIsLoggedIn(false);
     setUser(null);
     setData([]);
-    setSearchVisible(false);
-    setSearchQuery('');
     setReportVisible(false);
     setChartsVisible(false);
     setFullscreenChart(null);
@@ -9370,11 +9308,11 @@ useEffect(() => {
 )}
 </div>
         {/* ===== القوائم المنسدلة ===== */}
-        <select value={village} onChange={(e) => { setVillage(e.target.value); handleCloseSearch(); }} style={{ width: '100%', padding: '10px 16px', borderRadius: '12px', border: '2px solid rgba(76, 201, 240, 0.3)', background: 'linear-gradient(135deg, rgba(0, 119, 182, 0.85), rgba(0, 180, 216, 0.85))', fontSize: '14px', fontWeight: 'bold', color: 'white', cursor: 'pointer', fontFamily: 'Tajawal', appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\' viewBox=\'0 0 12 8\'%3E%3Cpath d=\'M1 1l5 5 5-5\' stroke=\'white\' stroke-width=\'2\' fill=\'none\' stroke-linecap=\'round\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'left 15px center', paddingLeft: '40px' }}>
+        <select value={village} onChange={(e) => setVillage(e.target.value)} style={{ width: '100%', padding: '10px 16px', borderRadius: '12px', border: '2px solid rgba(76, 201, 240, 0.3)', background: 'linear-gradient(135deg, rgba(0, 119, 182, 0.85), rgba(0, 180, 216, 0.85))', fontSize: '14px', fontWeight: 'bold', color: 'white', cursor: 'pointer', fontFamily: 'Tajawal', appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\' viewBox=\'0 0 12 8\'%3E%3Cpath d=\'M1 1l5 5 5-5\' stroke=\'white\' stroke-width=\'2\' fill=\'none\' stroke-linecap=\'round\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'left 15px center', paddingLeft: '40px' }}>
             {VILLAGES_LIST.map(v => (<option key={v} value={v} style={{ background: '#001219', color: 'white', padding: '10px' }}>{v}</option>))}
         </select>
 
-        <select value={month} onChange={(e) => { setMonth(e.target.value); handleCloseSearch(); }} style={{ width: '100%', padding: '10px 16px', borderRadius: '12px', border: '2px solid rgba(76, 201, 240, 0.3)', background: 'linear-gradient(135deg, rgba(0, 119, 182, 0.85), rgba(0, 180, 216, 0.85))', fontSize: '14px', fontWeight: 'bold', color: 'white', cursor: 'pointer', fontFamily: 'Tajawal', appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\' viewBox=\'0 0 12 8\'%3E%3Cpath d=\'M1 1l5 5 5-5\' stroke=\'white\' stroke-width=\'2\' fill=\'none\' stroke-linecap=\'round\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'left 15px center', paddingLeft: '40px' }}>
+        <select value={month} onChange={(e) => setMonth(e.target.value)} style={{ width: '100%', padding: '10px 16px', borderRadius: '12px', border: '2px solid rgba(76, 201, 240, 0.3)', background: 'linear-gradient(135deg, rgba(0, 119, 182, 0.85), rgba(0, 180, 216, 0.85))', fontSize: '14px', fontWeight: 'bold', color: 'white', cursor: 'pointer', fontFamily: 'Tajawal', appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\' viewBox=\'0 0 12 8\'%3E%3Cpath d=\'M1 1l5 5 5-5\' stroke=\'white\' stroke-width=\'2\' fill=\'none\' stroke-linecap=\'round\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'left 15px center', paddingLeft: '40px' }}>
             {Array.from({ length: 12 }, (_, i) => { const m = 'شهر ' + (i + 1); const isCurrent = m === getCurrentMonth(); return (<option key={m} value={m} style={{ background: '#001219', color: 'white', padding: '10px' }}>{m} {isCurrent ? '⭐ (الشهر الحالي)' : ''}</option>); })}
         </select>
 
@@ -9382,13 +9320,15 @@ useEffect(() => {
 </div>
         {/* ===== البحث الذكي ===== */}
         <div className="smart-search-container">
-            <div className="smart-search-box">
-                <span className="search-icon">🔍</span>
-                <input ref={searchInputRef} type="text" placeholder="ابحث بالاسم، رقم العداد، مسلم 5000..." value={searchQuery} onChange={(e) => { const val = e.target.value; setSearchQuery(val); if (val.trim().length > 0) { executeSmartSearch(val); } else { setSearchVisible(false); setSearchResults([]); setSearchSuggestions([]); } }} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); executeSmartSearch(searchQuery); } if (e.key === 'Escape') { handleCloseSearch(); } }} onFocus={() => { if (searchQuery.trim().length > 0) { executeSmartSearch(searchQuery); } }} onBlur={(e) => { setTimeout(() => { if (!document.activeElement || !document.activeElement.closest('.smart-search-results')) { handleCloseSearch(); } }, 150); }} />
-                <button className={`voice-btn ${isRecording ? 'recording' : ''}`} onClick={isRecording ? () => { if (voiceRecognitionRef.current) { voiceRecognitionRef.current.stop(); } setIsRecording(false); } : startVoiceRecognition} title="بحث صوتي">{isRecording ? <span className="pulse-dot"></span> : <span>🎤</span>}</button>
-            </div>
-            {searchQuery.trim() !== '' && (<SearchResults results={searchResults} suggestions={searchSuggestions} onSelect={handleSearchSelect} onClose={handleCloseSearch} showSuggestions={showSuggestions} />)}
-        </div>
+    <div className="smart-search-box">
+        <span className="search-icon">🔍</span>
+        <input 
+            type="text" 
+            placeholder="ابحث بالاسم، رقم العداد، مسلم 5000..." 
+        />
+        <button className="voice-btn" title="بحث صوتي">🎤</button>
+    </div>
+</div>
                             {/* ===== العمود الأيسر: الجداول والمحتوى (ثلثي الشاشة) ===== */}
                             <div className="app-main">
                                 {/* ===== لوحة الذكاء الاصطناعي ===== */}
@@ -9840,18 +9780,7 @@ useEffect(() => {
 
                         {/* أزرار التصدير */}
                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
-                            <button onClick={exportDirectorReportToExcel} style={{
-                                padding: '8px 20px',
-                                borderRadius: '25px',
-                                border: 'none',
-                                background: 'linear-gradient(135deg, #28a745, #20c997)',
-                                color: 'white',
-                                cursor: 'pointer',
-                                fontWeight: 'bold',
-                                fontFamily: 'Tajawal'
-                            }}>
-                                📊 تصدير Excel
-                            </button>
+                           
                             <button onClick={printDirectorReport} style={{
                                 padding: '8px 20px',
                                 borderRadius: '25px',
@@ -14724,57 +14653,87 @@ if (allRows[rowIndex]) {
     // ============================================================
 
     function showMessage(text) {
-        const old = document.querySelector('.cmd-result');
-        if (old) old.remove();
+    const old = document.querySelector('.cmd-result');
+    if (old) old.remove();
 
-        const div = document.createElement('div');
-        div.className = 'cmd-result';
-        div.textContent = text;
-        div.style.cssText = `
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.92);
-            color: #fff;
-            padding: 16px 30px;
-            border-radius: 16px;
-            font-size: 17px;
-            z-index: 999998;
-            font-family: 'Tajawal', sans-serif;
-            border: 2px solid #4cc9f0;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            text-align: center;
-            max-width: 90%;
-            direction: rtl;
-            white-space: pre-line;
-            line-height: 1.8;
-            animation: fadeIn 0.3s ease;
-        `;
-        document.body.appendChild(div);
-
-        setTimeout(() => {
-            div.style.opacity = '0';
-            div.style.transition = 'opacity 0.4s';
-            setTimeout(() => div.remove(), 400);
-        }, 5000);
+    // ✅ تحديد المدة حسب نوع الرسالة
+    let duration = 1800;  // افتراضي: 1.8 ثانية
+    
+    if (text.includes('❌') || text.includes('لم أجد') || text.includes('فشل')) {
+        duration = 3000;  // أخطاء: 3 ثوانٍ (وقت للقراءة)
+    } else if (text.includes('📋') && text.length > 100) {
+        duration = 8000;  // قائمة المساعدة: 8 ثوانٍ
+    } else if (text.includes('✅') || text.includes('تم')) {
+        duration = 1500;  // نجاح: 1.5 ثانية
+    } else if (text.includes('🔍')) {
+        duration = 2000;  // بحث: 2 ثانية
     }
+
+    const div = document.createElement('div');
+    div.className = 'cmd-result';
+    div.textContent = text;
+    div.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.92);
+        color: #fff;
+        padding: 14px 26px;
+        border-radius: 16px;
+        font-size: 16px;
+        z-index: 999998;
+        font-family: 'Tajawal', sans-serif;
+        border: 2px solid #4cc9f0;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        text-align: center;
+        max-width: 90%;
+        direction: rtl;
+        white-space: pre-line;
+        line-height: 1.7;
+        animation: fadeIn 0.3s ease;
+        cursor: pointer;
+    `;
+
+    // ✅ إغلاق فوري عند النقر
+    div.onclick = () => {
+        div.style.opacity = '0';
+        div.style.transition = 'opacity 0.2s';
+        setTimeout(() => div.remove(), 200);
+    };
+
+    document.body.appendChild(div);
+
+    setTimeout(() => {
+        if (!div.parentNode) return;  // أُغلق يدوياً
+        div.style.opacity = '0';
+        div.style.transition = 'opacity 0.4s';
+        setTimeout(() => div.remove(), 400);
+    }, duration);
+}
 
     // ============================================================
     //  ربط البحث مع الاقتراحات
     // ============================================================
 function connectSearch() {
-        const input = document.querySelector('.smart-search-box input');
-        if (!input) {
-            setTimeout(connectSearch, 500);
-            return;
-        }
+    const input = document.querySelector('.smart-search-box input');
+    if (!input) {
+        setTimeout(connectSearch, 500);
+        return;
+    }
 
-        console.log('✅ نظام الأوامر المتكامل مع الأزرار والبحث المتطور جاهز!');
+    // ✅ حماية من الربط المكرر
+    if (input.dataset.searchConnected === 'true') {
+        return;
+    }
+    input.dataset.searchConnected = 'true';
 
-        const newInput = input.cloneNode(true);
-        input.parentNode.replaceChild(newInput, input);
+    console.log('✅ نظام الأوامر المتكامل مع الأزرار والبحث المتطور جاهز!');
 
+    const newInput = input.cloneNode(true);
+    // ✅ نقل علامة الربط إلى النسخة الجديدة
+    newInput.dataset.searchConnected = 'true';
+    input.parentNode.replaceChild(newInput, input);
         let suggestionsContainer = document.createElement('div');
         suggestionsContainer.className = 'suggestions-container';
         suggestionsContainer.style.cssText = `
@@ -14963,15 +14922,27 @@ function connectSearch() {
     //  بدء التشغيل
     // ============================================================
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(connectSearch, 2000);
-            setTimeout(setupVoiceSearch, 2500);
-        });
-    } else {
-        setTimeout(connectSearch, 2000);
-        setTimeout(setupVoiceSearch, 2500);
+    // ✅ بحث أسرع — انتظار أقل، مع إعادة محاولة ذكية
+function tryConnect(retries = 50) {
+    const input = document.querySelector('.smart-search-box input');
+    if (input) {
+        connectSearch();
+        return;
     }
+    if (retries > 0) {
+        setTimeout(() => tryConnect(retries - 1), 200);
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        tryConnect(50);
+        setTimeout(setupVoiceSearch, 500);
+    });
+} else {
+    tryConnect(50);
+    setTimeout(setupVoiceSearch, 500);
+}
 
     console.log('✅ نظام الأوامر المتكامل مع الأزرار والبحث المتطور جاهز!');
     console.log('📋 الأزرار المدعومة:');
@@ -15036,17 +15007,23 @@ function connectSearch() {
     }
     
     // ===== مراقبة التغييرات =====
-    function startObserver() {
-        const observer = new MutationObserver(function() {
-            applyGoldBorders();
-        });
-        
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+    // ✅ راقب فقط tableWrapper بدل body كامل
+let observer = null;
+function startTableObserver() {
+    const tableWrapper = document.getElementById('tableWrapper');
+    if (!tableWrapper) {
+        setTimeout(startTableObserver, 500);
+        return;
     }
     
+    if (observer) observer.disconnect();
+    
+    observer = new MutationObserver(function() {
+        init();
+    });
+    observer.observe(tableWrapper, { childList: true, subtree: true });
+}
+startTableObserver();
     // ===== بدء التشغيل =====
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
@@ -16377,7 +16354,7 @@ window.__getYearReportData = async function(subscriberName, subscriberMeter) {
             console.log(`⚠️ الشهر الحالي (${currentMonth}) فارغ، استخدام آخر شهر (${lastMonthWithData.month})`);
         }
 
-        console.log(`💰 المطلوب=${totals.total} | المسلم=${totals.paid} | المتبقي=${totals.remaining} | الاستهلاك=${totals.consumption}`);
+        console.log(`?? المطلوب=${totals.total} | المسلم=${totals.paid} | المتبقي=${totals.remaining} | الاستهلاك=${totals.consumption}`);
 
         // ============================================================
         // ✅ بناء صفوف الجدول
