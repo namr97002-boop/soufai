@@ -7092,6 +7092,22 @@ const syncAllPendingChanges = useCallback(async () => {
     fetchData,
 ]);
 
+// ✅ تحديث الـ refs بأحدث النسخ
+useEffect(() => {
+    pendingChangesRef.current = pendingChanges;
+    syncRef.current = syncAllPendingChanges;
+}, [pendingChanges, syncAllPendingChanges]);
+
+// ✅ تنظيف المؤقت عند unmount
+useEffect(() => {
+    return () => {
+        if (retryTimerRef.current) {
+            clearTimeout(retryTimerRef.current);
+            retryTimerRef.current = null;
+        }
+    };
+}, []);
+
             const fetchData = useCallback(async (village, month, forceRefresh = false) => {
     const cacheKey = `${village}_${month}`;
     const apiUrl = villageAPIs[village];
@@ -7299,7 +7315,7 @@ const APP_VILLAGES_LIST = ['السوفعي', 'العليا', 'السفلى', 'ا
 
             
             const syncAllChanges = useCallback(() => {
-                syncAllPendingChanges();
+                syncRef.current?.();
             }, [syncAllPendingChanges]);
 
             const fetchMonthlyReportData = useCallback(async (month, forceRefresh = false) => {
@@ -7557,12 +7573,12 @@ data.forEach((row, index) => {
     if (index === 0 || index === 1) return;
     
     if (!row || !Array.isArray(row) || row.length === 0) return;
-    // ✅ تخطي الصفوف الفارغة تماماً
-if (!Array.isArray(row)) return;
-const isEmptyRow = !row.some(function(cell) {
-    return String(cell || '').trim() !== '';
-});
-if (isEmptyRow) return;
+
+// ✅ تخطي أي صف يكون العمود الثاني (الاسم) فيه فارغاً
+// ما عدا آخر صف (الإجمالي)
+const nameValue = String(row[1] || '').trim();
+const isLastRow = (index === data.length - 1);
+if (nameValue === '' && !isLastRow) return;
     // ✅ التحقق من أن هذا الصف ليس اسم قرية مكرر
     if (row.length === 1 && typeof row[0] === 'string' && 
         (row[0].includes('السوفعي') || row[0].includes('العليا') || 
@@ -8417,7 +8433,7 @@ const printDirectorReport = useCallback(() => {
             
             if (count > 0) {
                 console.log(`🔄 مزامنة ${count} تغيير معلق...`);
-                syncAllPendingChanges();
+                syncRef.current?.();
             } else {
                 // إذا لم تكن هناك تغييرات، نحدث البيانات
                 loadData(true);
@@ -9201,7 +9217,7 @@ useEffect(() => {
                 }
                 
                 showSync('🔄 جاري مزامنة ' + count + ' تغيير يدوياً...', 'info', 3000);
-                syncAllPendingChanges();
+                syncRef.current?.();
             }} 
             style={{ 
                 width: '100%',
@@ -15279,7 +15295,7 @@ function detectRealMonthFromTable() {
         const url = `sms:${phone}?body=${encodeURIComponent(message)}`;
         
         try {
-            if (!_smsFrame || now - _smsFrameTime > 300 || !document.contains(_smsFrame)) {
+            if (!_smsFrame || !document.contains(_smsFrame)) {
                 if (_smsFrame) {
                     try { _smsFrame.remove(); } catch(e) {}
                 }
@@ -15475,9 +15491,9 @@ function detectRealMonthFromTable() {
             if (busyBtn) releaseButton(busyBtn);
         }
         
-        btn._busy = true;
-        btn.dataset.busy = '1';
-        _busyCount++;
+        // ✅ لا عدّاد تراكمي — المؤقت الخاص بالزر يكفي
+btn._busy = true;
+btn.dataset.busy = '1';
         
         try {
     // قراءة البيانات
@@ -15540,11 +15556,13 @@ ${total}
                 }, 1000);
             }
             
-            // 🔴 الزر يبقى أحمر 20 ثانية كاملة
-            setTimeout(() => {
-                if (countdownTimer) clearInterval(countdownTimer);
-                releaseButton(btn);
-            }, CONFIG.RESET_BUTTON_AFTER);
+          // ✅ مؤقت واحد لكل زر — يُلغى السابق قبل إنشاء جديد (لا تراكم)
+if (btn._resetTimer) clearTimeout(btn._resetTimer);
+btn._resetTimer = setTimeout(() => {
+    if (countdownTimer) clearInterval(countdownTimer);
+    releaseButton(btn);
+    btn._resetTimer = null;
+}, CONFIG.RESET_BUTTON_AFTER);
             
         } catch (err) {
             error('❌ خطأ:', err);
