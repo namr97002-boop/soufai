@@ -393,7 +393,10 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 100;
-    background: #000814;
+    background: 
+        radial-gradient(ellipse at 20% 30%, rgba(76, 201, 240, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+        #000814 !important;
     transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -2001,8 +2004,7 @@ select:hover,
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95)) !important;
     color: white !important;
     padding: 12px 18px !important;
-    font-size:
-        font-size: 14px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     cursor: pointer !important;
     backdrop-filter: blur(10px) !important;
@@ -4255,12 +4257,12 @@ input, select, textarea {
         -webkit-overflow-scrolling: touch !important;
     }
     
-    /* تحسين الجدول */
-    .table-container td,
-    .table-container th {
-        padding: 8px 4px !important;
-        font-size: 13px !important;
-    }
+/* تحسين الجدول */
+.table-container td,
+.table-container th {
+    padding: 8px 4px !important;
+    font-size: 16px !important;   /* ⬅️ كبّرنا الخط فقط */
+}
     
     /* تحسين النوافذ */
     .report-modal {
@@ -4280,13 +4282,12 @@ input, select, textarea {
 /* ============================================ */
 @media (max-width: 480px) {
     
-    /* الجدول: خط أصغر أكثر */
-    .table-container td,
-    .table-container th {
-        font-size: 12px !important;
-        padding: 6px 3px !important;
-    }
-    
+/* الجدول: خط أصغر أكثر */
+.table-container td,
+.table-container th {
+    font-size: 15px !important;   /* ⬅️ كبّرنا من 12 إلى 15 */
+    padding: 6px 3px !important;
+}
     /* ✅ الأزرار تبقى بحجمها الأصلي — لا تعديل */
     
     /* النوافذ: ملء الشاشة */
@@ -4296,6 +4297,110 @@ input, select, textarea {
         height: 100vh !important;
     }
 }
+/* ============================================ */
+/* 📌 تثبيت رأس الجدول على الجوال - إصلاح */
+/* ============================================ */
+@media (max-width: 768px) {
+
+    /* 1️⃣ الحاوية: تمرير داخلي + ارتفاع محدود */
+    .table-container {
+        max-height: 75vh !important;
+        overflow-y: auto !important;
+        overflow-x: auto !important;
+        position: relative !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* 2️⃣ رأس الجدول: مثبت */
+    .table-container thead {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 100 !important;
+    }
+
+    /* 3️⃣ خلايا الرأس: sticky + خلفية صلبة (مهم!) */
+    .table-container thead th,
+    .table-container thead tr.row-0 td,
+    .table-container thead tr.row-1 th,
+    .table-container thead tr.row-1 td {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 101 !important;
+        /* ✅ لون رأس الجدول الحقيقي عندك = #1a237e */
+        background-color: #1a237e !important;
+        background-image: none !important;
+    }
+
+    /* 4️⃣ منع مشاكل sticky مع border-collapse */
+    .table-container table {
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+}
+@media (max-width: 768px) {
+    .table-container tbody tr:nth-child(even) {
+        background: rgba(76, 201, 240, 0.03) !important;
+    }
+    .table-container tbody tr:nth-child(odd) {
+        background: rgba(255, 255, 255, 0.01) !important;
+    }
+    .table-container tbody tr {
+        border-bottom: 1px solid rgba(76, 201, 240, 0.08) !important;
+    }
+}
+@media (max-width: 768px) {
+    .table-container tbody tr:nth-child(even) {
+        background: rgba(76, 201, 240, 0.03) !important;
+    }
+    .table-container tbody tr:nth-child(odd) {
+        background: rgba(255, 255, 255, 0.01) !important;
+    }
+    .table-container tbody tr {
+        border-bottom: 1px solid rgba(76, 201, 240, 0.08) !important;
+    }
+}
+@keyframes syncPulse {
+    0%, 100% {
+        box-shadow: 0 4px 25px rgba(255, 183, 3, 0.4);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 8px 45px rgba(255, 183, 3, 0.7), 0 0 80px rgba(255, 183, 3, 0.2);
+        transform: scale(1.01);
+    }
+}
+
+/* يُطبَّق فقط عندما يكون هناك تغييرات معلقة */
+.sync-btn-has-pending {
+    animation: syncPulse 2s ease-in-out infinite !important;
+}
+/* ============================================ */
+/* 🔥 تكبير كل الأعمدة - التغلب على كل القواعد السابقة */
+/* ============================================ */
+
+/* استخدم :where() لتقليل التحديد ثم !important للتغلب */
+.table-container tbody td,
+.table-container tbody tr td,
+.table-container tbody tr:not(.row-0):not(.row-1):not(.total-row) td,
+.table-container tbody tr:not(.row-0):not(.row-1):not(.total-row) td:nth-child(n),
+.table-container tbody tr td:nth-child(1),
+.table-container tbody tr td:nth-child(2),
+.table-container tbody tr td:nth-child(3),
+.table-container tbody tr td:nth-child(4),
+.table-container tbody tr td:nth-child(5),
+.table-container tbody tr td:nth-child(6),
+.table-container tbody tr td:nth-child(7),
+.table-container tbody tr td:nth-child(8),
+.table-container tbody tr td:nth-child(9),
+.table-container tbody tr td:nth-child(10),
+.table-container tbody tr td:nth-child(11),
+.table-container tbody tr td:nth-child(12),
+.table-container tbody tr td:nth-child(13),
+.table-container tbody tr td:nth-child(14) {
+    font-size: 17px !important;
+    font-weight: 900 !important;
+}
+
 </style>
 </head>
 <body>
@@ -5829,7 +5934,7 @@ function isValidBackup(backup) {
                                 >
                                     <option value="bar">📊 شريطي</option>
                                     <option value="line">📈 خطي</option>
-                                    <option value="pie">🥧 دائري</option>
+                                    <option value="pie">?? دائري</option>
                                 </select>
                                 <button className="btn btn-primary" onClick={() => handleFullscreen('revenue')} style={{ padding: '6px 10px', fontSize: '12px', width: 'auto' }}>
                                     <span>⤢</span>
@@ -9122,20 +9227,25 @@ useEffect(() => {
 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
     <button 
         onClick={() => {
-            // محاولة فتح النافذة مباشرة
             try {
-                if (window.__memoryManagerPro) {
+                if (window.__memoryManagerPro && typeof window.__memoryManagerPro.showPanel === 'function') {
                     window.__memoryManagerPro.showPanel();
-                } else if (window.memory && window.memory.panel) {
+                    return;
+                }
+                if (window.memory && typeof window.memory.panel === 'function') {
                     window.memory.panel();
+                    return;
+                }
+                if (typeof window.showEmergencyMemoryPanel === 'function') {
+                    window.showEmergencyMemoryPanel();
                 } else {
-                    // محاولة إنشاء النافذة يدوياً
-                    showMemoryPanel();
+                    alert('⚠️ نظام الذاكرة غير جاهز بعد. أعد تحميل الصفحة.');
                 }
             } catch(e) {
-                console.error('خطأ في فتح النافذة:', e);
-                // نافذة بديلة إذا فشل كل شيء
-                showFallbackPanel();
+                console.error('خطأ في فتح نافذة الذاكرة:', e);
+                if (typeof window.showEmergencyMemoryPanel === 'function') {
+                    window.showEmergencyMemoryPanel();
+                }
             }
         }} 
         style={{ 
@@ -15053,976 +15163,7 @@ startTableObserver();
     
     console.log('✨ نظام الحدود الذهبية جاهز');
 })();
-// ============================================================
-// 🏆 v8.1 - النسخة المثالية النهائية
-// ⚡ سرعة v7 | 🛡️ موثوقية v6 | 🆕 إصلاحات v8
-// 🔴 الزر يبقى أحمر 20 ثانية كاملة
-// ✅ أداء ثابت من أول رسالة إلى 10000 | ✅ صفر تراكم
-// ✅ iframe واحد مُعاد استخدامه | ✅ _busy على الزر
-// ✅ حفظ الإعدادات | ✅ أدوات تشخيص | ✅ شهر آمن
-// ============================================================
 
-(function emergencyButtonsPro() {
-    'use strict';
-    
-    console.log('%c🏆 v8.1 - الزر أحمر 20 ثانية', 'background:#25D366;color:#fff;padding:4px 10px;border-radius:4px;font-weight:bold;');
-    
-    // ============================================================
-    // 1. الإعدادات (محسّنة + قابلة للحفظ)
-    // ============================================================
-    const DEFAULT_CONFIG = {
-        // ⚡ الأداء
-        BATCH_SIZE: 100,
-        BATCH_DELAY: 20,
-        WATCH_INTERVAL: 10000,
-        RESET_BUTTON_AFTER: 20000,          // ✅ 20 ثانية — الزر يبقى أحمر
-        RETRY_DELAYS: [500, 1500],
-        MIN_SMS_INTERVAL: 0,
-        
-        // 🛡️ الحماية
-        LOCK_TIMEOUT: 10000,
-        MAX_BUSY_BUTTONS: 200,              // ✅ رفعناها (200 رسالة خلال 20 ثانية ممكنة)
-        
-        // 🎛️ الميزات
-        ENABLE_NOTIFICATIONS: true,
-        ENABLE_LOGGING: false,
-        SHOW_COUNTDOWN: false               // ✅ عدّاد تنازلي اختياري
-    };
-    
-    let CONFIG = { ...DEFAULT_CONFIG };
-    
-    // ============================================================
-    // 2. تحميل وحفظ الإعدادات
-    // ============================================================
-    function loadConfig() {
-        try {
-            const saved = localStorage.getItem('emergencyButtons_v8_config');
-            if (saved) {
-                CONFIG = { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
-                log('📂 تحميل الإعدادات');
-            }
-        } catch(e) {}
-    }
-    
-    function saveConfig() {
-        try {
-            localStorage.setItem('emergencyButtons_v8_config', JSON.stringify(CONFIG));
-        } catch(e) {}
-    }
-    
-    // ============================================================
-    // 3. أدوات مساعدة
-    // ============================================================
-    const log = (...args) => { if (CONFIG.ENABLE_LOGGING) console.log(...args); };
-    const warn = (...args) => { if (CONFIG.ENABLE_LOGGING) console.warn(...args); };
-    const error = (...args) => console.error(...args);
-    
-    // ============================================================
-    // 4. متغيرات الحالة
-    // ============================================================
-    let _table = null;
-    let _tableCheckTime = 0;
-    let _processedTables = new WeakSet();
-    let _smsFrame = null;
-    let _smsFrameTime = 0;
-    let _lastSMSTime = 0;
-    let _busyCount = 0;
-    let _isAdding = false;
-    let _addTimer = null;
-    let _watchTimer = null;
-    let _observer = null;
-    let _lockWatchdog = null;
-    let _observerDebounce = null;
-    let _notifyTimer = null;
-    let _hasShownFirstNotify = false;
-    
-    // ============================================================
-    // 5. البحث عن الجدول (cache ذكي 500ms)
-    // ============================================================
-    function getTable() {
-        const now = Date.now();
-        
-        if (_table && now - _tableCheckTime < 500 && document.contains(_table)) {
-            return _table;
-        }
-        
-        _tableCheckTime = now;
-        _table = null;
-        
-        const wrapper = document.getElementById('tableWrapper');
-        if (wrapper) {
-            const t = wrapper.querySelector('table');
-            if (t && t.rows.length > 1) {
-                _table = t;
-                return t;
-            }
-        }
-        
-        const container = document.querySelector('.table-container');
-        if (container) {
-            const t = container.querySelector('table');
-            if (t && t.rows.length > 1) {
-                _table = t;
-                return t;
-            }
-        }
-        
-        for (const t of document.querySelectorAll('table')) {
-            if (t.rows.length > 5) {
-                _table = t;
-                return t;
-            }
-        }
-        return null;
-    }
-    
-    // ============================================================
-    // 6. قراءة الشهر (3 مستويات آمنة)
-    // ============================================================
-    // ============================================================
-// ✅ getMonth() الذكية — تتحقق من الشهر الحقيقي للجدول
-// ============================================================
-function getMonth() {
-    // ===== 1. ابحث في app-sidebar أولاً (الأدق) =====
-    const sidebar = document.querySelector('.app-sidebar');
-    let selectValue = null;
-    
-    if (sidebar) {
-        for (const sel of sidebar.querySelectorAll('select')) {
-            const val = sel.value || '';
-            if (val.startsWith('شهر ')) {
-                selectValue = val.slice(5).trim();
-                break;
-            }
-        }
-    }
-    
-    // ===== 2. إذا لم نجد، ابحث في كل الصفحة =====
-    if (!selectValue) {
-        for (const sel of document.querySelectorAll('select')) {
-            const val = sel.value || '';
-            if (val.startsWith('شهر ')) {
-                selectValue = val.slice(5).trim();
-                break;
-            }
-        }
-    }
-    
-    // ===== 3. 🔥 التحقق الفعلي من الجدول =====
-    const realMonth = detectRealMonthFromTable();
-    
-    // ===== 4. المقارنة =====
-    if (selectValue && realMonth && selectValue !== realMonth) {
-        warn(`⚠️ تعارض! القائمة: شهر ${selectValue} — الجدول: شهر ${realMonth}`);
-        // ✅ الأولوية للجدول (الأدق)
-        return realMonth;
-    }
-    
-    // ===== 5. إرجاع القيمة المتاحة =====
-    return realMonth || selectValue || '1';
-}
-
-// ============================================================
-// 🔍 كشف الشهر الحقيقي من الجدول
-// ============================================================
-function detectRealMonthFromTable() {
-    const table = getTable();
-    if (!table) return null;
-    
-    // ===== المحاولة 1: البحث في الرؤوس (thead) =====
-    const thead = table.querySelector('thead');
-    if (thead) {
-        const text = thead.textContent || '';
-        // ابحث عن نمط "شهر X" أو "شهر 11"
-        const match = text.match(/شهر\s*(\d{1,2})/);
-        if (match && match[1]) {
-            const num = parseInt(match[1]);
-            if (num >= 1 && num <= 12) {
-                log(`✅ تم كشف الشهر من thead: ${num}`);
-                return num.toString();
-            }
-        }
-    }
-    
-    // ===== المحاولة 2: البحث في أول 3 صفوف =====
-    const rows = table.querySelectorAll('tbody tr');
-    for (let i = 0; i < Math.min(3, rows.length); i++) {
-        const text = rows[i].textContent || '';
-        const match = text.match(/شهر\s*(\d{1,2})/);
-        if (match && match[1]) {
-            const num = parseInt(match[1]);
-            if (num >= 1 && num <= 12) {
-                log(`✅ تم كشف الشهر من الصف ${i}: ${num}`);
-                return num.toString();
-            }
-        }
-    }
-    
-    // ===== المحاولة 3: البحث في عنوان الجدول (caption) =====
-    const caption = table.querySelector('caption');
-    if (caption) {
-        const text = caption.textContent || '';
-        const match = text.match(/شهر\s*(\d{1,2})/);
-        if (match && match[1]) {
-            return parseInt(match[1]).toString();
-        }
-    }
-    
-    // ===== المحاولة 4: من البيانات نفسها (row-0) =====
-    const firstSpecialRow = table.querySelector('tr.row-0');
-    if (firstSpecialRow) {
-        const text = firstSpecialRow.textContent || '';
-        const match = text.match(/شهر\s*(\d{1,2})/);
-        if (match && match[1]) {
-            return parseInt(match[1]).toString();
-        }
-    }
-    
-    return null;
-}
-    // ============================================================
-    // ⚡ 7. الإرسال الفوري (iframe واحد مُعاد استخدامه)
-    // ============================================================
-    function sendSMS(phone, message) {
-        const now = Date.now();
-        
-        if (CONFIG.MIN_SMS_INTERVAL > 0 && now - _lastSMSTime < CONFIG.MIN_SMS_INTERVAL) {
-            warn('⚠️ إرسال سريع جداً — تم تجاهله');
-            return false;
-        }
-        _lastSMSTime = now;
-        
-        const url = `sms:${phone}?body=${encodeURIComponent(message)}`;
-        
-        try {
-            if (!_smsFrame || !document.contains(_smsFrame)) {
-                if (_smsFrame) {
-                    try { _smsFrame.remove(); } catch(e) {}
-                }
-                
-                _smsFrame = document.createElement('iframe');
-                _smsFrame.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden;pointer-events:none;opacity:0;';
-                document.body.appendChild(_smsFrame);
-                _smsFrameTime = now;
-            }
-            
-            try {
-                _smsFrame.contentWindow.location.replace(url);
-            } catch(e) {
-                _smsFrame.src = url;
-            }
-            
-            log('📱 →', phone);
-            return true;
-            
-        } catch (err) {
-            error('❌ فشل الإرسال:', err);
-            try {
-                const a = document.createElement('a');
-                a.href = url;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => a.remove(), 100);
-                return true;
-            } catch (err2) {
-                copyText(message);
-                return false;
-            }
-        }
-    }
-    
-    // ============================================================
-    // 8. قفل حقيقي باستخدام WeakSet
-    // ============================================================
-    function acquireLock() {
-        if (_isAdding) return false;
-        _isAdding = true;
-        
-        if (_lockWatchdog) clearTimeout(_lockWatchdog);
-        _lockWatchdog = setTimeout(() => {
-            if (_isAdding) {
-                warn('⚠️ قفل عالق! تحرير تلقائي');
-                _isAdding = false;
-            }
-        }, CONFIG.LOCK_TIMEOUT);
-        
-        return true;
-    }
-    
-    function releaseLock() {
-        _isAdding = false;
-        if (_lockWatchdog) {
-            clearTimeout(_lockWatchdog);
-            _lockWatchdog = null;
-        }
-    }
-    
-    function tableNeedsButtons(table) {
-        if (!table) return false;
-        
-        const rows = table.rows;
-        for (let i = 0; i < rows.length; i++) {
-            const row = rows[i];
-            if (row.classList.contains('row-0') || 
-                row.classList.contains('row-1') || 
-                row.classList.contains('total-row')) continue;
-            
-            const first = row.cells[0];
-            if (!first) continue;
-            
-            const fc = first.firstChild;
-            if (!fc || fc.className !== 'my-send-btn') return true;
-        }
-        return false;
-    }
-    
-    // ============================================================
-    // ⚡ 9. الدالة الموحّدة (debounce)
-    // ============================================================
-    function scheduleAdd(delay = 0) {
-        if (_addTimer) clearTimeout(_addTimer);
-        _addTimer = setTimeout(runAdd, delay);
-    }
-    
-    function runAdd() {
-        _addTimer = null;
-        
-        const table = getTable();
-        if (!table) return;
-        
-        if (!tableNeedsButtons(table)) {
-            log('✅ الجدول مكتمل');
-            return;
-        }
-        
-        if (!acquireLock()) {
-            scheduleAdd(300);
-            return;
-        }
-        
-        try {
-            addButtons(table);
-        } catch (err) {
-            error('❌ خطأ في الإضافة:', err);
-        } finally {
-            releaseLock();
-        }
-    }
-    
-    // ============================================================
-    // ⚡ 10. إضافة الأزرار (نسخة مبسّطة سريعة)
-    // ============================================================
-    function addButtons(table) {
-        const rows = table.querySelectorAll('tbody tr');
-        if (rows.length === 0) return 0;
-        
-        let added = 0;
-        const startTime = Date.now();
-        
-        for (let i = 0; i < rows.length; i++) {
-            const row = rows[i];
-            
-            if (row.classList.contains('row-0') || 
-                row.classList.contains('row-1') || 
-                row.classList.contains('total-row')) continue;
-            
-            const first = row.cells[0];
-            if (!first) continue;
-            
-            const fc = first.firstChild;
-            if (fc && fc.className === 'my-send-btn') continue;
-            
-            const btn = makeButton(row);
-            first.insertBefore(btn, first.firstChild);
-            added++;
-        }
-        
-        if (added > 0) {
-            const elapsed = Date.now() - startTime;
-            log(`✅ ${added} زر في ${elapsed}ms`);
-            
-            if (CONFIG.ENABLE_NOTIFICATIONS) {
-                if (added >= 10 || !_hasShownFirstNotify) {
-                    notify(`✅ ${added} زر`);
-                    _hasShownFirstNotify = true;
-                }
-            }
-        }
-        
-        return added;
-    }
-    
-    // ============================================================
-    // 11. إنشاء الزر (مع !important)
-    // ============================================================
-    const BTN_STYLE = 'background:#25D366!important;border:none!important;color:#fff!important;border-radius:50%!important;width:30px!important;height:30px!important;cursor:pointer!important;font-size:16px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;margin-left:8px!important;box-shadow:0 2px 10px rgba(37,211,102,.3)!important;transition:all .15s ease!important;z-index:999999!important;position:relative!important;flex-shrink:0!important;padding:0!important;line-height:1!important;font-weight:bold!important;';
-    
-    function makeButton(row) {
-        const btn = document.createElement('button');
-        btn.className = 'my-send-btn';
-        btn.textContent = '💬';
-        btn.title = 'إرسال رسالة';
-        btn.style.cssText = BTN_STYLE;
-        
-        btn.onclick = handleClick;
-        btn._row = row;
-        btn._busy = false;
-        
-        return btn;
-    }
-    
-    // ============================================================
-    // 🔴 12. معالج الضغط — الزر يبقى أحمر 20 ثانية
-    // ============================================================
-    function handleClick(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const btn = this;
-        const row = btn._row;
-        
-        // ✅ حماية من النقر المزدوج
-        if (btn._busy) return;
-        
-        // ✅ حماية الذاكرة — إذا وصلنا للحد، حرر الأقدم
-        if (_busyCount >= CONFIG.MAX_BUSY_BUTTONS) {
-            const busyBtn = document.querySelector('.my-send-btn[data-busy="1"]');
-            if (busyBtn) releaseButton(busyBtn);
-        }
-        
-        // ✅ لا عدّاد تراكمي — المؤقت الخاص بالزر يكفي
-btn._busy = true;
-btn.dataset.busy = '1';
-        
-        try {
-    // قراءة البيانات
-    const c = row.cells;
-    const phone    = c[0].textContent.trim();
-    const previous = parseFloat(c[2].textContent)  || 0;
-    const current  = parseFloat(c[3].textContent)  || 0;
-    const diff     = parseFloat(c[4].textContent)  || 0;
-    const diffDecimal = c[5].textContent.trim() || '';
-    const value    = parseFloat(c[6].textContent)  || 0;
-    const sub      = parseFloat(c[7].textContent)  || 0;
-    const arrears  = parseFloat(c[8].textContent)  || 0;
-    const total    = parseFloat(c[9].textContent)  || 0;
-    const paid     = parseFloat(c[11].textContent) || 0;
-    const remain   = parseFloat(c[12].textContent) || 0;
-    
-    const msg = `فاتورةشهر${getMonth()}
-القراءةالسابقة
-${previous}
-القراءةالحالية
-${current}
-الفارق${diff}${diffDecimal ? '.' + diffDecimal : ''}
-القيمة${value}
-الاشتراك${sub}
-المتأخرات
-${arrears}
-المجموع
-${total}
-المسلم${paid}
-المتبقي${remain}${remain >= 5000 ? '\n⚠️إنذار بالفصل' : ''}`;
-            
-            // ✅ تأثير بصري — الزر يصبح أحمر
-            btn.style.setProperty('background', '#FF4444', 'important');
-            btn.textContent = '✓';
-            
-            // تنظيف الرقم
-            let clean = phone.replace(/\s|-/g, '').replace(/^0/, '');
-            if (/^7\d{8}$/.test(clean)) clean = '+967' + clean;
-            
-            // إرسال أو نسخ
-            if (clean.length >= 9) {
-                sendSMS(clean, msg);
-            } else {
-                copyText(msg);
-            }
-            
-            // ✅ العدّاد التنازلي (اختياري)
-            let countdownTimer = null;
-            if (CONFIG.SHOW_COUNTDOWN) {
-                let remaining = Math.floor(CONFIG.RESET_BUTTON_AFTER / 1000);
-                countdownTimer = setInterval(() => {
-                    remaining--;
-                    if (remaining <= 0 || !document.contains(btn) || !btn._busy) {
-                        clearInterval(countdownTimer);
-                        return;
-                    }
-                    if (remaining <= 10) {
-                        btn.textContent = remaining;
-                    }
-                }, 1000);
-            }
-            
-          // ✅ مؤقت واحد لكل زر — يُلغى السابق قبل إنشاء جديد (لا تراكم)
-if (btn._resetTimer) clearTimeout(btn._resetTimer);
-btn._resetTimer = setTimeout(() => {
-    if (countdownTimer) clearInterval(countdownTimer);
-    releaseButton(btn);
-    btn._resetTimer = null;
-}, CONFIG.RESET_BUTTON_AFTER);
-            
-        } catch (err) {
-            error('❌ خطأ:', err);
-            releaseButton(btn);
-        }
-    }
-    
-    // ============================================================
-    // 13. إعادة الزر (بعد 20 ثانية)
-    // ============================================================
-    function releaseButton(btn) {
-        if (!btn || !btn._busy) return;
-        
-        if (document.contains(btn)) {
-            btn.style.setProperty('background', '#25D366', 'important');
-            btn.textContent = '💬';
-            delete btn.dataset.busy;
-        }
-        
-        btn._busy = false;
-        _busyCount--;
-        if (_busyCount < 0) _busyCount = 0;
-    }
-    
-    // ============================================================
-    // 14. نسخ للحافظة
-    // ============================================================
-    function copyText(text) {
-        try {
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text)
-                    .then(() => notify('📋 نسخ'))
-                    .catch(() => fallbackCopy(text));
-            } else {
-                fallbackCopy(text);
-            }
-        } catch (e) {
-            fallbackCopy(text);
-        }
-    }
-    
-    function fallbackCopy(text) {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.cssText = 'position:fixed;opacity:0;';
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand('copy'); } catch(e) {}
-        ta.remove();
-        notify('📋 نسخ');
-    }
-    
-    // ============================================================
-    // 15. إشعار بسيط
-    // ============================================================
-    function notify(text) {
-        if (!CONFIG.ENABLE_NOTIFICATIONS) return;
-        
-        let el = document.getElementById('my-notify-v8');
-        
-        if (!el) {
-            el = document.createElement('div');
-            el.id = 'my-notify-v8';
-            el.style.cssText = 'position:fixed!important;top:20px!important;left:50%!important;transform:translateX(-50%)!important;background:#333!important;color:#fff!important;padding:10px 22px!important;border-radius:6px!important;font-size:15px!important;font-family:system-ui,sans-serif!important;z-index:9999999!important;box-shadow:0 4px 20px rgba(0,0,0,.3)!important;transition:opacity .2s ease!important;pointer-events:none!important;';
-            document.body.appendChild(el);
-        }
-        
-        el.textContent = text;
-        el.style.setProperty('opacity', '1', 'important');
-        
-        if (_notifyTimer) clearTimeout(_notifyTimer);
-        _notifyTimer = setTimeout(() => {
-            el.style.setProperty('opacity', '0', 'important');
-            setTimeout(() => {
-                if (el && el.parentNode && el.style.opacity === '0') {
-                    el.remove();
-                }
-            }, 300);
-        }, 2000);
-    }
-    
-    // ============================================================
-    // 🔒 16. المراقبة الخفيفة
-    // ============================================================
-    function startWatch() {
-        const wrapper = document.getElementById('tableWrapper');
-        
-        if (wrapper && !_observer) {
-            _observer = new MutationObserver((mutations) => {
-                let significant = false;
-                
-                for (const m of mutations) {
-                    if (m.type !== 'childList') continue;
-                    if (m.addedNodes.length === 0 && m.removedNodes.length === 0) continue;
-                    
-                    for (const node of m.addedNodes) {
-                        if (node.nodeType !== 1) continue;
-                        if (node.classList?.contains('my-send-btn')) continue;
-                        if (node.nodeName === 'TABLE' || 
-                            node.nodeName === 'TBODY' ||
-                            node.nodeName === 'TR') {
-                            significant = true;
-                            break;
-                        }
-                    }
-                    if (significant) break;
-                }
-                
-                if (!significant) return;
-                
-                if (_observerDebounce) clearTimeout(_observerDebounce);
-                _observerDebounce = setTimeout(() => {
-                    if (!_isAdding) scheduleAdd(300);
-                }, 300);
-            });
-            
-            _observer.observe(wrapper, {
-                childList: true,
-                subtree: true
-            });
-        }
-        
-        if (_watchTimer) clearInterval(_watchTimer);
-        _watchTimer = setInterval(() => {
-            if (_isAdding) return;
-            
-            const table = getTable();
-            if (!table) return;
-            
-            const firstRow = table.querySelector('tbody tr:not(.row-0):not(.row-1):not(.total-row)');
-            if (firstRow && firstRow.cells[0]) {
-                const fc = firstRow.cells[0].firstChild;
-                if (!fc || fc.className !== 'my-send-btn') {
-                    scheduleAdd(0);
-                }
-            }
-        }, CONFIG.WATCH_INTERVAL);
-    }
-    
-    // ============================================================
-    // 17. مراقبة تغيير القرية/الشهر
-    // ============================================================
-    function watchChange() {
-        document.addEventListener('change', (e) => {
-            if (e.target.tagName !== 'SELECT') return;
-            
-            log('🔄 تغيير القائمة');
-            
-            _table = null;
-            _processedTables = new WeakSet();
-            _hasShownFirstNotify = false;
-            
-            scheduleAdd(500);
-            setTimeout(() => scheduleAdd(0), CONFIG.RETRY_DELAYS[0] || 800);
-            setTimeout(() => scheduleAdd(0), CONFIG.RETRY_DELAYS[1] || 1500);
-            
-        }, true);
-    }
-    
-    // ============================================================
-    // 18. بدء التشغيل
-    // ============================================================
-    function start() {
-        const table = getTable();
-        if (!table) {
-            setTimeout(start, 500);
-            return;
-        }
-        
-        log('✅ الجدول موجود');
-        scheduleAdd(0);
-        startWatch();
-        watchChange();
-        log('🚀 v8.1 يعمل!');
-    }
-    
-    // ============================================================
-    // 19. أوامر المطور الشاملة
-    // ============================================================
-    
-    window.forceAdd = () => {
-        _table = null;
-        _processedTables = new WeakSet();
-        scheduleAdd(0);
-    };
-    
-    window.stopWatcher = function() {
-        if (_watchTimer) { clearInterval(_watchTimer); _watchTimer = null; }
-        if (_observer) { _observer.disconnect(); _observer = null; }
-        if (_addTimer) { clearTimeout(_addTimer); _addTimer = null; }
-        if (_lockWatchdog) { clearTimeout(_lockWatchdog); _lockWatchdog = null; }
-        if (_observerDebounce) { clearTimeout(_observerDebounce); _observerDebounce = null; }
-        _isAdding = false;
-        notify('⏹️ تم الإيقاف');
-    };
-    
-    window.restartWatcher = function() {
-        window.stopWatcher();
-        startWatch();
-        notify('🔄 إعادة التشغيل');
-    };
-    
-    window.cleanupDuplicateButtons = function() {
-        const table = getTable();
-        if (!table) return 0;
-        
-        let removed = 0;
-        table.querySelectorAll('tbody tr').forEach(row => {
-            const first = row.cells[0];
-            if (!first) return;
-            const buttons = first.querySelectorAll('.my-send-btn');
-            for (let i = 1; i < buttons.length; i++) {
-                buttons[i].remove();
-                removed++;
-            }
-        });
-        
-        notify(removed > 0 ? `🧹 حُذف ${removed}` : '✅ لا تكرار');
-        return removed;
-    };
-    
-    window.rebuildAllButtons = function() {
-        const table = getTable();
-        if (!table) return;
-        
-        let removed = 0;
-        table.querySelectorAll('.my-send-btn').forEach(b => {
-            if (b._busy) _busyCount--;
-            b.remove();
-            removed++;
-        });
-        _busyCount = 0;
-        _table = null;
-        _processedTables = new WeakSet();
-        
-        setTimeout(() => scheduleAdd(0), 100);
-        notify(`🔨 إعادة بناء ${removed}`);
-    };
-    
-    window.clearMemory = function() {
-        document.querySelectorAll('.my-send-btn').forEach(b => {
-            b._busy = false;
-            b.style.setProperty('background', '#25D366', 'important');
-            b.textContent = '💬';
-            delete b.dataset.busy;
-        });
-        
-        _busyCount = 0;
-        _table = null;
-        _processedTables = new WeakSet();
-        _hasShownFirstNotify = false;
-        
-        if (_smsFrame) {
-            try { _smsFrame.remove(); } catch(e) {}
-            _smsFrame = null;
-        }
-        _smsFrameTime = 0;
-        _lastSMSTime = 0;
-        
-        notify('🧠 ذاكرة نظيفة');
-    };
-    
-    window.getStatus = function() {
-        const table = getTable();
-        const status = {
-            'النسخة': 'v8.1',
-            'إضافة جارية': _isAdding,
-            'أزرار مشغولة (حمراء)': _busyCount,
-            'إجمالي الأزرار': document.querySelectorAll('.my-send-btn').length,
-            'الجدول': table ? '✅ موجود' : '❌',
-            'عدد الصفوف': table ? table.rows.length : 0,
-            'الشهر': getMonth(),
-            'iframe SMS': _smsFrame ? '✅' : '❌',
-            'مراقب الجدول': _observer ? '✅' : '❌',
-            'فحص دوري': _watchTimer ? '✅' : '❌',
-            'حارس القفل': _lockWatchdog ? '⏳' : '❌',
-            'مدة الاحمرار': CONFIG.RESET_BUTTON_AFTER + 'ms',
-            'ذاكرة (MB)': performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : '؟'
-        };
-        console.table(status);
-        return status;
-    };
-    
-    window.deepInspect = function() {
-        const table = getTable();
-        if (!table) {
-            log('❌ لا جدول');
-            return;
-        }
-        
-        let withBtn = 0, withoutBtn = 0, special = 0, duplicates = 0, busy = 0;
-        
-        table.querySelectorAll('tbody tr').forEach(row => {
-            if (row.classList.contains('row-0') || 
-                row.classList.contains('row-1') || 
-                row.classList.contains('total-row')) {
-                special++;
-                return;
-            }
-            
-            const first = row.cells[0];
-            if (!first) return;
-            
-            const buttons = first.querySelectorAll('.my-send-btn');
-            if (buttons.length === 0) withoutBtn++;
-            else if (buttons.length === 1) {
-                withBtn++;
-                if (buttons[0]._busy) busy++;
-            }
-            else duplicates += buttons.length - 1;
-        });
-        
-        const report = {
-            '📋 إجمالي الصفوف': table.rows.length,
-            '✅ صفوف بها زر': withBtn,
-            '🔴 أزرار حمراء (مشغولة)': busy,
-            '❌ صفوف بلا زر': withoutBtn,
-            '⭐ صفوف خاصة': special,
-            '⚠️ أزرار مكررة': duplicates
-        };
-        console.table(report);
-        
-        if (duplicates > 0) warn('⚠️ تكرار! استخدم cleanupDuplicateButtons()');
-        if (withoutBtn > 0) warn('⚠️ ناقص! استخدم forceAdd()');
-        
-        return report;
-    };
-    
-    window.speedTest = function() {
-        const table = getTable();
-        if (!table) return log('❌ لا جدول');
-        
-        log('🧪 اختبار السرعة...');
-        
-        const wasWatching = !!_watchTimer;
-        const wasObserving = !!_observer;
-        if (_watchTimer) { clearInterval(_watchTimer); _watchTimer = null; }
-        if (_observer) { _observer.disconnect(); _observer = null; }
-        
-        const start = performance.now();
-        table.querySelectorAll('.my-send-btn').forEach(b => b.remove());
-        const removeTime = performance.now() - start;
-        
-        const addStart = performance.now();
-        addButtons(table);
-        const addTime = performance.now() - addStart;
-        
-        const count = table.querySelectorAll('.my-send-btn').length;
-        
-        log(`⏱️ حذف: ${removeTime.toFixed(0)}ms`);
-        log(`⏱️ إضافة ${count}: ${addTime.toFixed(0)}ms`);
-        log(`🚀 السرعة: ${Math.round(count / (addTime / 1000))} زر/ثانية`);
-        
-        if (wasWatching || wasObserving) {
-            startWatch();
-            log('✅ إعادة المراقبة');
-        }
-        
-        return { removeTime, addTime, count };
-    };
-    
-    window.performanceTest = function() {
-        const mem = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : '؟';
-        
-        const stats = {
-            'الذاكرة (MB)': mem,
-            'عناصر DOM': document.querySelectorAll('*').length,
-            'أزرار': document.querySelectorAll('.my-send-btn').length,
-            'حمراء': _busyCount,
-            'iframe': document.querySelectorAll('iframe').length
-        };
-        console.table(stats);
-        return stats;
-    };
-    
-    window.setConfig = function(key, value) {
-        if (!DEFAULT_CONFIG.hasOwnProperty(key)) {
-            warn(`⚠️ غير موجود: ${key}`);
-            log('المتاح:', Object.keys(DEFAULT_CONFIG).join(', '));
-            return;
-        }
-        CONFIG[key] = value;
-        saveConfig();
-        log(`✅ ${key} = ${value}`);
-        notify(`⚙️ ${key}`);
-    };
-    
-    window.showConfig = function() {
-        console.table(CONFIG);
-        return CONFIG;
-    };
-    
-    window.resetConfig = function() {
-        CONFIG = { ...DEFAULT_CONFIG };
-        saveConfig();
-        notify('🔄 إعادة الإعدادات');
-    };
-    
-    window.help = function() {
-        console.log(`
-        ╔════════════════════════════════════════════════════╗
-        ║   🏆 أوامر نظام الرسائل v8.1                       ║
-        ║   🔴 الزر يبقى أحمر ${CONFIG.RESET_BUTTON_AFTER/1000} ثانية                   ║
-        ╠════════════════════════════════════════════════════╣
-        ║                                                    ║
-        ║  📊 التشخيص:                                       ║
-        ║    getStatus()              → حالة النظام          ║
-        ║    deepInspect()            → فحص عميق             ║
-        ║    speedTest()              → اختبار السرعة        ║
-        ║    performanceTest()        → قياس الأداء          ║
-        ║                                                    ║
-        ║  🔧 الصيانة:                                       ║
-        ║    forceAdd()               → إضافة فورية          ║
-        ║    clearMemory()            → تنظيف الذاكرة        ║
-        ║    cleanupDuplicateButtons() → حذف المكرر          ║
-        ║    rebuildAllButtons()      → إعادة بناء           ║
-        ║                                                    ║
-        ║  ⚙️ الإعدادات:                                     ║
-        ║    showConfig()             → عرض الإعدادات        ║
-        ║    setConfig(key, value)    → تعديل                ║
-        ║    resetConfig()            → إعادة تعيين          ║
-        ║                                                    ║
-        ║  🎨 ميزات إضافية:                                  ║
-        ║    setConfig('SHOW_COUNTDOWN', true)               ║
-        ║      → عدّاد تنازلي على الزر                       ║
-        ║    setConfig('RESET_BUTTON_AFTER', 30000)          ║
-        ║      → الزر يبقى 30 ثانية                         ║
-        ║                                                    ║
-        ║  ⏯️ التحكم:                                        ║
-        ║    stopWatcher()            → إيقاف                ║
-        ║    restartWatcher()         → إعادة تشغيل          ║
-        ║                                                    ║
-        ╚════════════════════════════════════════════════════╝
-        `);
-    };
-    
-    // ============================================================
-    // 20. التشغيل
-    // ============================================================
-    loadConfig();
-    
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        setTimeout(start, 300);
-    } else {
-        document.addEventListener('DOMContentLoaded', () => setTimeout(start, 300));
-    }
-    
-    console.log(`
-    ╔════════════════════════════════════════════════════╗
-    ║   🏆 نظام الرسائل v8.1 جاهز!                       ║
-    ╠════════════════════════════════════════════════════╣
-    ║   🔴 الزر يبقى أحمر ${CONFIG.RESET_BUTTON_AFTER/1000} ثانية              ║
-    ║   ⚡ السرعة: iframe واحد + _busy على الزر         ║
-    ║   🛡️ الأمان: WeakSet + lockWatchdog               ║
-    ║   💾 الإعدادات: محفوظة تلقائياً                    ║
-    ║   🎯 الأداء: ثابت من 1 إلى 10000                  ║
-    ║   💡 اكتب help() للأوامر                           ║
-    ╚════════════════════════════════════════════════════╝
-    `);
-})();
 </script>
 <!-- ============================================================ -->
 <!-- 🗓️ نظام تبديل السنة - 2026 / 2027 / 2028                    -->
@@ -16549,7 +15690,722 @@ window.__getYearReportData = async function(subscriberName, subscriberMeter) {
     console.log('💡 المطلوب/المتبقي = الشهر الحالي | المسلم/الاستهلاك = مجموع');
 
 })();
+// ============================================================
+// 💬 نظام أزرار الرسائل - النسخة الخفيفة السريعة (نهائية v2)
+// ✅ iframe واحد للأبد (صفر بطء)
+// ✅ الزر يبقى أحمر دائماً
+// ✅ الرسالة بصيغة 11 حقلاً كاملة
+// ✅ انتظار ذكي خفيف عند تغيير القرية/الشهر (يفحص صف واحد فقط)
+// ✅ debounce + حماية تزامن
+// ⚡ سريع في الإرسال + موثوق في تغيير القائمة
+// ============================================================
+(function() {
+    'use strict';
+    
+    var smsFrame = null;
+    var _addTimer = null;
+    var _isAdding = false;
+    
+    // ============================================================
+    // 1. إرسال SMS — iframe واحد للأبد
+    // ============================================================
+    function sendSMS(phone, message) {
+        var url = 'sms:' + phone + '?body=' + encodeURIComponent(message);
+        
+        try {
+            if (!smsFrame || !document.contains(smsFrame)) {
+                if (smsFrame) { try { smsFrame.remove(); } catch(e) {} }
+                smsFrame = document.createElement('iframe');
+                smsFrame.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden;pointer-events:none;opacity:0;';
+                document.body.appendChild(smsFrame);
+            }
+            
+            try {
+                smsFrame.contentWindow.location.replace(url);
+            } catch(e) {
+                smsFrame.src = url;
+            }
+            return true;
+            
+        } catch(err) {
+            try {
+                window.location.href = url;
+                return true;
+            } catch(e2) {
+                return false;
+            }
+        }
+    }
+    
+    // ============================================================
+    // 2. قراءة الشهر
+    // ============================================================
+    function getMonth() {
+        var sidebar = document.querySelector('.app-sidebar');
+        if (sidebar) {
+            var selects = sidebar.querySelectorAll('select');
+            for (var s = 0; s < selects.length; s++) {
+                var val = selects[s].value || '';
+                if (val.indexOf('شهر ') === 0) {
+                    return val.replace('شهر ', '').trim();
+                }
+            }
+        }
+        return '1';
+    }
+    
+    // ============================================================
+    // 3. إضافة الأزرار
+    // ============================================================
+    function addButtons() {
+        if (_isAdding) return 0;
+        _isAdding = true;
+        
+        try {
+            var table = document.querySelector('#tableWrapper table');
+            if (!table) return 0;
+            
+            var rows = table.querySelectorAll('tbody tr');
+            var added = 0;
+            
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                
+                if (row.classList.contains('row-0') || 
+                    row.classList.contains('row-1') || 
+                    row.classList.contains('total-row')) continue;
+                
+                var firstCell = row.cells[0];
+                if (!firstCell) continue;
+                if (firstCell.querySelector('.sms-btn-simple')) continue;
+                
+                var btn = document.createElement('button');
+                btn.className = 'sms-btn-simple';
+                btn.textContent = '💬';
+                btn.style.cssText = 'background:#25D366;border:none;color:#fff;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:16px;margin-left:6px;padding:0;flex-shrink:0;';
+                
+                btn.onclick = (function(r, b) {
+                    return function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        if (b.disabled) return;
+                        
+                        try {
+                            var c = r.cells;
+                            
+                            var phone     = (c[0].textContent || '').trim();
+                            var previous  = parseFloat(c[2].textContent) || 0;
+                            var current   = parseFloat(c[3].textContent) || 0;
+                            var diff      = parseFloat(c[4].textContent) || 0;
+                            var diffDec   = (c[5].textContent || '').trim();
+                            var value     = parseFloat(c[6].textContent) || 0;
+                            var sub       = parseFloat(c[7].textContent) || 0;
+                            var arrears   = parseFloat(c[8].textContent) || 0;
+                            var total     = parseFloat(c[9].textContent) || 0;
+                            var paid      = parseFloat(c[11].textContent) || 0;
+                            var remain    = parseFloat(c[12].textContent) || 0;
+                            
+                            var month = getMonth();
+                            
+                            var msg = 'فاتورةشهر' + month + '\n';
+                            msg += 'القراءةالسابقة\n' + previous + '\n';
+                            msg += 'القراءةالحالية\n' + current + '\n';
+                            msg += 'الفارق' + diff + (diffDec && diffDec !== '0' ? '.' + diffDec : '') + '\n';
+                            msg += 'القيمة' + value + '\n';
+                            msg += 'الاشتراك' + sub + '\n';
+                            msg += 'المتأخرات\n' + arrears + '\n';
+                            msg += 'المجموع\n' + total + '\n';
+                            msg += 'المسلم' + paid + '\n';
+                            msg += 'المتبقي' + remain;
+                            if (remain >= 5000) msg += '\n⚠️إنذار بالفصل';
+                            
+                            var clean = phone.replace(/\s/g, '').replace(/-/g, '').replace(/^0/, '');
+                            if (/^7\d{8}$/.test(clean)) clean = '+967' + clean;
+                            
+                            if (clean.length >= 9) {
+                                sendSMS(clean, msg);
+                            } else {
+                                alert('⚠️ رقم الجوال غير صحيح:\n' + phone);
+                            }
+                            
+                            b.disabled = true;
+                            b.dataset.busy = '1';
+                            b.style.background = '#FF4444';
+                            b.textContent = '✓';
+                            b.title = 'تم الإرسال - ' + new Date().toLocaleTimeString('ar-EG');
+                            
+                        } catch(err) {
+                            alert('❌ خطأ: ' + err.message);
+                        }
+                    };
+                })(row, btn);
+                
+                firstCell.insertBefore(btn, firstCell.firstChild);
+                added++;
+            }
+            
+            return added;
+            
+        } finally {
+            _isAdding = false;
+        }
+    }
+    
+    // ============================================================
+    // 4. جدولة الإضافة (debounce)
+    // ============================================================
+    function scheduleAdd(delay) {
+        if (_addTimer) clearTimeout(_addTimer);
+        _addTimer = setTimeout(function() {
+            _addTimer = null;
+            addButtons();
+        }, delay || 500);
+    }
+    
+    // ============================================================
+    // 5. التشغيل الأولي
+    // ============================================================
+    function start() {
+        if (document.querySelector('#tableWrapper table')) {
+            addButtons();
+        } else {
+            setTimeout(start, 1000);
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { setTimeout(start, 2000); });
+    } else {
+        setTimeout(start, 2000);
+    }
+    
+    // ============================================================
+    // 6. مراقبة الجدول (debounce — لا بطء)
+    // ============================================================
+    setTimeout(function() {
+        var wrapper = document.getElementById('tableWrapper');
+        if (wrapper) {
+            var observer = new MutationObserver(function(mutations) {
+                var significant = false;
+                for (var m = 0; m < mutations.length; m++) {
+                    var mut = mutations[m];
+                    if (mut.type !== 'childList') continue;
+                    var nodes = mut.addedNodes;
+                    for (var n = 0; n < nodes.length; n++) {
+                        var node = nodes[n];
+                        if (node.nodeType !== 1) continue;
+                        if (node.classList && node.classList.contains('sms-btn-simple')) continue;
+                        if (node.nodeName === 'TABLE' || 
+                            node.nodeName === 'TBODY' || 
+                            node.nodeName === 'TR') {
+                            significant = true;
+                            break;
+                        }
+                    }
+                    if (significant) break;
+                }
+                
+                if (significant) scheduleAdd(800);
+            });
+            observer.observe(wrapper, { childList: true, subtree: true });
+        }
+    }, 3000);
+    
+    // ============================================================
+    // 7. ✅ عند تغيير القرية/الشهر — انتظار ذكي خفيف
+    //    يفحص صف واحد فقط (لا 10000 صف) = سريع جداً
+    // ============================================================
+    document.addEventListener('change', function(e) {
+        if (e.target.tagName !== 'SELECT') return;
+        
+        console.log('🔄 تغيير القائمة — انتظار الجدول الجديد...');
+        
+        // إعادة تعيين الأزرار القديمة
+        document.querySelectorAll('.sms-btn-simple').forEach(function(b) {
+            b.disabled = false;
+            b.style.background = '#25D366';
+            b.textContent = '💬';
+            b.title = 'إرسال رسالة';
+            delete b.dataset.busy;
+        });
+        
+        // حذف iframe
+        if (smsFrame) {
+            try { smsFrame.remove(); } catch(e) {}
+            smsFrame = null;
+        }
+        
+        // ✅ حفظ بصمة أول صف من الجدول القديم
+        var oldTable = document.querySelector('#tableWrapper table');
+        var oldFirstText = oldTable && oldTable.rows.length > 1 
+            ? (oldTable.rows[1].cells[0].textContent || '') 
+            : '';
+        
+        var attempts = 0;
+        var maxAttempts = 40;  // 40 × 500ms = 20 ثانية كحد أقصى
+        
+        var waiter = setInterval(function() {
+            attempts++;
+            
+            var table = document.querySelector('#tableWrapper table');
+            if (!table || table.rows.length < 2) {
+                if (attempts >= maxAttempts) clearInterval(waiter);
+                return;
+            }
+            
+            // ✅ فحص خفيف جداً: هل تغيّر أول صف؟ (صف واحد فقط)
+            var newFirstText = table.rows[1].cells[0].textContent || '';
+            var isNewTable = (newFirstText !== oldFirstText) || oldFirstText === '';
+            
+            if (isNewTable) {
+                clearInterval(waiter);
+                addButtons();
+                console.log('✅ جدول جديد — أزرار أُضيفت (محاولة ' + attempts + ')');
+            } else if (attempts >= maxAttempts) {
+                clearInterval(waiter);
+                addButtons();
+                console.warn('⚠️ انتهت المحاولات — محاولة أخيرة');
+            }
+        }, 500);
+        
+    }, true);
+    
+    // ============================================================
+    // 8. أوامر المطور
+    // ============================================================
+    window.addSmsButtons = addButtons;
+    
+    window.smsStatus = function() {
+        var sentCount = document.querySelectorAll('.sms-btn-simple[data-busy="1"]').length;
+        console.log('📊 حالة النظام:', {
+            'إجمالي الأزرار': document.querySelectorAll('.sms-btn-simple').length,
+            'أزرار مرسلة (حمراء)': sentCount,
+            'iframe SMS': smsFrame ? '✅ (دائم)' : '❌',
+            'إضافة جارية': _isAdding,
+            'مؤقت معلق': _addTimer ? '⏳' : '❌'
+        });
+    };
+    
+    window.resetSmsButtons = function() {
+        document.querySelectorAll('.sms-btn-simple').forEach(function(b) {
+            b.disabled = false;
+            b.style.background = '#25D366';
+            b.textContent = '💬';
+            b.title = 'إرسال رسالة';
+            delete b.dataset.busy;
+        });
+        if (smsFrame) { try { smsFrame.remove(); } catch(e) {} smsFrame = null; }
+        alert('✅ تم إعادة تعيين جميع الأزرار وتنظيف الذاكرة');
+    };
+    
+    // ✅ أمر يدوي لإضافة الأزرار فوراً
+    window.forceWaitAdd = function() {
+        addButtons();
+    };
+    
+    console.log('%c✅ نظام الأزرار (سريع + خفيف + انتظار ذكي) جاهز', 'background:#25D366;color:#fff;padding:4px 10px;border-radius:4px;font-weight:bold;');
+    console.log('💡 أوامر: smsStatus() | resetSmsButtons() | addSmsButtons() | forceWaitAdd()');
+})();
 </script>
+<script>
+// ============================================================
+// 🧠 نافذة إدارة الذاكرة - نسخة الطوارئ المتقدمة
+// ✅ تقرأ من localStorage + localforage
+// ✅ تعرض تفاصيل كل عملية معلقة
+// ✅ تعمل حتى لو فشل MemoryManagerPro
+// ============================================================
+async function showEmergencyMemoryPanel() {
+    const old = document.getElementById('emergencyMemoryPanel');
+    if (old) old.remove();
+    
+    // ============================================================
+    // 💾 إحصائيات localStorage
+    // ============================================================
+    let lsSize = 0;
+    let lsItems = 0;
+    const keysInfo = [];
+    
+    try {
+        for (const k in localStorage) {
+            if (localStorage.hasOwnProperty(k)) {
+                const val = localStorage[k] || '';
+                const size = val.length * 2;
+                lsSize += size;
+                lsItems++;
+                keysInfo.push({ key: k, size: size });
+            }
+        }
+    } catch(e) {}
+    
+    keysInfo.sort((a, b) => b.size - a.size);
+    
+    // ============================================================
+    // 📤 قراءة العمليات المعلقة من المصدرين
+    // ============================================================
+    const pendingDetails = [];
+    const seenKeys = new Set(); // لمنع التكرار
+    
+    const fieldNames = {
+        0: 'رقم العداد', 1: 'الاسم', 2: 'قراءة سابقة',
+        3: 'قراءة حالية', 4: 'الفارق', 5: 'الفارق العشري',
+        6: 'القيمة', 7: 'الاشتراك', 8: 'المتأخرات',
+        9: 'المجموع', 10: 'إيرادات أخرى', 11: 'المسلم',
+        12: 'المتبقي', 13: 'التاريخ', 14: 'التاريخ'
+    };
+    
+    // ✅ دالة معالجة موحدة
+    function processPendingData(pendingData, source) {
+        if (!pendingData || typeof pendingData !== 'object') return;
+        
+        for (const key in pendingData) {
+            const changes = pendingData[key] || [];
+            const parts = key.split('_');
+            const year = parts[0] || '؟';
+            const village = parts[1] || '؟';
+            const month = parts.slice(2).join('_') || '؟';
+            
+            changes.forEach(c => {
+                if (!c.synced && c.cellIndex !== 12) {
+                    // ✅ بصمة فريدة لمنع التكرار
+                    const fingerprint = `${key}_${c.rowIndex}_${c.cellIndex}_${c.timestamp}`;
+                    if (seenKeys.has(fingerprint)) return;
+                    seenKeys.add(fingerprint);
+                    
+                    pendingDetails.push({
+                        year: year,
+                        village: village,
+                        month: month,
+                        row: c.rowIndex,
+                        col: c.cellIndex,
+                        field: fieldNames[c.cellIndex] || ('عمود ' + c.cellIndex),
+                        value: c.value,
+                        meter: c.meterNumber || '؟',
+                        time: c.timestamp ? new Date(c.timestamp).toLocaleString('ar-EG') : '؟',
+                        source: source
+                    });
+                }
+            });
+        }
+    }
+    
+    // 1️⃣ محاولة القراءة من localStorage
+    try {
+        const lsPending = JSON.parse(localStorage.getItem('soufai_pending_changes') || '{}');
+        processPendingData(lsPending, 'localStorage');
+    } catch(e) {
+        console.warn('⚠️ فشل قراءة localStorage:', e);
+    }
+    
+    // 2️⃣ محاولة القراءة من localforage
+    let lfSize = 0;
+    let lfItems = 0;
+    
+    if (window.localforage) {
+        try {
+            // ✅ استخدام نفس storeName المستخدم في التطبيق
+            const lfInstance = localforage.createInstance({
+                name: 'SoufaiWaterSystem',
+                storeName: 'soufai_store'
+            });
+            
+            // قراءة التغييرات المعلقة
+            const lfPending = await lfInstance.getItem('soufai_pending_changes');
+            if (lfPending) {
+                processPendingData(lfPending, 'localforage');
+            }
+            
+            // حساب حجم localforage
+            try {
+                const keys = await lfInstance.keys();
+                lfItems = keys.length;
+                
+                for (const k of keys) {
+                    try {
+                        const val = await lfInstance.getItem(k);
+                        if (val) {
+                            const str = typeof val === 'string' ? val : JSON.stringify(val);
+                            lfSize += str.length * 2;
+                        }
+                    } catch(e) {}
+                }
+            } catch(e) {
+                console.warn('⚠️ فشل حساب حجم localforage:', e);
+            }
+            
+        } catch(e) {
+            console.warn('⚠️ localforage غير متاح:', e);
+        }
+    }
+    
+    const pendingCount = pendingDetails.length;
+    const totalSize = lsSize + lfSize;
+    const totalItems = lsItems + lfItems;
+    
+    // ============================================================
+    // 🎨 حساب الحجم والنسبة
+    // ============================================================
+    const sizeKB = (totalSize / 1024).toFixed(2);
+    const sizeMB = (totalSize / 1048576).toFixed(2);
+    const sizeDisplay = totalSize > 1048576 ? sizeMB + ' MB' : sizeKB + ' KB';
+    const percent = Math.min(100, Math.round((totalSize / (5 * 1048576)) * 100));
+    
+    const barColor = percent > 80 ? 'linear-gradient(90deg, #ff4757, #ff3838)' 
+                   : percent > 60 ? 'linear-gradient(90deg, #ffb703, #fb8500)' 
+                   : 'linear-gradient(90deg, #4cc9f0, #00b4d8)';
+    
+    const topKeysHTML = keysInfo.slice(0, 8).map(k => `
+        <div style="display:flex;justify-content:space-between;padding:6px 10px;
+                    border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;">
+            <span style="color:#4cc9f0;direction:ltr;text-align:left;overflow:hidden;
+                        text-overflow:ellipsis;white-space:nowrap;max-width:60%;">${k.key}</span>
+            <span style="color:#ffb703;font-weight:bold;">${(k.size/1024).toFixed(1)} KB</span>
+        </div>
+    `).join('');
+    
+    // ============================================================
+    // 📋 بناء قائمة العمليات المعلقة
+    // ============================================================
+    let pendingHTML = '';
+    
+    if (pendingCount === 0) {
+        pendingHTML = `
+            <div style="text-align:center;padding:20px;opacity:0.5;">
+                <div style="font-size:35px;margin-bottom:8px;">✅</div>
+                <div style="font-size:13px;">لا توجد عمليات معلقة</div>
+                <div style="font-size:11px;margin-top:4px;opacity:0.7;">
+                    جميع التعديلات مزامنة
+                </div>
+            </div>
+        `;
+    } else {
+        pendingHTML = pendingDetails.map((p, idx) => `
+            <div style="padding:10px 12px;margin-bottom:6px;
+                        background:rgba(255,183,3,0.08);
+                        border-radius:10px;
+                        border-right:3px solid #ffb703;
+                        font-size:12px;">
+                <div style="display:flex;justify-content:space-between;
+                            margin-bottom:4px;">
+                    <span style="color:#ffb703;font-weight:bold;">
+                        ${idx + 1}. ${p.field}
+                    </span>
+                    <span style="color:#4cc9f0;direction:ltr;font-size:11px;">
+                        عداد: ${p.meter}
+                    </span>
+                </div>
+                <div style="display:flex;justify-content:space-between;
+                            margin-bottom:3px;">
+                    <span style="color:#fff;font-weight:bold;">
+                        💰 القيمة: ${p.value}
+                    </span>
+                    <span style="opacity:0.7;font-size:11px;">
+                        ${p.village} - ${p.month}
+                    </span>
+                </div>
+                <div style="opacity:0.5;font-size:10px;
+                            display:flex;justify-content:space-between;">
+                    <span>📅 ${p.year} | صف: ${p.row + 1}</span>
+                    <span>🕐 ${p.time}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // ============================================================
+    // 🖼️ بناء النافذة
+    // ============================================================
+    const modal = document.createElement('div');
+    modal.id = 'emergencyMemoryPanel';
+    modal.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+        z-index: 999999; display: flex; align-items: center;
+        justify-content: center; backdrop-filter: blur(15px);
+        font-family: 'Tajawal', sans-serif; padding: 10px;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background:linear-gradient(145deg,#0a0e27,#1a1a3e);
+                    border-radius:24px;padding:28px;max-width:650px;width:100%;
+                    max-height:92vh;overflow-y:auto;color:#e0e0ff;
+                    border:2px solid rgba(76,201,240,0.3);
+                    box-shadow:0 25px 80px rgba(0,0,0,0.8);">
+            
+            <div style="display:flex;justify-content:space-between;align-items:center;
+                        margin-bottom:20px;padding-bottom:15px;
+                        border-bottom:2px solid rgba(76,201,240,0.15);">
+                <div>
+                    <h2 style="margin:0;color:#a78bfa;font-size:20px;">
+                        🧠 إدارة الذاكرة
+                    </h2>
+                    <div style="font-size:12px;opacity:0.5;margin-top:4px;">
+                        📅 ${new Date().toLocaleString('ar-EG')}
+                    </div>
+                </div>
+                <button onclick="document.getElementById('emergencyMemoryPanel').remove()"
+                        style="background:rgba(255,71,87,0.2);border:2px solid #ff4757;
+                               color:#ff4757;width:40px;height:40px;border-radius:50%;
+                               cursor:pointer;font-size:20px;font-weight:bold;">
+                    ✕
+                </button>
+            </div>
+            
+            <!-- الإحصائيات -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+                        margin-bottom:18px;">
+                <div style="background:rgba(76,201,240,0.1);padding:14px;border-radius:12px;
+                            text-align:center;border:1px solid rgba(76,201,240,0.2);">
+                    <div style="font-size:22px;font-weight:bold;color:#4cc9f0;">${totalItems}</div>
+                    <div style="font-size:11px;opacity:0.6;margin-top:4px;">مفتاح</div>
+                </div>
+                <div style="background:rgba(255,183,3,0.1);padding:14px;border-radius:12px;
+                            text-align:center;border:1px solid rgba(255,183,3,0.2);">
+                    <div style="font-size:18px;font-weight:bold;color:#ffb703;">${sizeDisplay}</div>
+                    <div style="font-size:11px;opacity:0.6;margin-top:4px;">الحجم</div>
+                </div>
+                <div style="background:rgba(${pendingCount>0?'255,71,87':'0,176,155'},0.1);
+                            padding:14px;border-radius:12px;text-align:center;
+                            border:1px solid rgba(${pendingCount>0?'255,71,87':'0,176,155'},0.2);">
+                    <div style="font-size:22px;font-weight:bold;
+                                color:${pendingCount>0?'#ff4757':'#00b09b'};">
+                        ${pendingCount}
+                    </div>
+                    <div style="font-size:11px;opacity:0.6;margin-top:4px;">معلق</div>
+                </div>
+            </div>
+            
+            <!-- تفصيل المصادر -->
+            <div style="background:rgba(255,255,255,0.05);padding:10px 14px;
+                        border-radius:12px;margin-bottom:18px;font-size:11px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="opacity:0.6;">📦 localStorage:</span>
+                    <span style="color:#4cc9f0;">${lsItems} مفتاح | ${(lsSize/1024).toFixed(1)} KB</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span style="opacity:0.6;">🗄️ localforage:</span>
+                    <span style="color:#a78bfa;">${lfItems} مفتاح | ${(lfSize/1024).toFixed(1)} KB</span>
+                </div>
+            </div>
+            
+            <!-- شريط الاستخدام -->
+            <div style="background:rgba(255,255,255,0.05);padding:14px;
+                        border-radius:12px;margin-bottom:18px;">
+                <div style="display:flex;justify-content:space-between;
+                            font-size:12px;margin-bottom:8px;">
+                    <span>💾 استخدام التخزين</span>
+                    <span style="color:#ffb703;font-weight:bold;">${percent}%</span>
+                </div>
+                <div style="height:10px;background:rgba(0,0,0,0.3);border-radius:10px;
+                            overflow:hidden;">
+                    <div style="height:100%;width:${percent}%;background:${barColor};
+                                border-radius:10px;"></div>
+                </div>
+            </div>
+            
+            <!-- 🔥 العمليات المعلقة -->
+            <div style="background:rgba(0,0,0,0.2);border-radius:12px;
+                        padding:12px;margin-bottom:18px;
+                        max-height:320px;overflow-y:auto;">
+                <div style="display:flex;justify-content:space-between;
+                            align-items:center;margin-bottom:10px;
+                            padding-bottom:8px;
+                            border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <span style="color:#ffb703;font-weight:bold;font-size:13px;">
+                        📤 العمليات المعلقة (${pendingCount})
+                    </span>
+                    ${pendingCount > 0 ? `
+                        <button onclick="
+                            if(confirm('⚠️ مزامنة ${pendingCount} عملية الآن؟')){
+                                if(window.syncAllPendingChanges){
+                                    window.syncAllPendingChanges();
+                                } else if(window.__memoryManagerPro && window.__memoryManagerPro.refreshStatus){
+                                    window.__memoryManagerPro.refreshStatus();
+                                } else {
+                                    alert('❌ نظام المزامنة غير متاح');
+                                }
+                                document.getElementById('emergencyMemoryPanel').remove();
+                            }
+                        " style="padding:4px 12px;border-radius:8px;
+                                border:1px solid #00b09b;
+                                background:rgba(0,176,155,0.2);
+                                color:#00b09b;cursor:pointer;
+                                font-family:'Tajawal';font-size:11px;
+                                font-weight:bold;">
+                            🔄 مزامنة
+                        </button>
+                    ` : ''}
+                </div>
+                ${pendingHTML}
+            </div>
+            
+            <!-- أكبر المفاتيح -->
+            <div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:8px 0;
+                        margin-bottom:18px;max-height:150px;overflow-y:auto;">
+                <div style="padding:8px 12px;font-size:12px;opacity:0.6;
+                            border-bottom:1px solid rgba(255,255,255,0.05);">
+                    📊 أكبر مفاتيح localStorage:
+                </div>
+                ${topKeysHTML || '<div style="padding:15px;text-align:center;opacity:0.4;">لا توجد بيانات</div>'}
+            </div>
+            
+            <!-- الأزرار -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <button onclick="
+                    if(confirm('⚠️ مسح الكاش والتغييرات المعلقة من localStorage و localforage؟')){
+                        ['soufai_cache_data','soufai_pending_changes','soufai_backups',
+                         'soufai_report_cache','soufai_memory_v6','soufai_memory_v5',
+                         'soufai_memory_v4','soufai_backup_v4','soufai_sync_queue_v5']
+                        .forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
+                        
+                        // مسح localforage أيضاً
+                        if(window.localforage){
+                            try {
+                                const lf = localforage.createInstance({
+                                    name: 'SoufaiWaterSystem',
+                                    storeName: 'soufai_store'
+                                });
+                                lf.clear().then(() => console.log('✅ localforage cleared'));
+                            } catch(e) {}
+                        }
+                        
+                        alert('✅ تم مسح الكاش من المصدرين');
+                        document.getElementById('emergencyMemoryPanel').remove();
+                        setTimeout(() => location.reload(), 800);
+                    }
+                " style="padding:14px;border-radius:12px;
+                        border:2px solid rgba(255,71,87,0.4);
+                        background:rgba(255,71,87,0.15);
+                        color:#ff4757;cursor:pointer;font-weight:bold;
+                        font-family:'Tajawal';font-size:14px;">
+                    🗑️ مسح الكاش
+                </button>
+                <button onclick="location.reload()"
+                        style="padding:14px;border-radius:12px;
+                               border:2px solid rgba(76,201,240,0.4);
+                               background:rgba(76,201,240,0.15);
+                               color:#4cc9f0;cursor:pointer;font-weight:bold;
+                               font-family:'Tajawal';font-size:14px;">
+                    🔄 إعادة تحميل
+                </button>
+            </div>
+            
+            <div style="margin-top:15px;padding-top:12px;
+                        border-top:1px solid rgba(255,255,255,0.05);
+                        font-size:10px;opacity:0.4;text-align:center;">
+                💡 يقرأ من localStorage + localforage | يعرض التفاصيل الفعلية
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.onclick = (e) => {
+        if (e.target === modal) modal.remove();
+    };
+}
 
+window.showEmergencyMemoryPanel = showEmergencyMemoryPanel;
+console.log('✅ نافذة الطوارئ المتقدمة جاهزة - تقرأ من المصدرين');
+</script>
 </body>
 </html>
