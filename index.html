@@ -4179,9 +4179,22 @@ body.quick-view-mode #exitQuickViewBtn {
     .developer-signature span {
         font-size: 15px !important;
     }
-    .designer-signature .designer-name {
-        font-size: 20px !important;
-    }
+.designer-signature .designer-name {
+    font-size: 10px !important;
+}
+.designer-phone {
+    display: block;
+    font-size: 10px;
+    background: linear-gradient(135deg, #ffd700, #ffb703);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 900;
+    margin-top: 4px;
+    letter-spacing: 1px;
+    direction: ltr;
+    text-align: center;
+}
     [data-theme="pro"] .login-card {
         padding: 16px;
     }
@@ -4400,7 +4413,14 @@ input, select, textarea {
     font-size: 17px !important;
     font-weight: 900 !important;
 }
-
+td.high-debt {
+    background: #ff1744 !important;
+    color: #ffffff !important;
+    border: 3px solid #ff1744 !important;
+    border-radius: 8px !important;
+    font-weight: 900 !important;
+    animation: debtPulse 1.5s ease-in-out infinite !important;
+}
 </style>
 </head>
 <body>
@@ -5202,10 +5222,11 @@ function isValidBackup(backup) {
                                 </div>
                             )}
 
-                            <div className="designer-signature">
-                                <span className="designer-label">تصميم وإعداد وتنفيذ</span>
-                                <span className="designer-name">الأستاذ نصر العامري</span>
-                            </div>
+                   <div className="designer-signature">
+    <span className="designer-label">تصميم وإعداد وتنفيذ</span>
+    <span className="designer-name">الأستاذ نصر العامري</span>
+    <span className="designer-phone">📞 770362878</span>
+</div>
                         </div>
                     </div>
                 </div>
@@ -16406,6 +16427,43 @@ async function showEmergencyMemoryPanel() {
 
 window.showEmergencyMemoryPanel = showEmergencyMemoryPanel;
 console.log('✅ نافذة الطوارئ المتقدمة جاهزة - تقرأ من المصدرين');
+</script>
+<script>
+(function() {
+    function colorOnce() {
+        try {
+            var headers = document.querySelectorAll('thead th, thead td');
+            var col = -1;
+            headers.forEach(function(h, i) {
+                var t = (h.textContent || '').trim();
+                if (t.indexOf('المتبقي') !== -1) col = i + 1;
+            });
+            var cols = col > 0 ? [col] : [12];
+            cols.forEach(function(n) {
+                document.querySelectorAll('td:nth-child(' + n + ')').forEach(function(td) {
+                    var row = td.closest('tr');
+                    if (!row || row.closest('thead')) return;
+                    if (row.classList.contains('total-row')) return;
+                    var num = parseFloat((td.textContent || '').replace(/[^\d.-]/g, ''));
+                    if (!isNaN(num) && num >= 5000) {
+                        td.classList.add('high-debt');
+                    } else {
+                        td.classList.remove('high-debt');
+                    }
+                });
+            });
+        } catch (e) {
+            // تجاهل أي خطأ — لا نريد تعطيل الصفحة
+        }
+    }
+    // شغّل مرة واحدة فقط عند التحميل + كل 3 ثوانٍ
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', colorOnce);
+    } else {
+        colorOnce();
+    }
+    setInterval(colorOnce, 3000);
+})();
 </script>
 </body>
 </html>
